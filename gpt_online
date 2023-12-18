@@ -1,0 +1,189 @@
+addEventListener('fetch', event => {
+    const url = new URL(event.request.url);
+    if (url.pathname === '/v1/chat/completions') {
+        console.log('接收到 fetch 事件');
+        event.respondWith(handleRequest(event.request));
+    } else {
+        console.log('请求的路径不是 /v1/chat/completions，返回404状态码');
+        event.respondWith(new Response('Not found', {status: 404}));
+    }
+})
+
+// 搜索函数，调用您的搜索服务
+async function custom_search(query) {
+    console.log(`正在使用查询进行自定义搜索: ${query}`);
+    try {
+        const response = await fetch('https://gpts.webpilot.ai/api/visit-web', {
+            method: 'POST',
+            headers: { "Content-Type": "application/json", "WebPilot-Friend-UID": "fatwang2" },
+            body: JSON.stringify({ ur: query })
+        });
+
+        if (!response.ok) {
+            console.error(`API 请求失败, 状态码: ${response.status}`);
+            return `API 请求失败, 状态码: ${response.status}`;
+        }
+
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            console.error("收到的响应不是有效的 JSON 格式");
+            return "收到的响应不是有效的 JSON 格式";
+        }
+
+        const data = await response.json();
+        console.log('自定义搜索服务调用完成');
+        return JSON.stringify(data.content);
+    } catch (error) {
+        console.error('请求过程中发生错误:', error);
+        return '请求过程中发生错误';
+    }
+}
+
+
+
+
+
+async function handleRequest(request) {
+    // 在函数的开始部分
+    if (request.method === 'OPTIONS') {
+        // 预检请求。回应所有的预检请求，并设置适当的`Access-Control-Allow-*`头部
+        return new Response(null, {
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+            }
+        });
+    }
+    console.log('请求方法:', request.method);
+    console.log('请求头:', [...request.headers]);
+    const requestData = await request.json();
+    console.log('请求体:', requestData);
+    // 找到最新的用户消息
+    const userMessages = requestData.messages.filter(message => message.role === 'user');
+    const latestUserMessage = userMessages[userMessages.length - 1];
+    const user_input = latestUserMessage ? latestUserMessage.content : "";
+    console.log(`用户输入: ${user_input}`);
+    // 设置默认值
+    const defaultModel = "gpt-3.5-turbo-1106";
+    const defaultSystemContent = "You are a helpful assistant.";
+
+    const model = requestData.model || defaultModel; // 使用默认 model 如果未提供
+    const system_content = requestData.messages[0]?.content || defaultSystemContent; // 使用默认 system_content 如果未提供
+    const authHeader = request.headers.get('Authorization'); // 从请求的 headers 中获取 Authorization
+    const apiKey = authHeader.split(' ')[1]; // 从 Authorization 中获取 API key
+    const body = JSON.stringify({
+        model: model,
+        messages: [
+        { role: "system", content: system_content},
+        { role: "user", content: user_input }
+        ],
+        tools: [
+        {
+            type: "function",
+            function: {
+            name: "custom_search",
+            description: "search online for news and factors",
+            parameters: {
+                type: "object",
+                properties: {
+                    query: { type: "string" }
+                },
+                required: ["query"]
+                }
+            }
+        }
+    ],
+    tool_choice: "auto"
+});
+
+    console.log('解析请求文本完成，准备调用 OpenAI API');
+    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': `Bearer ${apiKey}` // 使用从请求的 headers 中获取的 API key
+        },
+        body: body
+    });
+    console.log('OpenAI API 请求体:', body);
+    const data = await openAIResponse.json();
+    console.log('OpenAI API 响应状态码:', openAIResponse.status);
+    console.log('OpenAI API 响应头:', openAIResponse.headers);
+    console.log('OpenAI API 响应体:', data);
+    if (!data.choices || data.choices.length === 0) {
+        console.log('数据中没有选择项');
+        return new Response('数据中没有选择项', { status: 500 });
+    }
+    
+    console.log('OpenAI API 响应接收完成，检查是否需要调用自定义函数');
+    let messages = requestData.messages;
+    messages.push(data.choices[0].message);
+    // 检查是否有函数调用
+    let calledCustomFunction = false;
+    if (data.choices[0].message.tool_calls) {
+        const toolCalls = data.choices[0].message.tool_calls;
+        const availableFunctions = {
+            custom_search: custom_search,
+        };
+
+        
+        for (const toolCall of toolCalls) {
+            const functionName = toolCall.function.name;
+            const functionToCall = availableFunctions[functionName];
+            const functionArgs = JSON.parse(toolCall.function.arguments);
+            const functionResponse = await functionToCall(functionArgs.query);
+            messages.push({
+                tool_call_id: toolCall.id,
+                role: "tool",
+                name: functionName,
+                content: functionResponse, 
+            });
+            if (functionName === "custom_search") {
+                calledCustomFunction = true;
+            }
+        }
+        const secondResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${apiKey}` // 使用从请求的 headers 中获取的 API key
+            },
+            body: JSON.stringify({
+                model: model,
+                messages: messages
+        })
+        });
+        const secondData = await secondResponse.json();
+        // 如果调用了自定义函数，则在最终的回复中添加 "🌍" 标记
+        if (calledCustomFunction && secondData.choices && secondData.choices.length > 0) {
+            secondData.choices[0].message.content = "🌍" + secondData.choices[0].message.content;
+        }
+        console.log('响应状态码: 200');
+        console.log('响应体:', JSON.stringify(secondData));
+        return new Response(JSON.stringify(secondData), {
+            status: 200,
+            headers: { 
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*', // 允许来自所有源的请求
+                'Access-Control-Allow-Methods': 'GET, POST', // 允许 GET 和 POST 请求
+                'Access-Control-Allow-Headers': 'Content-Type, Authorization' // 允许 Content-Type 和 Authorization 头部
+            }
+        });
+    } else {
+        // 没有调用自定义函数，直接返回原始回复
+        console.log('响应状态码: 200');
+        console.log('响应体:', JSON.stringify(data));
+        return new Response(JSON.stringify(data), {
+            status: 200,
+            headers: { 
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*', // 允许来自所有源的请求
+                'Access-Control-Allow-Methods': 'GET, POST', // 允许 GET 和 POST 请求
+                'Access-Control-Allow-Headers': 'Content-Type, Authorization' // 允许 Content-Type 和 Authorization 头部
+            }
+        }); 
+    }
+}
