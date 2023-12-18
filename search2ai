@@ -1,3 +1,6 @@
+// 获取环境变量，如果未设置，则使用默认值
+const APIBASE = APIBASE || 'https://api.openai.com';
+
 addEventListener('fetch', event => {
     const url = new URL(event.request.url);
     if (url.pathname === '/v1/chat/completions') {
@@ -38,9 +41,6 @@ async function custom_search(query) {
         return '请求过程中发生错误';
     }
 }
-
-
-
 
 
 async function handleRequest(request) {
@@ -98,7 +98,7 @@ async function handleRequest(request) {
 });
 
     console.log('解析请求文本完成，准备调用 OpenAI API');
-    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    const openAIResponse = await fetch(`${APIBASE}/v1/chat/completions`, {
         method: 'POST',
         headers: {
         'Content-Type': 'application/json',
@@ -144,7 +144,7 @@ async function handleRequest(request) {
                 calledCustomFunction = true;
             }
         }
-        const secondResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        const secondResponse = await fetch(`${APIBASE}/v1/chat/completions`, {
             method: 'POST',
             headers: {
             'Content-Type': 'application/json',
