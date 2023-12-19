@@ -1,13 +1,38 @@
 addEventListener('fetch', event => {
     const url = new URL(event.request.url);
+    const apiBase = typeof APIBASE !== 'undefined' ? APIBASE : 'https://api.openai.com';
+    const authHeader = event.request.headers.get('Authorization'); // 从请求的 headers 中获取 Authorization
+    const apiKey = authHeader.split(' ')[1]; // 从 Authorization 中获取 API key
+
     if (url.pathname === '/v1/chat/completions') {
         console.log('接收到 fetch 事件');
-        event.respondWith(handleRequest(event.request));
+        event.respondWith(handleRequest(event.request, apiBase, apiKey));
+    } else if (url.pathname === '/v1/models') {
+        console.log('接收到 /v1/models 请求');
+        event.respondWith(handleModelsRequest(apiBase, apiKey));
     } else {
-        console.log('请求的路径不是 /v1/chat/completions，返回404状态码');
+        console.log('请求的路径不是 /v1/chat/completions 或 /v1/models，返回404状态码');
         event.respondWith(new Response('Not found', {status: 404}));
     }
 })
+async function handleModelsRequest(apiBase, apiKey) {
+    const response = await fetch(`${apiBase}/v1/models`, {
+        headers: {
+            'Authorization': `Bearer ${apiKey}`
+        }
+    });
+
+    const data = await response.json();
+    return new Response(JSON.stringify(data), {
+        status: response.status,
+        headers: { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*', // 允许来自所有源的请求
+            'Access-Control-Allow-Methods': 'GET, POST', // 允许 GET 和 POST 请求
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization' // 允许 Content-Type 和 Authorization 头部
+        }
+    });
+}
 
 // 搜索函数，调用您的搜索服务
 async function custom_search(query) {
@@ -40,10 +65,8 @@ async function custom_search(query) {
 }
 
 
-async function handleRequest(request) {
-    // @ts-ignore
-    const apiBase = typeof APIBASE !== 'undefined' ? APIBASE : 'https://api.openai.com';
-
+async function handleRequest(request, apiBase, apiKey) {
+    
     // 在函数的开始部分
     if (request.method === 'OPTIONS') {
         // 预检请求。回应所有的预检请求，并设置适当的`Access-Control-Allow-*`头部
@@ -59,6 +82,7 @@ async function handleRequest(request) {
     console.log('请求头:', [...request.headers]);
     const requestData = await request.json();
     console.log('请求体:', requestData);
+    const stream = requestData.stream || false;
     // 找到最新的用户消息
     const userMessages = requestData.messages.filter(message => message.role === 'user');
     const latestUserMessage = userMessages[userMessages.length - 1];
@@ -67,11 +91,9 @@ async function handleRequest(request) {
     // 设置默认值
     const defaultModel = "gpt-3.5-turbo-1106";
     const defaultSystemContent = "You are a helpful assistant.";
-
     const model = requestData.model || defaultModel; // 使用默认 model 如果未提供
     const system_content = requestData.messages[0]?.content || defaultSystemContent; // 使用默认 system_content 如果未提供
-    const authHeader = request.headers.get('Authorization'); // 从请求的 headers 中获取 Authorization
-    const apiKey = authHeader.split(' ')[1]; // 从 Authorization 中获取 API key
+    
     const body = JSON.stringify({
         model: model,
         messages: [
@@ -153,29 +175,97 @@ async function handleRequest(request) {
             },
             body: JSON.stringify({
                 model: model,
-                messages: messages
+                messages: messages,
+                stream: stream
         })
         });
-        const secondData = await secondResponse.json();
-        // 如果调用了自定义函数，则在最终的回复中添加 "🌍" 标记
-        if (calledCustomFunction && secondData.choices && secondData.choices.length > 0) {
-            secondData.choices[0].message.content = "🌍" + secondData.choices[0].message.content;
-        }
+
+
         console.log('响应状态码: 200');
-        console.log('响应体:', JSON.stringify(secondData));
-        return new Response(JSON.stringify(secondData), {
+        if (stream) {
+    // 使用 SSE 格式
+    return new Response(secondResponse.body, {
+        status: secondResponse.status,
+        headers: { 
+            'Content-Type': 'text/event-stream',
+            'Access-Control-Allow-Origin': '*', // 允许来自所有源的请求
+            'Access-Control-Allow-Methods': 'GET, POST', // 允许 GET 和 POST 请求
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization' // 允许 Content-Type 和 Authorization 头部
+        }
+    });
+} else {
+    // 使用普通 JSON 格式
+    const data = await secondResponse.json();
+    return new Response(JSON.stringify(data), {
+        status: 200,
+        headers: { 
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*', // 允许来自所有源的请求
+            'Access-Control-Allow-Methods': 'GET, POST', // 允许 GET 和 POST 请求
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization' // 允许 Content-Type 和 Authorization 头部
+        }
+    }); 
+} }
+    if (!calledCustomFunction) {
+    // 没有调用自定义函数，直接返回原始回复
+    console.log('响应状态码: 200');
+    console.log('响应体:', JSON.stringify(data));
+    // 创建一个将 JSON 数据转换为 SSE 格式的流的函数
+    function jsonToStream(jsonData) {
+    const encoder = new TextEncoder();
+
+    return new ReadableStream({
+        start(controller) {
+            // 将消息内容分割为单个字符
+            const characters = Array.from(jsonData.choices[0].message.content);
+
+            // 为每个字符创建一个新的 JSON 对象
+            for (let i = 0; i < characters.length; i++) {
+                const character = characters[i];
+                const newJsonData = {
+                    id: jsonData.id,
+                    object: 'chat.completion.chunk',
+                    created: jsonData.created,
+                    model: jsonData.model,
+                    choices: [
+                        {
+                            index: 0,
+                            delta: {
+                                content: character
+                            },
+                            logprobs: null,
+                            finish_reason: i === characters.length - 1 ? 'stop' : null
+                        }
+                    ],
+                    system_fingerprint: jsonData.system_fingerprint
+                };
+
+                // 将新的 JSON 对象编码为一个新的 SSE 事件，然后加入 StreamReader
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify(newJsonData)}\n\n`));
+            }
+
+            // 添加一个表示结束的 SSE 事件
+            controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+            controller.close();
+        }
+    });
+}
+
+    
+    if (stream) {
+        // 使用 SSE 格式
+        const sseStream = jsonToStream(data);
+        return new Response(sseStream,{
             status: 200,
             headers: { 
-                'Content-Type': 'application/json',
+                'Content-Type': 'text/event-stream',
                 'Access-Control-Allow-Origin': '*', // 允许来自所有源的请求
                 'Access-Control-Allow-Methods': 'GET, POST', // 允许 GET 和 POST 请求
                 'Access-Control-Allow-Headers': 'Content-Type, Authorization' // 允许 Content-Type 和 Authorization 头部
             }
         });
     } else {
-        // 没有调用自定义函数，直接返回原始回复
-        console.log('响应状态码: 200');
-        console.log('响应体:', JSON.stringify(data));
+        // 使用普通 JSON 格式
         return new Response(JSON.stringify(data), {
             status: 200,
             headers: { 
@@ -186,4 +276,5 @@ async function handleRequest(request) {
             }
         }); 
     }
+}
 }
