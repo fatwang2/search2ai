@@ -2,8 +2,12 @@ addEventListener('fetch', event => {
     const url = new URL(event.request.url);
     const apiBase = typeof APIBASE !== 'undefined' ? APIBASE : 'https://api.openai.com';
     const authHeader = event.request.headers.get('Authorization'); // 从请求的 headers 中获取 Authorization
-    const apiKey = authHeader.split(' ')[1]; // 从 Authorization 中获取 API key
-
+    let apiKey = '';
+    if (authHeader) {
+        apiKey = authHeader.split(' ')[1]; // 从 Authorization 中获取 API key
+    } else {
+        return new Response('Authorization header is missing', {status: 400});
+    }   
     if (url.pathname === '/v1/chat/completions') {
         console.log('接收到 fetch 事件');
         event.respondWith(handleRequest(event.request, apiBase, apiKey));
