@@ -11,7 +11,7 @@
 - search2ai，让你的 OpenAI 可以根据你的意图判断是否联网，不需要安装任何插件，也不需要更换key，直接在你常用的 OpenAI 三方客户端替换自定义域名为下面的地址即可，支持 Cloudflare 自行部署 
 
 ```
-https://online.sum4all.one/v1
+https://api.search2ai.online/v1
 ```
 
 ![效果示例](pictures/BotGem.png)
