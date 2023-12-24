@@ -93,16 +93,12 @@ async function handleRequest(request, apiBase, apiKey) {
             }
         });
     }
-    console.log('请求方法:', request.method);
-    console.log('请求头:', [...request.headers]);
     const requestData = await request.json();
-    console.log('请求体:', requestData);
     const stream = requestData.stream || false;
     // 找到最新的用户消息
     const userMessages = requestData.messages.filter(message => message.role === 'user');
     const latestUserMessage = userMessages[userMessages.length - 1];
     const user_input = latestUserMessage ? latestUserMessage.content : "";
-    console.log(`用户输入: ${user_input}`);
     // 设置默认值
     const defaultModel = "gpt-3.5-turbo-1106";
     const defaultSystemContent = "You are a helpful assistant.";
@@ -144,11 +140,8 @@ async function handleRequest(request, apiBase, apiKey) {
         },
         body: body
     });
-    console.log('OpenAI API 请求体:', body);
     const data = await openAIResponse.json();
     console.log('OpenAI API 响应状态码:', openAIResponse.status);
-    console.log('OpenAI API 响应头:', openAIResponse.headers);
-    console.log('OpenAI API 响应体:', data);
     if (!data.choices || data.choices.length === 0) {
         console.log('数据中没有选择项');
         return new Response('数据中没有选择项', { status: 500 });
@@ -224,7 +217,6 @@ async function handleRequest(request, apiBase, apiKey) {
     if (!calledCustomFunction) {
     // 没有调用自定义函数，直接返回原始回复
     console.log('响应状态码: 200');
-    console.log('响应体:', JSON.stringify(data));
     // 创建一个将 JSON 数据转换为 SSE 格式的流的函数
     function jsonToStream(jsonData) {
     const encoder = new TextEncoder();
