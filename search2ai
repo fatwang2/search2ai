@@ -42,10 +42,18 @@ async function handleModelsRequest(apiBase, apiKey) {
 async function custom_search(query) {
     console.log(`正在使用查询进行自定义搜索: ${query}`);
     try {
-        const response = await fetch('https://gpts.webpilot.ai/api/visit-web', {
+        const response = await fetch('https://search.search2ai.one', {
             method: 'POST',
-            headers: { "Content-Type": "application/json", "WebPilot-Friend-UID": "fatwang2" },
-            body: JSON.stringify({ ur: query })
+            headers: {
+                "Content-Type": "application/json",
+                "google_cx": GOOGLE_CX,
+                "google_key": GOOGLE_KEY,
+                "bing_key": BING_KEY
+            },
+            body: JSON.stringify({
+                query: query,
+                search_service: SEARCH_SERVICE
+            })
         });
 
         if (!response.ok) {
@@ -60,14 +68,17 @@ async function custom_search(query) {
         }
 
         const data = await response.json();
+        const filteredData = data.map(item => ({
+            snippet: item.snippet,
+            content: item.content
+        }));
         console.log('自定义搜索服务调用完成');
-        return JSON.stringify(data.content);
-    } catch (error) {
-        console.error('请求过程中发生错误:', error);
-        return '请求过程中发生错误';
-    }
+        return JSON.stringify(filteredData); // 将处理后的数据转换为 JSON 字符串
+        }catch (error) {
+                console.error(`在 custom_search 函数中捕获到错误: ${error}`);
+                return `在 custom_search 函数中捕获到错误: ${error}`;
+            }
 }
-
 
 async function handleRequest(request, apiBase, apiKey) {
     
