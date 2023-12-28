@@ -1,25 +1,51 @@
+// 在顶部定义CORS头部
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', // 允许的HTTP方法
+    'Access-Control-Allow-Headers': 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization',
+    'Access-Control-Max-Age': '86400', // 预检请求结果的缓存时间
+};
 addEventListener('fetch', event => {
+    console.log(`收到请求: ${event.request.method} ${event.request.url}`);
     const url = new URL(event.request.url);
+    // 处理 CORS 预检请求
+    if (event.request.method === 'OPTIONS') {
+        return event.respondWith(handleOptions());
+    }
     const apiBase = typeof APIBASE !== 'undefined' ? APIBASE : 'https://api.openai.com';
     const authHeader = event.request.headers.get('Authorization'); // 从请求的 headers 中获取 Authorization
     let apiKey = '';
     if (authHeader) {
         apiKey = authHeader.split(' ')[1]; // 从 Authorization 中获取 API key
     } else {
-        return new Response('Authorization header is missing', {status: 400});
-    }   
+        return event.respondWith(new Response('Authorization header is missing', {status: 400, headers: corsHeaders}));
+    }
     if (url.pathname === '/v1/chat/completions') {
         console.log('接收到 fetch 事件');
         event.respondWith(handleRequest(event.request, apiBase, apiKey));
     } else if (url.pathname === '/v1/models') {
-        console.log('接收到 /v1/models 请求');
-        event.respondWith(handleModelsRequest(apiBase, apiKey));
-    } else {
+        // 调用 handleModelsRequest 并确保在响应中包含 CORS 头部
+        event.respondWith(handleModelsRequest(apiBase, apiKey).then(response => {
+            return new Response(response.body, {
+                status: response.status,
+                headers: { ...response.headers, ...corsHeaders }
+            });
+        }));
+    }else {
         console.log('请求的路径不是 /v1/chat/completions 或 /v1/models，返回404状态码');
-        event.respondWith(new Response('Not found', {status: 404}));
+        event.respondWith(new Response('Not found', {status: 404, headers: corsHeaders}));
     }
 })
+// 处理 OPTIONS 请求
+function handleOptions() {
+    return new Response(null, {
+        status: 204,
+        headers: corsHeaders
+    });
+}
+
 async function handleModelsRequest(apiBase, apiKey) {
+    console.log('进入 handleModelsRequest');
     const response = await fetch(`${apiBase}/v1/models`, {
         headers: {
             'Authorization': `Bearer ${apiKey}`
@@ -27,14 +53,10 @@ async function handleModelsRequest(apiBase, apiKey) {
     });
 
     const data = await response.json();
+    console.log('退出 handleModelsRequest');
     return new Response(JSON.stringify(data), {
         status: response.status,
-        headers: { 
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*', // 允许来自所有源的请求
-            'Access-Control-Allow-Methods': 'GET, POST', // 允许 GET 和 POST 请求
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization' // 允许 Content-Type 和 Authorization 头部
-        }
+        headers: corsHeaders
     });
 }
 
@@ -81,19 +103,16 @@ async function custom_search(query) {
 }
 
 async function handleRequest(request, apiBase, apiKey) {
-    
-    // 在函数的开始部分
-    if (request.method === 'OPTIONS') {
-        // 预检请求。回应所有的预检请求，并设置适当的`Access-Control-Allow-*`头部
-        return new Response(null, {
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-            }
-        });
+    console.log(`开始处理请求: ${request.method} ${request.url}`);
+
+    // 确保请求是我们可以处理的类型
+    if (request.method !== 'POST') {
+        console.log(`不支持的请求方法: ${request.method}`);
+        return new Response('Method Not Allowed', { status: 405, headers: corsHeaders });
     }
+    
     const requestData = await request.json();
+    console.log('请求数据:', requestData);
     const stream = requestData.stream || false;
     // 找到最新的用户消息
     const userMessages = requestData.messages.filter(message => message.role === 'user');
@@ -196,9 +215,7 @@ async function handleRequest(request, apiBase, apiKey) {
         status: secondResponse.status,
         headers: { 
             'Content-Type': 'text/event-stream',
-            'Access-Control-Allow-Origin': '*', // 允许来自所有源的请求
-            'Access-Control-Allow-Methods': 'GET, POST', // 允许 GET 和 POST 请求
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization' // 允许 Content-Type 和 Authorization 头部
+            ...corsHeaders, 
         }
     });
 } else {
@@ -208,9 +225,7 @@ async function handleRequest(request, apiBase, apiKey) {
         status: 200,
         headers: { 
             'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*', // 允许来自所有源的请求
-            'Access-Control-Allow-Methods': 'GET, POST', // 允许 GET 和 POST 请求
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization' // 允许 Content-Type 和 Authorization 头部
+            ...corsHeaders, 
         }
     }); 
 } }
@@ -266,9 +281,7 @@ async function handleRequest(request, apiBase, apiKey) {
             status: 200,
             headers: { 
                 'Content-Type': 'text/event-stream',
-                'Access-Control-Allow-Origin': '*', // 允许来自所有源的请求
-                'Access-Control-Allow-Methods': 'GET, POST', // 允许 GET 和 POST 请求
-                'Access-Control-Allow-Headers': 'Content-Type, Authorization' // 允许 Content-Type 和 Authorization 头部
+                ...corsHeaders, 
             }
         });
     } else {
@@ -277,9 +290,7 @@ async function handleRequest(request, apiBase, apiKey) {
             status: 200,
             headers: { 
                 'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*', // 允许来自所有源的请求
-                'Access-Control-Allow-Methods': 'GET, POST', // 允许 GET 和 POST 请求
-                'Access-Control-Allow-Headers': 'Content-Type, Authorization' // 允许 Content-Type 和 Authorization 头部
+                ...corsHeaders, 
             }
         }); 
     }

@@ -2,6 +2,7 @@
 [telegram频道 ](https://sum4all.one/telegram)
 
 # 版本更新
+- V0.0.5，20231229，支持跨域请求，兼容BotGem移动端、ChatGPT-Next-Web等跨域请求的客户端
 - V0.0.4，20231220，支持Google、Bing搜索
 - V0.0.3，20231220，支持流式输出，适配OpenAI三方客户端
 - V0.0.2，20231218，支持OpenAI三方代理，在worker中配置APIBASE的变量为代理地址即可
@@ -22,7 +23,7 @@ https://api.search2ai.online/v1
 
 # 使用方法
 - 直接使用：替换客户端自定义域名为上述地址即可
-- 自行部署(有难度)
+- 自行部署(有难度，需谨慎)
 1. 复制[search2ai](https://search2ai.online/cloudflare)的代码，在cloudflare的worker里部署，上线后的worker的地址可作为你接口调用时的自定义域名地址，注意拼接，worker地址仅代表v1前的部分 XXX/v1/chat/completions
 2. worker中配置变量
 - APIBASE：如果你在用 OpenAI 三方代理，可在这里填入，注意不需要加v1，非必填
@@ -30,7 +31,6 @@ https://api.search2ai.online/v1
 - BING_KEY：如选bing搜索必填，请自行搜索教程，申请地址 https://search2ai.online/bing
 - GOOGLE_CX：如选Google搜索必填，Search engine ID，请自行搜索教程，申请地址 https://search2ai.online/googlecx
 - GOOGLE_KEY：如选Google搜索必填，API key，申请地址 https://search2ai.online/googlekey
-
 
 # 后续迭代
 - 接口兼容非对话场景
