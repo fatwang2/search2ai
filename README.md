@@ -2,6 +2,7 @@
 [telegram频道 ](https://sum4all.one/telegram)
 
 # 版本更新
+- V0.0.6，20231229，修复自行部署中变量定义的bug，已测试通过
 - V0.0.5，20231229，支持跨域请求，兼容BotGem移动端、ChatGPT-Next-Web等跨域请求的客户端
 - V0.0.4，20231220，支持Google、Bing搜索
 - V0.0.3，20231220，支持流式输出，适配OpenAI三方客户端

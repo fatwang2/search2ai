@@ -68,9 +68,9 @@ async function custom_search(query) {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json",
-                "google_cx": GOOGLE_CX,
-                "google_key": GOOGLE_KEY,
-                "bing_key": BING_KEY
+                "google_cx": typeof GOOGLE_CX !== 'undefined' ? GOOGLE_CX : '',
+                "google_key": typeof GOOGLE_KEY !== 'undefined' ? GOOGLE_KEY : '',
+                "bing_key": typeof BING_KEY !== 'undefined' ? BING_KEY : ''
             },
             body: JSON.stringify({
                 query: query,
