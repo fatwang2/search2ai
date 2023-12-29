@@ -70,6 +70,7 @@ async function custom_search(query) {
                 "Content-Type": "application/json",
                 "google_cx": typeof GOOGLE_CX !== 'undefined' ? GOOGLE_CX : '',
                 "google_key": typeof GOOGLE_KEY !== 'undefined' ? GOOGLE_KEY : '',
+                "serpapi_key": typeof SERPAPI_KEY !== 'undefined' ? SERPAPI_KEY : '',
                 "bing_key": typeof BING_KEY !== 'undefined' ? BING_KEY : ''
             },
             body: JSON.stringify({
