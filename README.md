@@ -34,6 +34,7 @@ https://api.search2ai.online/v1
 - GOOGLE_CX：如选Google搜索必填，Search engine ID，请自行搜索教程，申请地址 https://search2ai.online/googlecx
 - GOOGLE_KEY：如选Google搜索必填，API key，申请地址 https://search2ai.online/googlekey
 - SERPAPI_KEY: 如选serpapi必填，注册地址 https://search2ai.online/serpapi
+3. worker里配置触发器-自定义域名，国内直接访问worker的地址可能会出问题，需要替换为自定义域名
 
 # 后续迭代
 - 接口兼容非对话场景
