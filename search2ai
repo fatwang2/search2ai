@@ -71,6 +71,7 @@ async function custom_search(query) {
                 "google_cx": typeof GOOGLE_CX !== 'undefined' ? GOOGLE_CX : '',
                 "google_key": typeof GOOGLE_KEY !== 'undefined' ? GOOGLE_KEY : '',
                 "serpapi_key": typeof SERPAPI_KEY !== 'undefined' ? SERPAPI_KEY : '',
+                "serper_key": typeof SERPER_KEY !== 'undefined' ? SERPER_KEY : '',
                 "bing_key": typeof BING_KEY !== 'undefined' ? BING_KEY : ''
             },
             body: JSON.stringify({
@@ -136,7 +137,7 @@ async function handleRequest(request, apiBase, apiKey) {
             type: "function",
             function: {
             name: "custom_search",
-            description: "search online for news and factors",
+            description: "search for news and factors",
             parameters: {
                 type: "object",
                 properties: {
