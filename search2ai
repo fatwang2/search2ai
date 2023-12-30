@@ -195,6 +195,7 @@ async function handleRequest(request, apiBase, apiKey) {
                 calledCustomFunction = true;
             }
         }
+        console.log('准备发送第二次 OpenAI API 请求');
         const secondResponse = await fetch(`${apiBase}/v1/chat/completions`, {
             method: 'POST',
             headers: {
