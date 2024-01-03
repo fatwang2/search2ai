@@ -72,7 +72,8 @@ async function custom_search(query) {
                 "google_key": typeof GOOGLE_KEY !== 'undefined' ? GOOGLE_KEY : '',
                 "serpapi_key": typeof SERPAPI_KEY !== 'undefined' ? SERPAPI_KEY : '',
                 "serper_key": typeof SERPER_KEY !== 'undefined' ? SERPER_KEY : '',
-                "bing_key": typeof BING_KEY !== 'undefined' ? BING_KEY : ''
+                "bing_key": typeof BING_KEY !== 'undefined' ? BING_KEY : '',
+                "apibase": typeof APIBASE !== 'undefined' ? APIBASE : 'https://api.openai.com'
             },
             body: JSON.stringify({
                 query: query,
