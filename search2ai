@@ -151,7 +151,7 @@ async function handleRequest(request, apiBase, apiKey) {
     const user_input = latestUserMessage ? latestUserMessage.content : "";
     // 设置默认值
     const defaultModel = "gpt-3.5-turbo-1106";
-    const defaultSystemContent = "You are a helpful assistant.";
+    const defaultSystemContent = "你是一个信息检索专家，擅长以简洁明了的语言回答我的问题。如果用户的问题涉及未知的新闻或事件或事实，则通过search函数网络搜索，请回复答案以及你参考的相关链接;如果搜索结果摘要无法回答问题，则调用crawer函数获取第一个搜索结果链接的内容，尝试回答；如果当用户指定某个链接的时候，也一样获取链接内容进行回答";
     const model = requestData.model || defaultModel; // 使用默认 model 如果未提供
     const system_content = requestData.messages[0]?.content || defaultSystemContent; // 使用默认 system_content 如果未提供
     
@@ -170,7 +170,7 @@ async function handleRequest(request, apiBase, apiKey) {
             parameters: {
                 type: "object",
                 properties: {
-                    query: { type: "string","description": "The prompt to search."}
+                    query: { type: "string","description": "The query to search."}
                 },
                 required: ["query"]
                 }
@@ -180,7 +180,7 @@ async function handleRequest(request, apiBase, apiKey) {
             type: "function",
             function: {
                 name: "crawer",
-                description: "Get the content of a specified webpage，when the user wants to know more about a news or a factor",
+                description: "Get the content of a specified webpage",
                 parameters: {
                     type: "object",
                     properties: {
@@ -252,7 +252,6 @@ async function handleRequest(request, apiBase, apiKey) {
             messages: messages,
             stream: stream
         };
-        console.log('请求体内容: ', JSON.stringify(requestBody, null, 2)); // 打印请求体内容
         const secondResponse = await fetch(`${apiBase}/v1/chat/completions`, {
             method: 'POST',
             headers: {

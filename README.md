@@ -2,7 +2,7 @@
 [telegram频道 ](https://sum4all.one/telegram)
 
 # 版本更新
-- V0.0.9，20230105，支持搜索结果回复URL、支持URL内容总结
+- V0.0.9，20230105，支持搜索结果回复URL、支持访问URL
 - V0.0.8，20231230，支持接入Serper的Google搜索，注册领取2500次额度，6个月有效
 - V0.0.7，20231230，支持接入Serpapi的Google搜索，每个月免费100次，个人够用，注册简单
 - V0.0.6，20231229，修复自行部署中变量定义的bug，已测试通过
@@ -18,6 +18,7 @@
 ```
 https://api.search2ai.online/v1
 ```
+![效果示例](pictures/url.png)
 
 ![效果示例](pictures/BotGem.png)
 
@@ -47,7 +48,7 @@ https://api.search2ai.online/v1
 - 支持更多大模型
 - 支持browserless自建
 - 开放自定义prompt
-- 提升搜索稳定性与速度
+- 提升网页访问的速度
 
 # 特别鸣谢
 - [webpilot](https://github.com/webpilot-ai/Webpilot)
