@@ -61,8 +61,8 @@ async function handleModelsRequest(apiBase, apiKey) {
 }
 
 // 搜索函数，调用您的搜索服务
-async function custom_search(query) {
-    console.log(`正在使用查询进行自定义搜索: ${query}`);
+async function search(query) {
+    console.log(`正在使用查询进行自定义搜索: ${JSON.stringify(query)}`);
     try {
         const response = await fetch('https://search.search2ai.one', {
             method: 'POST',
@@ -93,18 +93,46 @@ async function custom_search(query) {
         }
 
         const data = await response.json();
-        const filteredData = data.map(item => ({
-            snippet: item.snippet,
-            content: item.content
-        }));
         console.log('自定义搜索服务调用完成');
-        return JSON.stringify(filteredData); // 将处理后的数据转换为 JSON 字符串
+        return JSON.stringify(data); 
         }catch (error) {
-                console.error(`在 custom_search 函数中捕获到错误: ${error}`);
-                return `在 custom_search 函数中捕获到错误: ${error}`;
+                console.error(`在 search 函数中捕获到错误: ${error}`);
+                return `在 search 函数中捕获到错误: ${error}`;
             }
 }
+// 爬取函数，调用你的爬取服务
+async function crawer(url) {
+    console.log(`正在使用 URL 进行自定义爬取:${JSON.stringify(url)}`);
+    try {
+        const response = await fetch('https://crawer.search2ai.one', {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                url: url
+            })
+        });
 
+        if (!response.ok) {
+            console.error(`API 请求失败, 状态码: ${response.status}`);
+            return `API 请求失败, 状态码: ${response.status}`;
+        }
+
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            console.error("收到的响应不是有效的 JSON 格式");
+            return "收到的响应不是有效的 JSON 格式";
+        }
+
+        const data = await response.json();
+        console.log('自定义爬取服务调用完成');
+        return JSON.stringify(data); 
+    } catch (error) {
+        console.error(`在 crawl 函数中捕获到错误: ${error}`);
+        return `在 crawer 函数中捕获到错误: ${error}`;
+    }
+}
 async function handleRequest(request, apiBase, apiKey) {
     console.log(`开始处理请求: ${request.method} ${request.url}`);
 
@@ -137,14 +165,30 @@ async function handleRequest(request, apiBase, apiKey) {
         {
             type: "function",
             function: {
-            name: "custom_search",
+            name: "search",
             description: "search for news and factors",
             parameters: {
                 type: "object",
                 properties: {
-                    query: { type: "string" }
+                    query: { type: "string","description": "The prompt to search."}
                 },
                 required: ["query"]
+                }
+            }
+        },
+        {
+            type: "function",
+            function: {
+                name: "crawer",
+                description: "Get the content of a specified webpage，when the user wants to know more about a news or a factor",
+                parameters: {
+                    type: "object",
+                    properties: {
+                        url: {
+                            type: "string",
+                            description: "The URL of the webpage"},
+                    },
+                    required: ["url"],
                 }
             }
         }
@@ -177,41 +221,47 @@ async function handleRequest(request, apiBase, apiKey) {
     if (data.choices[0].message.tool_calls) {
         const toolCalls = data.choices[0].message.tool_calls;
         const availableFunctions = {
-            custom_search: custom_search,
+            "search": search,
+            "crawer": crawer        
         };
-
-        
         for (const toolCall of toolCalls) {
             const functionName = toolCall.function.name;
             const functionToCall = availableFunctions[functionName];
             const functionArgs = JSON.parse(toolCall.function.arguments);
-            const functionResponse = await functionToCall(functionArgs.query);
+            let functionResponse;
+            if (functionName === 'search') {
+                functionResponse = await functionToCall(functionArgs.query);
+            } else if (functionName === 'crawer') {
+                functionResponse = await functionToCall(functionArgs.url);
+            }
+            console.log('工具调用的响应: ', functionResponse);
             messages.push({
                 tool_call_id: toolCall.id,
                 role: "tool",
                 name: functionName,
                 content: functionResponse, 
+ 
             });
-            if (functionName === "custom_search") {
+            if (functionName === "search" || functionName === "crawer") {
                 calledCustomFunction = true;
             }
         }
         console.log('准备发送第二次 OpenAI API 请求');
+        const requestBody = {
+            model: model,
+            messages: messages,
+            stream: stream
+        };
+        console.log('请求体内容: ', JSON.stringify(requestBody, null, 2)); // 打印请求体内容
         const secondResponse = await fetch(`${apiBase}/v1/chat/completions`, {
             method: 'POST',
             headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${apiKey}` // 使用从请求的 headers 中获取的 API key
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Authorization': `Bearer ${apiKey}` // 使用从请求的 headers 中获取的 API key
             },
-            body: JSON.stringify({
-                model: model,
-                messages: messages,
-                stream: stream
-        })
+            body: JSON.stringify(requestBody)
         });
-
-
         console.log('响应状态码: 200');
         if (stream) {
     // 使用 SSE 格式
