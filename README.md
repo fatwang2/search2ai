@@ -13,7 +13,8 @@
 - V0.0.1，20231218，开源代码，可直接在cloudflare的worker里部署上线
 
 # 产品介绍
-- search2ai，搜索+OpenAI，让大模型可以根据你的意图判断是否联网，不需要安装任何插件，也不需要更换key，直接在你常用的 OpenAI 三方客户端替换自定义域名为下面的地址即可，支持 Cloudflare 自行部署 
+- search2ai，支持搜索、联网的 OpenAI，而且是让大模型会根据你的输入判断是否联网，不是每次都联网搜索，不需要安装任何插件，也不需要更换key，直接在你常用的 OpenAI 三方客户端替换自定义域名为下面的地址即可，支持 Cloudflare 自行部署 
+- demo站体验地址：[demo站](https://search2ai.online/demo)，根据提示使用你的key，更换自定义域名即可（注意demo站地址不用加v1）
 
 ```
 https://api.search2ai.online/v1
@@ -27,7 +28,11 @@ https://api.search2ai.online/v1
 ![效果示例](pictures/Opencat.png)
 
 # 使用方法
-- 直接使用：替换客户端自定义域名为上述地址即可
+- 直接使用：替换客户端自定义域名为上述地址即可，下面是两个例子
+
+![效果示例](pictures/Opencat2.png)
+![效果示例](pictures/NextChat.png)
+
 - 自行部署(有难度，需谨慎)
 1. 复制[search2ai](https://search2ai.online/cloudflare)的代码，不需要任何修改！在cloudflare的worker里部署，上线后的worker的地址可作为你接口调用时的自定义域名地址，注意拼接，worker地址仅代表v1前的部分 XXX/v1/chat/completions
 
@@ -43,10 +48,9 @@ https://api.search2ai.online/v1
 3. worker里配置触发器-自定义域名，国内直接访问worker的地址可能会出问题，需要替换为自定义域名
 
 # 后续迭代
-- 接口兼容非对话场景
-- 支持更多搜索服务
-- 支持更多大模型
-- 支持browserless自建
+- 接口兼容非对话场景，如图片、语音等
+- 支持duckduckgo搜索
+- 支持Gemini
 - 开放自定义prompt
 - 提升网页访问的速度
 
