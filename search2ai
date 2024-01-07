@@ -23,17 +23,13 @@ addEventListener('fetch', event => {
     if (url.pathname === '/v1/chat/completions') {
         console.log('接收到 fetch 事件');
         event.respondWith(handleRequest(event.request, apiBase, apiKey));
-    } else if (url.pathname === '/v1/models') {
-        // 调用 handleModelsRequest 并确保在响应中包含 CORS 头部
-        event.respondWith(handleModelsRequest(apiBase, apiKey).then(response => {
+    } else {
+        event.respondWith(handleOtherRequest(apiBase, apiKey, event.request, url.pathname).then(response => {
             return new Response(response.body, {
                 status: response.status,
                 headers: { ...response.headers, ...corsHeaders }
             });
         }));
-    }else {
-        console.log('请求的路径不是 /v1/chat/completions 或 /v1/models，返回404状态码');
-        event.respondWith(new Response('Not found', {status: 404, headers: corsHeaders}));
     }
 })
 // 处理 OPTIONS 请求
@@ -44,20 +40,35 @@ function handleOptions() {
     });
 }
 
-async function handleModelsRequest(apiBase, apiKey) {
-    console.log('进入 handleModelsRequest');
-    const response = await fetch(`${apiBase}/v1/models`, {
-        headers: {
-            'Authorization': `Bearer ${apiKey}`
-        }
+async function handleOtherRequest(apiBase, apiKey, request, pathname) {
+    // 创建一个新的 Headers 对象，复制原始请求的所有头部，但不包括 Host 头部
+    const headers = new Headers(request.headers);
+    headers.delete('Host');
+    headers.set('Authorization', `Bearer ${apiKey}`);
+
+    // 对所有请求，直接转发
+    const response = await fetch(`${apiBase}${pathname}`, {
+        method: request.method,
+        headers: headers,
+        body: request.body
     });
 
-    const data = await response.json();
-    console.log('退出 handleModelsRequest');
-    return new Response(JSON.stringify(data), {
-        status: response.status,
-        headers: corsHeaders
-    });
+    let data;
+    if (pathname.startsWith('/v1/audio/')) {
+        // 如果路径以 '/v1/audio/' 开头，处理音频文件
+        data = await response.arrayBuffer();
+        return new Response(data, {
+            status: response.status,
+            headers: { 'Content-Type': 'audio/mpeg', ...corsHeaders }
+        });
+    } else {
+        // 对于其他路径，处理 JSON 数据
+        data = await response.json();
+        return new Response(JSON.stringify(data), {
+            status: response.status,
+            headers: corsHeaders
+        });
+    }
 }
 
 // 搜索函数，调用您的搜索服务
@@ -145,63 +156,58 @@ async function handleRequest(request, apiBase, apiKey) {
     const requestData = await request.json();
     console.log('请求数据:', requestData);
     const stream = requestData.stream || false;
-    // 找到最新的用户消息
     const userMessages = requestData.messages.filter(message => message.role === 'user');
     const latestUserMessage = userMessages[userMessages.length - 1];
-    const user_input = latestUserMessage ? latestUserMessage.content : "";
-    // 设置默认值
-    const defaultModel = "gpt-3.5-turbo-1106";
-    const defaultSystemContent = "你是一个信息检索专家，擅长以简洁明了的语言回答我的问题。如果用户的问题涉及未知的新闻或事件或事实，则通过search函数网络搜索，请回复答案以及你参考的相关链接;如果搜索结果摘要无法回答问题，则调用crawer函数获取第一个搜索结果链接的内容，尝试回答；如果当用户指定某个链接的时候，也一样获取链接内容进行回答";
-    const model = requestData.model || defaultModel; // 使用默认 model 如果未提供
-    const system_content = requestData.messages[0]?.content || defaultSystemContent; // 使用默认 system_content 如果未提供
-    
+    const model = requestData.model
+    const isContentArray = Array.isArray(latestUserMessage.content);
+    const defaultMaxTokens = 3000;
+    const maxTokens = requestData.max_tokens || defaultMaxTokens; // 使用默认 max_tokens 如果未提供
+
     const body = JSON.stringify({
         model: model,
-        messages: [
-        { role: "system", content: system_content},
-        { role: "user", content: user_input }
-        ],
-        tools: [
-        {
-            type: "function",
-            function: {
-            name: "search",
-            description: "search for news and factors",
-            parameters: {
-                type: "object",
-                properties: {
-                    query: { type: "string","description": "The query to search."}
+        messages: requestData.messages, 
+        max_tokens: maxTokens, 
+        ...(isContentArray ? {} : {
+            tools: [
+                {
+                    type: "function",
+                    function: {
+                        name: "search",
+                        description: "search for news and factors",
+                        parameters: {
+                            type: "object",
+                            properties: {
+                                query: { type: "string","description": "The query to search."}
+                            },
+                            required: ["query"]
+                        }
+                    }
                 },
-                required: ["query"]
+                {
+                    type: "function",
+                    function: {
+                        name: "crawer",
+                        description: "Get the content of a specified webpage",
+                        parameters: {
+                            type: "object",
+                            properties: {
+                                url: {
+                                    type: "string",
+                                    description: "The URL of the webpage"},
+                            },
+                            required: ["url"],
+                        }
+                    }
                 }
-            }
-        },
-        {
-            type: "function",
-            function: {
-                name: "crawer",
-                description: "Get the content of a specified webpage",
-                parameters: {
-                    type: "object",
-                    properties: {
-                        url: {
-                            type: "string",
-                            description: "The URL of the webpage"},
-                    },
-                    required: ["url"],
-                }
-            }
-        }
-    ],
-    tool_choice: "auto"
-});
-
-    console.log('解析请求文本完成，准备调用 OpenAI API');
+            ],
+            tool_choice: "auto"
+        })
+    });
+    console.log('请求体:', body);
     const openAIResponse = await fetch(`${apiBase}/v1/chat/completions`, {
         method: 'POST',
         headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
         'Authorization': `Bearer ${apiKey}` // 使用从请求的 headers 中获取的 API key
         },
         body: body
