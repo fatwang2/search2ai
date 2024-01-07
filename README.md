@@ -2,6 +2,7 @@
 [telegram频道 ](https://sum4all.one/telegram)
 
 # 版本更新
+- V0.0.10，20230107，支持duckduckgo搜索，无需注册，默认地址已切换，自行部署的修改search_service即可
 - V0.0.9，20230105，支持搜索结果回复URL、支持访问URL
 - V0.0.8，20231230，支持接入Serper的Google搜索，注册领取2500次额度，6个月有效
 - V0.0.7，20231230，支持接入Serpapi的Google搜索，每个月免费100次，个人够用，注册简单
@@ -13,12 +14,9 @@
 - V0.0.1，20231218，开源代码，可直接在cloudflare的worker里部署上线
 
 # 产品介绍
-- search2ai，支持搜索、联网的 OpenAI，而且是让大模型会根据你的输入判断是否联网，不是每次都联网搜索，不需要安装任何插件，也不需要更换key，直接在你常用的 OpenAI 三方客户端替换自定义域名为下面的地址即可，支持 Cloudflare 自行部署 
+- search2ai，支持搜索、联网的 OpenAI，而且是让大模型会根据你的输入判断是否联网，不是每次都联网搜索，不需要安装任何插件，也不需要更换key，直接在你常用的 OpenAI 三方客户端替换自定义地址即可，也支持 Cloudflare 自行部署 
 - demo站体验地址：[demo站](https://search2ai.online/demo)，根据提示使用你的key，更换自定义域名即可（注意demo站地址不用加v1）
 
-```
-https://api.search2ai.online/v1
-```
 ![效果示例](pictures/url.png)
 
 ![效果示例](pictures/BotGem.png)
@@ -28,8 +26,10 @@ https://api.search2ai.online/v1
 ![效果示例](pictures/Opencat.png)
 
 # 使用方法
-- 直接使用：替换客户端自定义域名为上述地址即可，下面是两个例子
-
+- 直接使用：替换客户端自定义域名为下面地址即可
+```
+https://api.search2ai.online/v1
+```
 ![效果示例](pictures/Opencat2.png)
 ![效果示例](pictures/NextChat.png)
 
@@ -38,7 +38,7 @@ https://api.search2ai.online/v1
 
 2. worker中配置变量
 - APIBASE：如果你在用 OpenAI 三方代理，可在这里填入，注意不需要加v1，非必填
-- SEARCH_SERVICE：暂时支持google、bing、serpapi、serper，必填
+- SEARCH_SERVICE：暂时支持google、bing、serpapi、serper、duckduckgo，必填
 - BING_KEY：如选bing搜索必填，请自行搜索教程，申请地址 https://search2ai.online/bing
 - GOOGLE_CX：如选Google搜索必填，Search engine ID，请自行搜索教程，申请地址 https://search2ai.online/googlecx
 - GOOGLE_KEY：如选Google搜索必填，API key，申请地址 https://search2ai.online/googlekey
@@ -49,7 +49,6 @@ https://api.search2ai.online/v1
 
 # 后续迭代
 - 接口兼容非对话场景，如图片、语音等
-- 支持duckduckgo搜索
 - 支持Gemini
 - 开放自定义prompt
 - 提升网页访问的速度
