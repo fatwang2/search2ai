@@ -130,6 +130,10 @@ async function handleRequest(req, res, apiBase, apiKey) {
             },
             body: JSON.stringify(requestBody)
         });
+        if (!secondResponse) {
+            console.log('secondResponse is undefined');
+            return;
+        }
         console.log('响应状态码:', secondResponse.status);
         if (calledCustomFunction) {
             if (secondResponse) {
@@ -138,7 +142,6 @@ async function handleRequest(req, res, apiBase, apiKey) {
                     res.statusCode = secondResponse.status;
                     res.setHeader('Content-Type', 'text/event-stream');
                     res.end(secondResponse.body);
-                    
                 } else {
                     // 使用普通 JSON 格式
                     const data = await secondResponse.json();
@@ -148,8 +151,8 @@ async function handleRequest(req, res, apiBase, apiKey) {
                 }
             }
             return { status: res.statusCode };
-
         }
+
         if (!calledCustomFunction) {
             // 没有调用自定义函数，直接返回原始回复
             console.log('响应状态码: 200');
