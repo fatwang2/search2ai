@@ -10,7 +10,7 @@ async function handleRequest(req, res, apiBase, apiKey) {
         res.status(405).send('Method Not Allowed');
         return;
     }
-    const requestData = await req.json();
+    const requestData = req.body;
     console.log('请求数据:', requestData);
     const stream = requestData.stream || false;
     const userMessages = requestData.messages.filter(message => message.role === 'user');
