@@ -42,7 +42,7 @@ export default async (req, res) => {
     }
     if (req.url === '/v1/chat/completions') {
         console.log('接收到 fetch 事件');
-        const response = await handleRequest(req, apiBase, apiKey);
+        const response = await handleRequest(req, res, apiBase, apiKey);
         res.status(response.status).set({...response.headers, ...corsHeaders}).send(response.body);
     } else {
         const response = await handleOtherRequest(apiBase, apiKey, req, req.url);
