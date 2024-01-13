@@ -126,8 +126,11 @@ async function handleRequest(req, res, apiBase, apiKey) {
     console.log('更新后的 messages 数组:', messages);
 
     // 检查是否有函数调用
+    console.log('开始检查是否有函数调用');
+
     let calledCustomFunction = false;
     if (data.choices[0].message.tool_calls) {
+
         const toolCalls = data.choices[0].message.tool_calls;
         const availableFunctions = {
             "search": search,
@@ -159,8 +162,10 @@ async function handleRequest(req, res, apiBase, apiKey) {
             }
         }
         console.log('处理完自定义函数调用后的 messages 数组:', messages);
-
-        console.log('准备发送第二次 OpenAI API 请求');
+        }else {
+            console.log('没有发现函数调用');
+        }
+        console.log('结束检查是否有函数调用');
         const requestBody = {
             model: model,
             messages: messages,
@@ -206,7 +211,7 @@ async function handleRequest(req, res, apiBase, apiKey) {
 
         // 现在你可以安全地访问 secondResponse.status，因为如果 fetch 失败，你的代码将不会到达这里
         console.log('响应状态码:', secondResponse.status);
-        console.log(calledCustomFunction);
+        
         if (calledCustomFunction) {
             if (secondResponse) {
                 if (typeof secondResponse !== 'undefined') {
