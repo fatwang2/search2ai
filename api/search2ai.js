@@ -12,6 +12,7 @@ async function handleRequest(req, res, apiBase, apiKey) {
     }
     const requestData = req.body;
     console.log('请求数据:', requestData);
+    console.log('API base:', apiBase);
     const stream = requestData.stream || false;
     const userMessages = requestData.messages.filter(message => message.role === 'user');
     const latestUserMessage = userMessages[userMessages.length - 1];
