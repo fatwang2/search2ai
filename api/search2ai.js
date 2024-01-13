@@ -230,7 +230,7 @@ async function handleRequest(req, res, apiBase, apiKey) {
 
         if (!calledCustomFunction) {
             // 没有调用自定义函数，直接返回原始回复
-            console.log('响应状态码: 200');
+            console.log('没有调用自定义函数，返回原始回复');
 
             // 设置响应头
             res.statusCode = 200;
