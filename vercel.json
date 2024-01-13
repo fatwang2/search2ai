@@ -1,6 +1,5 @@
 {
     "rewrites": [
-        { "source": "/v1/chat/completions", "destination": "/api/index.js" },
-        { "source": "/v1/audio/(.*)", "destination": "/api/index.js" }
+        { "source": "/(.*)", "destination": "/api/index.js" }
     ]
 }

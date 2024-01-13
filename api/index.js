@@ -1,7 +1,6 @@
 // index.js 示例
 import fetch from 'node-fetch';
-import search2ai from './api/search2ai';
-
+import search2ai from './search2ai';
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', // 允许的HTTP方法
