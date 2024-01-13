@@ -1,6 +1,6 @@
 // index.js 示例
 import fetch from 'node-fetch';
-import search2ai from './search2ai.js';
+import handleRequest from './search2ai.js';
 import process from 'process';
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -42,7 +42,7 @@ export default async (req, res) => {
     }
     if (req.url === '/v1/chat/completions') {
         console.log('接收到 fetch 事件');
-        const response = await search2ai.handleRequest(req, apiBase, apiKey);        
+        const response = await handleRequest(req, apiBase, apiKey);
         res.status(response.status).set({...response.headers, ...corsHeaders}).send(response.body);
     } else {
         const response = await handleOtherRequest(apiBase, apiKey, req, req.url);
