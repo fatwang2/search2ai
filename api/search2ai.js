@@ -298,5 +298,4 @@ async function handleRequest(req, res, apiBase, apiKey) {
             });
         }
     }
-    }
     module.exports = handleRequest;
