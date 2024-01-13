@@ -1,4 +1,5 @@
 import fetch from 'node-fetch';
+import process from 'process';
 import { config } from 'dotenv';
 config();
 async function search(query) {

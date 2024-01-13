@@ -1,6 +1,7 @@
 // index.js 示例
 import fetch from 'node-fetch';
 import search2ai from './search2ai.js';
+import process from 'process';
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', // 允许的HTTP方法
@@ -17,7 +18,7 @@ function handleOptions() {
 }
 
 // 主处理函数
-module.exports = async (req, res) => {
+export default async (req, res) => {
     console.log(`收到请求: ${req.method} ${req.url}`);
     const url = new URL(req.url);
     const apiBase = process.env.APIBASE || 'https://api.openai.com';
