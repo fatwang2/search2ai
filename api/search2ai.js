@@ -105,7 +105,8 @@ async function handleRequest(req, res, apiBase, apiKey) {
         res.end('解析 OpenAI 响应失败');
         return { status: 500 };
     }
-    
+    console.log('确认解析后的 data 对象:', data);
+
     if (!data) {
         console.error('OpenAI 响应没有数据');
         res.statusCode = 500;
