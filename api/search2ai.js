@@ -1,6 +1,7 @@
 import fetch from 'node-fetch';
 import search from '../units/search.js';
 import crawer from '../units/crawer.js';
+import { corsHeaders } from './index.js';
 import { config } from 'dotenv';
 config();
 

@@ -2,7 +2,7 @@
 import fetch from 'node-fetch';
 import handleRequest from './search2ai.js';
 import process from 'process';
-const corsHeaders = {
+export const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', // 允许的HTTP方法
     'Access-Control-Allow-Headers': 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization',
