@@ -97,6 +97,8 @@ async function handleRequest(req, res, apiBase, apiKey) {
     let data;
     try {
         data = await openAIResponse.json();
+        console.log('解析后的数据:', data);
+
     } catch (error) {
         console.error('解析 OpenAI 响应时发生错误:', error);
         res.statusCode = 500;
@@ -113,7 +115,15 @@ async function handleRequest(req, res, apiBase, apiKey) {
 
     console.log('OpenAI API 响应接收完成，检查是否需要调用自定义函数');
     let messages = requestData.messages;
+    if (!data.choices || data.choices.length === 0 || !data.choices[0].message) {
+        console.error('OpenAI 响应数据格式不正确');
+        res.statusCode = 500;
+        res.end('OpenAI 响应数据格式不正确');
+        return { status: 500 };
+    }
+    
     messages.push(data.choices[0].message);
+    
     // 检查是否有函数调用
     let calledCustomFunction = false;
     if (data.choices[0].message.tool_calls) {
