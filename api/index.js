@@ -46,21 +46,24 @@ module.exports = async (req, res) => {
         res.end('欢迎体验search2ai，让你的大模型自由联网！');
         return;
     }
-    if (req.url === '/v1/chat/completions') {
-        console.log('接收到 fetch 事件');
-        const response = await handleRequest(req, res, apiBase, apiKey);
+    try {
+        let response;
+        if (req.url === '/v1/chat/completions') {
+            console.log('接收到 fetch 事件');
+            response = await handleRequest(req, res, apiBase, apiKey);
+        } else {
+            response = await handleOtherRequest(apiBase, apiKey, req, req.url);
+        }
+    
         res.statusCode = response.status;
         Object.entries({...response.headers, ...corsHeaders}).forEach(([key, value]) => {
             res.setHeader(key, value);
         });
         res.end(response.body);
-    } else {
-        const response = await handleOtherRequest(apiBase, apiKey, req, req.url);
-        res.statusCode = response.status;
-        Object.entries({...response.headers, ...corsHeaders}).forEach(([key, value]) => {
-            res.setHeader(key, value);
-        });
-        res.end(response.body);
+    } catch (error) {
+        console.error('请求处理时发生错误:', error);
+        res.statusCode = 500;
+        res.end('Internal Server Error');
     }
 };
 
