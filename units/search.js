@@ -1,6 +1,6 @@
-const fetch = require('node-fetch');
-require('dotenv').config();
-
+import fetch from 'node-fetch';
+import { config } from 'dotenv';
+config();
 async function search(query) {
     console.log(`正在使用查询进行自定义搜索: ${JSON.stringify(query)}`);
     try {

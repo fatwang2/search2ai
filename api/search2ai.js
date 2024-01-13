@@ -1,7 +1,8 @@
-const fetch = require('node-fetch');
-const { search } = require('../units/search');
-const { crawer } = require('../units/crawer');
-require('dotenv').config();
+import fetch from 'node-fetch';
+import { search } from '../units/search';
+import { crawer } from '../units/crawer';
+import { config } from 'dotenv';
+config();
 
 async function handleRequest(req, apiBase, apiKey) {
     if (req.method !== 'POST') {

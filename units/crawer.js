@@ -1,4 +1,4 @@
-const fetch = require('node-fetch');
+import fetch from 'node-fetch';
 
 // 爬取函数，调用你的爬取服务
 async function crawer(url) {

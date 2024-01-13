@@ -1,6 +1,6 @@
 // index.js 示例
-const fetch = require('node-fetch');
-const search2ai = require('./api/search2ai');
+import fetch from 'node-fetch';
+import search2ai from './api/search2ai';
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
