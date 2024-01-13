@@ -131,6 +131,7 @@ async function handleRequest(req, res, apiBase, apiKey) {
             body: JSON.stringify(requestBody)
         });
         console.log('响应状态码: 200');
+    if (calledCustomFunction) {
         if (stream) {
             // 使用 SSE 格式
             res.statusCode = secondResponse.status;
