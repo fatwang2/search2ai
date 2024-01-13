@@ -238,22 +238,20 @@ async function handleRequest(req, res, apiBase, apiKey) {
             // 没有调用自定义函数，直接返回原始回复
             console.log('没有调用自定义函数，返回原始回复');
 
-            // 设置响应头
-            res.statusCode = 200;
-            Object.entries(corsHeaders).forEach(([key, value]) => {
-                res.setHeader(key, value);
-            });
-
             if (stream) {
                 // 使用 SSE 格式
-                res.setHeader('Content-Type', 'text/event-stream');
-                res.end(jsonToStream(data));
+                console.log('Using SSE format');
+                const sseStream = jsonToStream(data);
+                res.writeHead(200, { 'Content-Type': 'text/event-stream', ...corsHeaders });
+                res.end(sseStream);
             } else {
                 // 使用普通 JSON 格式
-                res.setHeader('Content-Type', 'application/json');
+                console.log('Using JSON format');
+                res.writeHead(200, { 'Content-Type': 'application/json', ...corsHeaders });
                 res.end(JSON.stringify(data));
             }
 
+            console.log('Response sent');
             return { status: 200 };
         }
 

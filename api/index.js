@@ -50,22 +50,23 @@ module.exports = async (req, res) => {
     try {
         if (req.url === '/v1/chat/completions') {
             console.log('接收到 fetch 事件');
-            response = await handleRequest(req, res, apiBase, apiKey);
+            response = await handleRequest(req, apiBase, apiKey);
         } else {
             response = await handleOtherRequest(apiBase, apiKey, req, req.url);
         }
     } catch (error) {
         console.error('请求处理时发生错误:', error);
-        res.statusCode = 500;
-        res.end('Internal Server Error');
-        return;
+        response = { status: 500, body: 'Internal Server Error' };
     }
-    
+
     if (!response || typeof response.status !== 'number') {
         console.error('无效的响应对象:', response);
-        res.statusCode = 500;
-        res.end('Invalid response object');
-        return;
+        response = { status: 500, body: 'Invalid response object' };
+    }
+
+    if (!res.headersSent) {
+        res.statusCode = response.status;
+        res.end(response.body);
     }
     
     res.statusCode = response.status;
