@@ -121,19 +121,26 @@ async function handleRequest(req, res, apiBase, apiKey) {
             stream: stream
         };
 
-        const secondResponse = await fetch(`${apiBase}/v1/chat/completions`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Authorization': `Bearer ${apiKey}` // 使用从请求的 headers 中获取的 API key
-            },
-            body: JSON.stringify(requestBody)
-        });
-        if (!secondResponse) {
-            console.log('secondResponse is undefined');
-            return;
+        let secondResponse;
+        try {
+            secondResponse = await fetch(`${apiBase}/v1/chat/completions`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${apiKey}` // 使用从请求的 headers 中获取的 API key
+                },
+                body: JSON.stringify(requestBody)
+            });
+        } catch (error) {
+            console.error('在尝试获取 secondResponse 时发生错误:', error);
+            // 这里你可以选择如何处理错误，例如你可以返回一个错误响应
+            res.statusCode = 500;
+            res.end('在尝试获取 secondResponse 时发生错误');
+            return { status: 500 };
         }
+
+        // 现在你可以安全地访问 secondResponse.status，因为如果 fetch 失败，你的代码将不会到达这里
         console.log('响应状态码:', secondResponse.status);
         if (calledCustomFunction) {
             if (secondResponse) {
