@@ -33,5 +33,4 @@ async function crawer(url) {
         return `在 crawer 函数中捕获到错误: ${error}`;
     }
 }
-
-module.exports = crawer;
+export default crawer;

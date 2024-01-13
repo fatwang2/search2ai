@@ -203,4 +203,4 @@ async function handleRequest(req, apiBase, apiKey) {
         }
     }
     }
-module.exports = handleRequest;
+export default handleRequest;

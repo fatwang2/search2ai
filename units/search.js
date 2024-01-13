@@ -41,4 +41,4 @@ async function search(query) {
     }
 }
 
-module.exports = search;
+export default search;
