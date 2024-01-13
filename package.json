@@ -2,9 +2,9 @@
   "name": "search2ai",
   "version": "0.1.0",
   "description": "联网大模型",
-  "main": "index.js",
+  "main": "api/index.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "node api/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "fatwang2",
