@@ -10,7 +10,7 @@ async function handleRequest(req, res, apiBase, apiKey) {
         console.log(`不支持的请求方法: ${req.method}`);
         res.statusCode = 405;
         res.end('Method Not Allowed');
-        return;
+        return { status: 405 };
     }
     const requestData = req.body;
     console.log('请求数据:', requestData);
@@ -78,7 +78,7 @@ async function handleRequest(req, res, apiBase, apiKey) {
         console.log('数据中没有选择项');
         res.statusCode = 500;
         res.end('数据中没有选择项');
-        return;
+        return { status: 500 };
     }
 
     console.log('OpenAI API 响应接收完成，检查是否需要调用自定义函数');
@@ -131,86 +131,88 @@ async function handleRequest(req, res, apiBase, apiKey) {
             body: JSON.stringify(requestBody)
         });
         console.log('响应状态码:', secondResponse.status);
-    if (calledCustomFunction) {
-        if (secondResponse) {
+        if (calledCustomFunction) {
+            if (secondResponse) {
+                if (stream) {
+                    // 使用 SSE 格式
+                    res.statusCode = secondResponse.status;
+                    res.setHeader('Content-Type', 'text/event-stream');
+                    res.end(secondResponse.body);
+                    
+                } else {
+                    // 使用普通 JSON 格式
+                    const data = await secondResponse.json();
+                    res.statusCode = 200;
+                    res.setHeader('Content-Type', 'application/json');
+                    res.end(JSON.stringify(data));
+                }
+            }
+            return { status: res.statusCode };
+
+        }
+        if (!calledCustomFunction) {
+            // 没有调用自定义函数，直接返回原始回复
+            console.log('响应状态码: 200');
+
+            // 设置响应头
+            res.statusCode = 200;
+            Object.entries(corsHeaders).forEach(([key, value]) => {
+                res.setHeader(key, value);
+            });
+
             if (stream) {
                 // 使用 SSE 格式
-                res.statusCode = secondResponse.status;
                 res.setHeader('Content-Type', 'text/event-stream');
-                res.end(secondResponse.body);
+                res.end(jsonToStream(data));
             } else {
                 // 使用普通 JSON 格式
-                const data = await secondResponse.json();
-                res.statusCode = 200;
                 res.setHeader('Content-Type', 'application/json');
                 res.end(JSON.stringify(data));
             }
+
+            return { status: 200 };
         }
-    }
-    if (!calledCustomFunction) {
-        // 没有调用自定义函数，直接返回原始回复
-        console.log('响应状态码: 200');
+
         // 创建一个将 JSON 数据转换为 SSE 格式的流的函数
         function jsonToStream(jsonData) {
-        const encoder = new TextEncoder();
+            const encoder = new TextEncoder();
 
-        return new ReadableStream({
-            start(controller) {
-                // 将消息内容分割为单个字符
-                const characters = Array.from(jsonData.choices[0].message.content);
+            return new ReadableStream({
+                start(controller) {
+                    // 将消息内容分割为单个字符
+                    const characters = Array.from(jsonData.choices[0].message.content);
 
-                // 为每个字符创建一个新的 JSON 对象
-                for (let i = 0; i < characters.length; i++) {
-                    const character = characters[i];
-                    const newJsonData = {
-                        id: jsonData.id,
-                        object: 'chat.completion.chunk',
-                        created: jsonData.created,
-                        model: jsonData.model,
-                        choices: [
-                            {
-                                index: 0,
-                                delta: {
-                                    content: character
-                                },
-                                logprobs: null,
-                                finish_reason: i === characters.length - 1 ? 'stop' : null
-                            }
-                        ],
-                        system_fingerprint: jsonData.system_fingerprint
-                    };
+                    // 为每个字符创建一个新的 JSON 对象
+                    for (let i = 0; i < characters.length; i++) {
+                        const character = characters[i];
+                        const newJsonData = {
+                            id: jsonData.id,
+                            object: 'chat.completion.chunk',
+                            created: jsonData.created,
+                            model: jsonData.model,
+                            choices: [
+                                {
+                                    index: 0,
+                                    delta: {
+                                        content: character
+                                    },
+                                    logprobs: null,
+                                    finish_reason: i === characters.length - 1 ? 'stop' : null
+                                }
+                            ],
+                            system_fingerprint: jsonData.system_fingerprint
+                        };
 
-                    // 将新的 JSON 对象编码为一个新的 SSE 事件，然后加入 StreamReader
-                    controller.enqueue(encoder.encode(`data: ${JSON.stringify(newJsonData)}\n\n`));
+                        // 将新的 JSON 对象编码为一个新的 SSE 事件，然后加入 StreamReader
+                        controller.enqueue(encoder.encode(`data: ${JSON.stringify(newJsonData)}\n\n`));
+                    }
+
+                    // 添加一个表示结束的 SSE 事件
+                    controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+                    controller.close();
                 }
-
-                // 添加一个表示结束的 SSE 事件
-                controller.enqueue(encoder.encode('data: [DONE]\n\n'));
-                controller.close();
-            }
-        });
-    }
-
-        
-        if (stream) {
-            // 使用 SSE 格式
-            const sseStream = jsonToStream(data);
-            res.statusCode = 200;
-            res.setHeader('Content-Type', 'text/event-stream');
-            Object.entries(corsHeaders).forEach(([key, value]) => {
-                res.setHeader(key, value);
             });
-            res.end(sseStream);
-        } else {
-            // 使用普通 JSON 格式
-            res.statusCode = 200;
-            res.setHeader('Content-Type', 'application/json');
-            Object.entries(corsHeaders).forEach(([key, value]) => {
-                res.setHeader(key, value);
-            });
-            res.end(JSON.stringify(data));
         }
-}
-}
-}
-module.exports = handleRequest;
+    }
+    }
+    module.exports = handleRequest;
