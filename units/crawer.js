@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+const fetch = require('node-fetch');
 
 // 爬取函数，调用你的爬取服务
 async function crawer(url) {
@@ -33,4 +33,4 @@ async function crawer(url) {
         return `在 crawer 函数中捕获到错误: ${error}`;
     }
 }
-export default crawer;
+module.exports = crawer;

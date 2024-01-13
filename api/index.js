@@ -1,8 +1,8 @@
 // index.js 示例
-import fetch from 'node-fetch';
-import handleRequest from './search2ai.mjs';
-import process from 'process';
-export const corsHeaders = {
+const fetch = require('node-fetch');
+const handleRequest = require('./search2ai.js');
+const process = require('process');
+const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', // 允许的HTTP方法
     'Access-Control-Allow-Headers': 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization',
@@ -18,7 +18,7 @@ function handleOptions() {
 }
 
 // 主处理函数
-export default async (req, res) => {
+module.exports = async (req, res) => {
     console.log(`收到请求: ${req.method} ${req.url}`);
     const apiBase = process.env.APIBASE || 'https://api.openai.com';
     const authHeader = req.headers['authorization']; // 从请求的 headers 中获取 Authorization
@@ -63,6 +63,7 @@ export default async (req, res) => {
         res.end(response.body);
     }
 };
+module.exports.corsHeaders = corsHeaders;
 
 async function handleOtherRequest(apiBase, apiKey, req, pathname) {
     // 创建一个新的 Headers 对象，复制原始请求的所有头部，但不包括 Host 头部

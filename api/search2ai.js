@@ -1,8 +1,8 @@
-import fetch from 'node-fetch';
-import search from '../units/search.mjs';
-import crawer from '../units/crawer.mjs';
-import { corsHeaders } from './index.mjs';
-import { config } from 'dotenv';
+const fetch = require('node-fetch');
+const search = require('../units/search.js');
+const crawer = require('../units/crawer.js');
+const { corsHeaders } = require('./index.js');
+const { config } = require('dotenv');
 config();
 
 async function handleRequest(req, res, apiBase, apiKey) {
@@ -212,4 +212,5 @@ async function handleRequest(req, res, apiBase, apiKey) {
         }
 }
 }
-export default handleRequest;
+}
+module.exports = handleRequest;

@@ -1,6 +1,6 @@
-import fetch from 'node-fetch';
-import process from 'process';
-import { config } from 'dotenv';
+const fetch = require('node-fetch');
+const process = require('process');
+const { config } = require('dotenv');
 config();
 async function search(query) {
     console.log(`正在使用查询进行自定义搜索: ${JSON.stringify(query)}`);
@@ -42,4 +42,4 @@ async function search(query) {
     }
 }
 
-export default search;
+module.exports = search;

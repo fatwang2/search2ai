@@ -1,11 +1,10 @@
 {
   "name": "search2ai",
   "version": "0.1.0",
-  "type": "module",
   "description": "联网大模型",
-  "main": "api/index.mjs",
+  "main": "api/index.js",
   "scripts": {
-    "start": "node api/index.mjs",
+    "start": "node api/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "fatwang2",
