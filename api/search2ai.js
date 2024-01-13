@@ -1,9 +1,15 @@
 const fetch = require('node-fetch');
 const search = require('../units/search.js');
 const crawer = require('../units/crawer.js');
-const { corsHeaders } = require('./index.js');
 const { config } = require('dotenv');
 config();
+
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', // 允许的HTTP方法
+    'Access-Control-Allow-Headers': 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization',
+    'Access-Control-Max-Age': '86400', // 预检请求结果的缓存时间
+};
 
 async function handleRequest(req, res, apiBase, apiKey) {
     if (req.method !== 'POST') {
@@ -67,17 +73,27 @@ async function handleRequest(req, res, apiBase, apiKey) {
     const openAIResponse = await fetch(`${apiBase}/v1/chat/completions`, {
         method: 'POST',
         headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}` // 使用从请求的 headers 中获取的 API key
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
         },
         body: body
-    });
-    const data = await openAIResponse.json();
-    console.log('OpenAI API 响应状态码:', openAIResponse.status);
-    if (!data.choices || data.choices.length === 0) {
-        console.log('数据中没有选择项');
+    }).catch(error => console.error('请求 OpenAI API 时发生错误:', error));
+    
+    if (!openAIResponse || !openAIResponse.ok) {
+        console.error('无效的 OpenAI 响应:', openAIResponse);
         res.statusCode = 500;
-        res.end('数据中没有选择项');
+        res.end('OpenAI API 请求失败');
+        return { status: 500 };
+    }
+    
+    const data = await openAIResponse.json().catch(error => {
+        console.error('解析 OpenAI 响应时发生错误:', error);
+        res.statusCode = 500;
+        res.end('解析 OpenAI 响应失败');
+        return null;
+    });
+    
+    if (!data) {
         return { status: 500 };
     }
 
@@ -128,17 +144,35 @@ async function handleRequest(req, res, apiBase, apiKey) {
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
-                    'Authorization': `Bearer ${apiKey}` // 使用从请求的 headers 中获取的 API key
+                    'Authorization': `Bearer ${apiKey}`
                 },
                 body: JSON.stringify(requestBody)
             });
         } catch (error) {
             console.error('在尝试获取 secondResponse 时发生错误:', error);
-            // 这里你可以选择如何处理错误，例如你可以返回一个错误响应
             res.statusCode = 500;
-            res.end('在尝试获取 secondResponse 时发生错误');
+            res.end('第二次 OpenAI API 请求失败');
             return { status: 500 };
         }
+        
+        if (!secondResponse || !secondResponse.ok) {
+            console.error('无效的 secondResponse:', secondResponse);
+            res.statusCode = 500;
+            res.end('第二次 OpenAI API 请求失败');
+            return { status: 500 };
+        }
+        
+        const secondData = await secondResponse.json().catch(error => {
+            console.error('解析 secondResponse 时发生错误:', error);
+            res.statusCode = 500;
+            res.end('解析 secondResponse 失败');
+            return null;
+        });
+        
+        if (!secondData) {
+            return { status: 500 };
+        }
+        
 
         // 现在你可以安全地访问 secondResponse.status，因为如果 fetch 失败，你的代码将不会到达这里
         console.log('响应状态码:', secondResponse.status);
