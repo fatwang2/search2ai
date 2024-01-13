@@ -106,7 +106,6 @@ async function handleRequest(req, res, apiBase, apiKey) {
         return { status: 500 };
     }
     console.log('确认解析后的 data 对象:', data);
-
     if (!data) {
         console.error('OpenAI 响应没有数据');
         res.statusCode = 500;
@@ -124,7 +123,8 @@ async function handleRequest(req, res, apiBase, apiKey) {
     }
     
     messages.push(data.choices[0].message);
-    
+    console.log('更新后的 messages 数组:', messages);
+
     // 检查是否有函数调用
     let calledCustomFunction = false;
     if (data.choices[0].message.tool_calls) {
@@ -138,23 +138,28 @@ async function handleRequest(req, res, apiBase, apiKey) {
             const functionToCall = availableFunctions[functionName];
             const functionArgs = JSON.parse(toolCall.function.arguments);
             let functionResponse;
-            if (functionName === 'search') {
-                functionResponse = await functionToCall(functionArgs.query);
-            } else if (functionName === 'crawer') {
-                functionResponse = await functionToCall(functionArgs.url);
-            }
-            console.log('工具调用的响应: ', functionResponse);
-            messages.push({
-                tool_call_id: toolCall.id,
-                role: "tool",
-                name: functionName,
-                content: functionResponse, 
-
-            });
+            try {
+                if (functionName === 'search') {
+                    functionResponse = await functionToCall(functionArgs.query);
+                } else if (functionName === 'crawer') {
+                    functionResponse = await functionToCall(functionArgs.url);
+                }
+                console.log('工具调用的响应: ', functionResponse);
+                messages.push({
+                    tool_call_id: toolCall.id,
+                    role: "tool",
+                    name: functionName,
+                    content: functionResponse, 
+                });
+            } catch (error) {
+            console.error(`调用工具函数 ${functionName} 时发生错误:`, error);
+        }
             if (functionName === "search" || functionName === "crawer") {
                 calledCustomFunction = true;
             }
         }
+        console.log('处理完自定义函数调用后的 messages 数组:', messages);
+
         console.log('准备发送第二次 OpenAI API 请求');
         const requestBody = {
             model: model,
