@@ -1,6 +1,6 @@
 // index.js 示例
 import fetch from 'node-fetch';
-import handleRequest from './search2ai.js';
+import handleRequest from './search2ai.mjs';
 import process from 'process';
 export const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
