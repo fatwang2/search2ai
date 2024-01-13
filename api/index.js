@@ -20,7 +20,6 @@ function handleOptions() {
 // 主处理函数
 export default async (req, res) => {
     console.log(`收到请求: ${req.method} ${req.url}`);
-    const url = new URL(req.url);
     const apiBase = process.env.APIBASE || 'https://api.openai.com';
     const authHeader = req.headers['authorization']; // 从请求的 headers 中获取 Authorization
 
@@ -37,16 +36,16 @@ export default async (req, res) => {
         res.status(optionsResponse.status).set(optionsResponse.headers).send();
         return;
     }
-    if (url.pathname === '/') {
+    if (req.url === '/') {
         res.status(200).send('欢迎体验search2ai，让你的大模型自由联网！');
         return;
     }
-    if (url.pathname === '/v1/chat/completions') {
+    if (req.url === '/v1/chat/completions') {
         console.log('接收到 fetch 事件');
         const response = await search2ai.handleRequest(req, apiBase, apiKey);        
         res.status(response.status).set({...response.headers, ...corsHeaders}).send(response.body);
     } else {
-        const response = await handleOtherRequest(apiBase, apiKey, req, url.pathname);
+        const response = await handleOtherRequest(apiBase, apiKey, req, req.url);
         res.status(response.status).set(response.headers).send(response.body);
     }
 };
@@ -67,7 +66,8 @@ async function handleOtherRequest(apiBase, apiKey, req, pathname) {
     let data;
     if (pathname.startsWith('/v1/audio/')) {
         // 如果路径以 '/v1/audio/' 开头，处理音频文件
-        data = await response.buffer();
+        const arrayBuffer = await response.arrayBuffer();
+        data = Buffer.from(arrayBuffer);        
         return {
             status: response.status,
             headers: { 'Content-Type': 'audio/mpeg', ...corsHeaders },
