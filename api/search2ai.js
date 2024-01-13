@@ -206,6 +206,7 @@ async function handleRequest(req, res, apiBase, apiKey) {
 
         // 现在你可以安全地访问 secondResponse.status，因为如果 fetch 失败，你的代码将不会到达这里
         console.log('响应状态码:', secondResponse.status);
+        console.log(calledCustomFunction);
         if (calledCustomFunction) {
             if (secondResponse) {
                 if (typeof secondResponse !== 'undefined') {
