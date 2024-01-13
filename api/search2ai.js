@@ -70,14 +70,22 @@ async function handleRequest(req, res, apiBase, apiKey) {
         })
     });
     console.log('请求体:', body);
-    const openAIResponse = await fetch(`${apiBase}/v1/chat/completions`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
-        },
-        body: body
-    }).catch(error => console.error('请求 OpenAI API 时发生错误:', error));
+    let openAIResponse;
+    try {
+        openAIResponse = await fetch(`${apiBase}/v1/chat/completions`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: body
+        });
+    } catch (error) {
+        console.error('请求 OpenAI API 时发生错误:', error);
+        res.statusCode = 500;
+        res.end('OpenAI API 请求失败');
+        return { status: 500 };
+    }
     
     if (!openAIResponse || !openAIResponse.ok) {
         console.error('无效的 OpenAI 响应:', openAIResponse);
@@ -86,14 +94,20 @@ async function handleRequest(req, res, apiBase, apiKey) {
         return { status: 500 };
     }
     
-    const data = await openAIResponse.json().catch(error => {
+    let data;
+    try {
+        data = await openAIResponse.json();
+    } catch (error) {
         console.error('解析 OpenAI 响应时发生错误:', error);
         res.statusCode = 500;
         res.end('解析 OpenAI 响应失败');
-        return null;
-    });
+        return { status: 500 };
+    }
     
     if (!data) {
+        console.error('OpenAI 响应没有数据');
+        res.statusCode = 500;
+        res.end('OpenAI 响应没有数据');
         return { status: 500 };
     }
 

@@ -63,7 +63,6 @@ module.exports = async (req, res) => {
         res.end(response.body);
     }
 };
-module.exports.corsHeaders = corsHeaders;
 
 async function handleOtherRequest(apiBase, apiKey, req, pathname) {
     // 创建一个新的 Headers 对象，复制原始请求的所有头部，但不包括 Host 头部
