@@ -37,7 +37,10 @@ module.exports = async (req, res) => {
         res.status(optionsResponse.status).set(optionsResponse.headers).send();
         return;
     }
-
+    if (url.pathname === '/') {
+        res.status(200).send('欢迎体验search2ai，让你的大模型自由联网！');
+        return;
+    }
     if (url.pathname === '/v1/chat/completions') {
         console.log('接收到 fetch 事件');
         const response = await search2ai.handleRequest(req, apiBase, apiKey);        
