@@ -27,26 +27,40 @@ export default async (req, res) => {
     if (authHeader) {
         apiKey = authHeader.split(' ')[1]; // 从 Authorization 中获取 API key
     } else {
-        res.status(400).send('Authorization header is missing');
+        res.statusCode = 400;
+        res.end('Authorization header is missing');
         return;
     }
 
     if (req.method === 'OPTIONS') {
         const optionsResponse = handleOptions();
-        res.status(optionsResponse.status).set(optionsResponse.headers).send();
+        res.statusCode = optionsResponse.status;
+        Object.entries(optionsResponse.headers).forEach(([key, value]) => {
+            res.setHeader(key, value);
+        });
+        res.end();
         return;
     }
     if (req.url === '/') {
-        res.status(200).send('欢迎体验search2ai，让你的大模型自由联网！');
+        res.statusCode = 200;
+        res.end('欢迎体验search2ai，让你的大模型自由联网！');
         return;
     }
     if (req.url === '/v1/chat/completions') {
         console.log('接收到 fetch 事件');
         const response = await handleRequest(req, res, apiBase, apiKey);
-        res.status(response.status).set({...response.headers, ...corsHeaders}).send(response.body);
+        res.statusCode = response.status;
+        Object.entries({...response.headers, ...corsHeaders}).forEach(([key, value]) => {
+            res.setHeader(key, value);
+        });
+        res.end(response.body);
     } else {
         const response = await handleOtherRequest(apiBase, apiKey, req, req.url);
-        res.status(response.status).set(response.headers).send(response.body);
+        res.statusCode = response.status;
+        Object.entries({...response.headers, ...corsHeaders}).forEach(([key, value]) => {
+            res.setHeader(key, value);
+        });
+        res.end(response.body);
     }
 };
 
@@ -70,7 +84,7 @@ async function handleOtherRequest(apiBase, apiKey, req, pathname) {
         data = Buffer.from(arrayBuffer);        
         return {
             status: response.status,
-            headers: { 'Content-Type': 'audio/mpeg', ...corsHeaders },
+            headers: { ...response.headers, 'Content-Type': 'audio/mpeg', ...corsHeaders },
             body: data
         };
     } else {

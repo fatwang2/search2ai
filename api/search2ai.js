@@ -8,7 +8,8 @@ config();
 async function handleRequest(req, res, apiBase, apiKey) {
     if (req.method !== 'POST') {
         console.log(`不支持的请求方法: ${req.method}`);
-        res.status(405).send('Method Not Allowed');
+        res.statusCode = 405;
+        res.end('Method Not Allowed');
         return;
     }
     const requestData = req.body;
@@ -75,7 +76,8 @@ async function handleRequest(req, res, apiBase, apiKey) {
     console.log('OpenAI API 响应状态码:', openAIResponse.status);
     if (!data.choices || data.choices.length === 0) {
         console.log('数据中没有选择项');
-        res.status(500).send('数据中没有选择项');
+        res.statusCode = 500;
+        res.end('数据中没有选择项');
         return;
     }
 
@@ -131,11 +133,15 @@ async function handleRequest(req, res, apiBase, apiKey) {
         console.log('响应状态码: 200');
         if (stream) {
             // 使用 SSE 格式
-            res.status(secondResponse.status).setHeader('Content-Type', 'text/event-stream').send(secondResponse.body);
+            res.statusCode = secondResponse.status;
+            res.setHeader('Content-Type', 'text/event-stream');
+            res.end(secondResponse.body);
         } else {
             // 使用普通 JSON 格式
             const data = await secondResponse.json();
-            res.status(200).json(data);
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify(data));
         }
     }
     if (!calledCustomFunction) {
@@ -186,23 +192,21 @@ async function handleRequest(req, res, apiBase, apiKey) {
         if (stream) {
             // 使用 SSE 格式
             const sseStream = jsonToStream(data);
-            return new Response(sseStream,{
-                status: 200,
-                headers: { 
-                    'Content-Type': 'text/event-stream',
-                    ...corsHeaders, 
-                }
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'text/event-stream');
+            Object.entries(corsHeaders).forEach(([key, value]) => {
+                res.setHeader(key, value);
             });
+            res.end(sseStream);
         } else {
             // 使用普通 JSON 格式
-            return new Response(JSON.stringify(data), {
-                status: 200,
-                headers: { 
-                    'Content-Type': 'application/json',
-                    ...corsHeaders, 
-                }
-            }); 
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            Object.entries(corsHeaders).forEach(([key, value]) => {
+                res.setHeader(key, value);
+            });
+            res.end(JSON.stringify(data));
         }
-    }
-    }
+}
+}
 export default handleRequest;
