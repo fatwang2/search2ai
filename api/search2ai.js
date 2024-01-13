@@ -130,19 +130,21 @@ async function handleRequest(req, res, apiBase, apiKey) {
             },
             body: JSON.stringify(requestBody)
         });
-        console.log('响应状态码: 200');
+        console.log('响应状态码:', secondResponse.status);
     if (calledCustomFunction) {
-        if (stream) {
-            // 使用 SSE 格式
-            res.statusCode = secondResponse.status;
-            res.setHeader('Content-Type', 'text/event-stream');
-            res.end(secondResponse.body);
-        } else {
-            // 使用普通 JSON 格式
-            const data = await secondResponse.json();
-            res.statusCode = 200;
-            res.setHeader('Content-Type', 'application/json');
-            res.end(JSON.stringify(data));
+        if (secondResponse) {
+            if (stream) {
+                // 使用 SSE 格式
+                res.statusCode = secondResponse.status;
+                res.setHeader('Content-Type', 'text/event-stream');
+                res.end(secondResponse.body);
+            } else {
+                // 使用普通 JSON 格式
+                const data = await secondResponse.json();
+                res.statusCode = 200;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify(data));
+            }
         }
     }
     if (!calledCustomFunction) {
