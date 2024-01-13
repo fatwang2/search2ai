@@ -4,7 +4,7 @@ import crawer from '../units/crawer.js';
 import { config } from 'dotenv';
 config();
 
-async function handleRequest(req, apiBase, apiKey) {
+async function handleRequest(req, res, apiBase, apiKey) {
     if (req.method !== 'POST') {
         console.log(`不支持的请求方法: ${req.method}`);
         res.status(405).send('Method Not Allowed');
