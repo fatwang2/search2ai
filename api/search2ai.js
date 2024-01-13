@@ -186,14 +186,12 @@ async function handleRequest(req, res, apiBase, apiKey) {
         } catch (error) {
             console.error('在尝试获取 secondResponse 时发生错误:', error);
             res.statusCode = 500;
-            res.end('第二次 OpenAI API 请求失败');
             return { status: 500 };
         }
         
         if (!secondResponse || !secondResponse.ok) {
             console.error('无效的 secondResponse:', secondResponse);
             res.statusCode = 500;
-            res.end('第二次 OpenAI API 请求失败');
             return { status: 500 };
         }
         
