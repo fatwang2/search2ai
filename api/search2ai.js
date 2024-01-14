@@ -162,18 +162,12 @@ async function handleRequest(req, res, apiBase, apiKey) {
                 body: JSON.stringify(requestBody)
             });
             if (stream) {
-                console.log('开始处理流式响应...');
-                res.statusCode = secondResponse.status;
-                res.writeHead(200, { 'Content-Type': 'text/event-stream', ...corsHeaders });
-                // 逐步发送数据块
-                secondResponse.body.on('data', (chunk) => {
-                    res.write(chunk);
-                });
-
-                // 响应结束时关闭连接
-                secondResponse.body.on('end', () => {
-                    res.end();
-                });
+                console.log('返回流');
+                return {
+                    status: secondResponse.status,
+                    headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache',...corsHeaders },
+                    body: secondResponse.body
+                };
             }else {
                 // 使用普通 JSON 格式
                 const data = await secondResponse.json();
@@ -196,7 +190,8 @@ async function handleRequest(req, res, apiBase, apiKey) {
             // 使用 SSE 格式
             console.log('Using SSE format');
             const sseStream = jsonToStream(data);
-            res.writeHead(200, { 'Content-Type': 'text/event-stream', ...corsHeaders });
+            res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache',
+            ...corsHeaders });
 
             sseStream.on('data', (chunk) => {
                 res.write(chunk);

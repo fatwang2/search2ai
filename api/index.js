@@ -69,15 +69,10 @@ module.exports = async (req, res) => {
             res.setHeader(key, value);
         });
         if (response.body instanceof Stream) {
-            // If the body is a stream
-            response.body.on('data', (chunk) => {
-                res.write(chunk);
-            });
-            response.body.on('end', () => {
-                res.end();
-            });        
+            console.log('Sending response as a stream'); // 添加的日志
+            response.body.pipe(res);
         } else {
-            // Otherwise, send it as a string or Buffer
+            console.log('Sending response as a string or Buffer'); // 添加的日志
             res.end(response.body);
         }
     }
