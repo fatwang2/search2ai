@@ -163,6 +163,8 @@ async function handleRequest(req, res, apiBase, apiKey) {
         };
 
         let secondResponse;
+        console.log("第二次请求体:", JSON.stringify(requestBody, null, 2));
+
         try {
             secondResponse = await fetch(`${apiBase}/v1/chat/completions`, {
                 method: 'POST',
