@@ -116,7 +116,6 @@ async function handleRequest(req, res, apiBase, apiKey) {
 
     let calledCustomFunction = false;
     if (data.choices[0].message.tool_calls) {
-
         const toolCalls = data.choices[0].message.tool_calls;
         const availableFunctions = {
             "search": search,
@@ -127,36 +126,33 @@ async function handleRequest(req, res, apiBase, apiKey) {
             const functionToCall = availableFunctions[functionName];
             const functionArgs = JSON.parse(toolCall.function.arguments);
             let functionResponse;
-            try {
-                if (functionName === 'search') {
-                    functionResponse = await functionToCall(functionArgs.query);
-                } else if (functionName === 'crawer') {
-                    functionResponse = await functionToCall(functionArgs.url);
-                }
-                console.log('工具调用的响应: ', functionResponse);
-                messages.push({
-                    tool_call_id: toolCall.id,
-                    role: "tool",
-                    name: functionName,
-                    content: functionResponse, 
-                });
-            } catch (error) {
-            console.error(`调用工具函数 ${functionName} 时发生错误:`, error);
-        }
-            if (functionName === "search" || functionName === "crawer") {
-                calledCustomFunction = true;
+            if (functionName === 'search') {
+                functionResponse = await functionToCall(functionArgs.query);
+            } else if (functionName === 'crawer') {
+                functionResponse = await functionToCall(functionArgs.url);
             }
+            console.log('工具调用的响应: ', functionResponse);
+            messages.push({
+                tool_call_id: toolCall.id,
+                role: "tool",
+                name: functionName,
+                content: functionResponse, 
+            });
+            calledCustomFunction = true;
         }
         console.log('处理完自定义函数调用后的 messages 数组:', messages);
-        }else {
-            console.log('没有发现函数调用');
-        }
-        console.log('结束检查是否有函数调用');
-        const requestBody = {
+    } else {
+        console.log('没有发现函数调用');
+    }
+    console.log('结束检查是否有函数调用');
+    let requestBody;
+    if (calledCustomFunction) {
+        requestBody = {
             model: model,
             messages: messages,
             stream: stream
         };
+    }
         try {
             console.log("第五个消息内容:", JSON.stringify(messages[4], null, 2));
             let secondResponse = await fetch(`${apiBase}/v1/chat/completions`, {
