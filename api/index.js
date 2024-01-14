@@ -2,6 +2,7 @@
 const fetch = require('node-fetch');
 const handleRequest = require('./search2ai.js');
 const process = require('process');
+
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', // 允许的HTTP方法
@@ -60,13 +61,18 @@ module.exports = async (req, res) => {
         console.error('请求处理时发生错误:', error);
         response = { status: 500, body: 'Internal Server Error' };
     }
-    
     if (!res.headersSent) {
         res.statusCode = response.status;
         Object.entries({...response.headers, ...corsHeaders}).forEach(([key, value]) => {
             res.setHeader(key, value);
         });
-        res.end(response.body);
+        if (typeof response.body.pipe === 'function') {
+            // If the body is a stream, pipe it to the response
+            response.body.pipe(res);
+        } else {
+            // Otherwise, send it as a string or Buffer
+            res.end(response.body);
+        }
     }
     
 

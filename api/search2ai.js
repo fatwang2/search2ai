@@ -161,11 +161,12 @@ async function handleRequest(req, res, apiBase, apiKey) {
                 },
                 body: JSON.stringify(requestBody)
             });
-        if (stream) {
-                res.writeHead(200, { 'Content-Type': 'text/event-stream', ...corsHeaders });
+            if (stream) {
                 console.log('开始处理流式响应...');
+                res.statusCode = secondResponse.status;
+                res.writeHead(200, { 'Content-Type': 'text/event-stream', ...corsHeaders });
                 secondResponse.body.pipe(res);
-        }else {
+            }else {
                 // 使用普通 JSON 格式
                 const data = await secondResponse.json();
                 res.statusCode = secondResponse.status;
