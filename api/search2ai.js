@@ -3,6 +3,7 @@ const search = require('../units/search.js');
 const crawer = require('../units/crawer.js');
 const { config } = require('dotenv');
 const Stream = require('stream');
+
 config();
 
 const corsHeaders = {
@@ -130,7 +131,6 @@ async function handleRequest(req, res, apiBase, apiKey) {
             } else if (functionName === 'crawer') {
                 functionResponse = await functionToCall(functionArgs.url);
             }
-            console.log('工具调用的响应: ', functionResponse);
             messages.push({
                 tool_call_id: toolCall.id,
                 role: "tool",
@@ -161,22 +161,11 @@ async function handleRequest(req, res, apiBase, apiKey) {
                 },
                 body: JSON.stringify(requestBody)
             });
-    
-            if (!secondResponse.ok) {
-                const errorBody = await secondResponse.text();
-                console.error("Failed OpenAI API request with status:", secondResponse.status, "Response Body:", errorBody);
-                throw new Error('OpenAI API 请求失败');
-            }
-            if (stream) {
-                // 使用 SSE 格式
-                res.statusCode = secondResponse.status;
-                res.setHeader('Content-Type', 'text/event-stream');
-                await new Promise((resolve, reject) => {
-                    secondResponse.body.pipe(res);
-                    secondResponse.body.on('end', resolve);
-                    secondResponse.body.on('error', reject);
-                });
-            }else {
+        if (stream) {
+                res.writeHead(200, { 'Content-Type': 'text/event-stream', ...corsHeaders });
+                console.log('开始处理流式响应...');
+                secondResponse.body.pipe(res);
+        }else {
                 // 使用普通 JSON 格式
                 const data = await secondResponse.json();
                 res.statusCode = secondResponse.status;
@@ -189,7 +178,7 @@ async function handleRequest(req, res, apiBase, apiKey) {
                 res.statusCode = 500;
                 res.end('Internal Server Error');
                 responseSent = true;
-            }
+            } return;  
         }
     } else {
         // 没有调用自定义函数，直接返回原始回复
@@ -252,12 +241,6 @@ async function handleRequest(req, res, apiBase, apiKey) {
                     }
                 }
             });
-        }
-        if (!responseSent) {
-            res.statusCode = 200; // 或其他适当的状态码
-            res.setHeader('Content-Type', 'application/json');
-            res.end(JSON.stringify(data)); // 发送处理后的 data
-            responseSent = true;
         }
     }
 module.exports = handleRequest;
