@@ -160,12 +160,9 @@ async function handleRequest(req, res, apiBase, apiKey) {
             messages: messages,
             stream: stream
         };
-
-        let secondResponse;
-        console.log("第二次请求体:", JSON.stringify(requestBody, null, 2));
-
         try {
-            secondResponse = await fetch(`${apiBase}/v1/chat/completions`, {
+            console.log("第二次请求体:", JSON.stringify(requestBody, null, 2));
+            let secondResponse = await fetch(`${apiBase}/v1/chat/completions`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -176,6 +173,7 @@ async function handleRequest(req, res, apiBase, apiKey) {
             });
         
             if (!secondResponse.ok) {
+                console.error("Failed OpenAI API request with status:", secondResponse.status);
                 throw new Error('OpenAI API 请求失败');
             }
         
