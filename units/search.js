@@ -35,7 +35,7 @@ async function search(query) {
 
         const data = await response.json();
         console.log('自定义搜索服务调用完成');
-        return data; // 返回一个 JavaScript 对象，而不是一个 JSON 字符串
+        return JSON.stringify(data); 
     } catch (error) {
         console.error(`在 search 函数中捕获到错误: ${error}`);
         return `在 search 函数中捕获到错误: ${error}`;

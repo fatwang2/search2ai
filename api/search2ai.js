@@ -136,7 +136,7 @@ async function handleRequest(req, res, apiBase, apiKey) {
                 tool_call_id: toolCall.id,
                 role: "tool",
                 name: functionName,
-                content: JSON.stringify(functionResponse), // 将 functionResponse 转换为字符串
+                content: functionResponse, 
             });
             calledCustomFunction = true;
         }
