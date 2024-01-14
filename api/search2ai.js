@@ -265,4 +265,4 @@ async function handleRequest(req, res, apiBase, apiKey) {
             responseSent = true;
         }
     }
-    module.exports = handleRequest;
+module.exports = handleRequest;
