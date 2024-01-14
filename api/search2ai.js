@@ -12,14 +12,14 @@ const corsHeaders = {
 };
 
 async function handleRequest(req, res, apiBase, apiKey) {
-    let responseSent = false; // 新增标志位来跟踪响应是否已发送
+    let responseSent = false;
+    let responseData = { status: 200, body: '' }; // 初始化响应数据
 
-    if (req.method !== 'POST') {
-        console.log(`不支持的请求方法: ${req.method}`);
-        res.statusCode = 405;
-        res.end('Method Not Allowed');
-        return { status: 405 };
-    }
+    try {
+        if (req.method !== 'POST') {
+            console.log(`不支持的请求方法: ${req.method}`);
+            throw new Error('Method Not Allowed'); // 抛出错误
+        }
     const requestData = req.body;
     console.log('请求数据:', requestData);
     console.log('API base:', apiBase);

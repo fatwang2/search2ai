@@ -106,3 +106,4 @@ async function handleOtherRequest(apiBase, apiKey, req, pathname) {
         };
     }
 }
+}
