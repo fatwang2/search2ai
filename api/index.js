@@ -2,6 +2,8 @@
 const fetch = require('node-fetch');
 const handleRequest = require('./search2ai.js');
 const process = require('process');
+const Stream = require('stream');
+
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -66,9 +68,14 @@ module.exports = async (req, res) => {
         Object.entries({...response.headers, ...corsHeaders}).forEach(([key, value]) => {
             res.setHeader(key, value);
         });
-        if (typeof response.body.pipe === 'function') {
-            // If the body is a stream, pipe it to the response
-            response.body.pipe(res);
+        if (response.body instanceof Stream) {
+            // If the body is a stream
+            response.body.on('data', (chunk) => {
+                res.write(chunk);
+            });
+            response.body.on('end', () => {
+                res.end();
+            });        
         } else {
             // Otherwise, send it as a string or Buffer
             res.end(response.body);

@@ -165,7 +165,15 @@ async function handleRequest(req, res, apiBase, apiKey) {
                 console.log('开始处理流式响应...');
                 res.statusCode = secondResponse.status;
                 res.writeHead(200, { 'Content-Type': 'text/event-stream', ...corsHeaders });
-                secondResponse.body.pipe(res);
+                // 逐步发送数据块
+                secondResponse.body.on('data', (chunk) => {
+                    res.write(chunk);
+                });
+
+                // 响应结束时关闭连接
+                secondResponse.body.on('end', () => {
+                    res.end();
+                });
             }else {
                 // 使用普通 JSON 格式
                 const data = await secondResponse.json();
