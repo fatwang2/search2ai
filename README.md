@@ -2,6 +2,7 @@
 [telegram频道 ](https://sum4all.one/telegram)
 
 # 版本更新
+- V0.1.1，20230114，支持vercel一键部署，目前只适合喜欢折腾的人
 - V0.1.0，20230108，兼容非对话场景，图片、语音等，不再报错！
 - V0.0.10，20230107，支持duckduckgo搜索，无需注册，默认地址已切换，自行部署的修改search_service即可
 - V0.0.9，20230105，支持搜索结果回复URL、支持访问URL
@@ -27,14 +28,14 @@
 ![效果示例](pictures/Opencat.png)
 
 # 使用方法
-- 直接使用：替换客户端自定义域名为下面地址即可
+**直接使用：替换客户端自定义域名为下面地址即可**
 ```
 https://api.search2ai.online/v1
 ```
 ![效果示例](pictures/Opencat2.png)
 ![效果示例](pictures/NextChat.png)
 
-- 自行部署(有难度，需谨慎)
+**cloudflare worker部署(有难度，需谨慎)**
 1. 复制[search2ai](https://search2ai.online/cloudflare)的代码，不需要任何修改！在cloudflare的worker里部署，上线后的worker的地址可作为你接口调用时的自定义域名地址，注意拼接，worker地址仅代表v1前的部分 XXX/v1/chat/completions
 
 2. worker中配置变量
@@ -49,6 +50,16 @@ https://api.search2ai.online/v1
 
 3. worker里配置触发器-自定义域名，国内直接访问worker的地址可能会出问题，需要替换为自定义域名
 ![Alt text](pictures/域名.png)
+
+**vercel部署**
+
+特别说明：vercel项目暂不支持流式输出，且有10s响应限制，实际使用体验不佳，放出来主要是想等大神给我pull request
+
+一键部署
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Ffatwang2%2Fsearch2ai&env=SEARCH_SERVICE&envDescription=%E6%9A%82%E6%97%B6%E6%94%AF%E6%8C%81google%E3%80%81bing%E3%80%81serpapi%E3%80%81serper%E3%80%81duckduckgo%EF%BC%8C%E5%BF%85%E5%A1%AB)
+
+为保证更新，也可以先fork本项目后自己在vercel上部署
 
 # 后续迭代
 - 支持Gemini
