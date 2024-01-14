@@ -136,7 +136,7 @@ async function handleRequest(req, res, apiBase, apiKey) {
                 tool_call_id: toolCall.id,
                 role: "tool",
                 name: functionName,
-                content: functionResponse, 
+                content: JSON.stringify(functionResponse), // 将 functionResponse 转换为字符串
             });
             calledCustomFunction = true;
         }
@@ -152,7 +152,6 @@ async function handleRequest(req, res, apiBase, apiKey) {
             messages: messages,
             stream: stream
         };
-    }
         try {
             console.log("第五个消息内容:", JSON.stringify(messages[4], null, 2));
             let secondResponse = await fetch(`${apiBase}/v1/chat/completions`, {
@@ -199,26 +198,26 @@ async function handleRequest(req, res, apiBase, apiKey) {
             }
         }
 
-        if (!calledCustomFunction) {
-            // 没有调用自定义函数，直接返回原始回复
-            console.log('没有调用自定义函数，返回原始回复');
-
-            if (stream) {
-                // 使用 SSE 格式
-                console.log('Using SSE format');
-                const sseStream = jsonToStream(data);
-                res.writeHead(200, { 'Content-Type': 'text/event-stream', ...corsHeaders });
-                res.end(sseStream);
-            } else {
-                // 使用普通 JSON 格式
-                console.log('Using JSON format');
-                res.writeHead(200, { 'Content-Type': 'application/json', ...corsHeaders });
-                res.end(JSON.stringify(data));
-            }
-
-            console.log('Response sent');
-            return { status: 200 };
+    } else {
+        // 没有调用自定义函数，直接返回原始回复
+        console.log('没有调用自定义函数，返回原始回复');
+    
+        if (stream) {
+            // 使用 SSE 格式
+            console.log('Using SSE format');
+            const sseStream = jsonToStream(data);
+            res.writeHead(200, { 'Content-Type': 'text/event-stream', ...corsHeaders });
+            res.end(sseStream);
+        } else {
+            // 使用普通 JSON 格式
+            console.log('Using JSON format');
+            res.writeHead(200, { 'Content-Type': 'application/json', ...corsHeaders });
+            res.end(JSON.stringify(data));
         }
+    
+        console.log('Response sent');
+        return { status: 200 };
+    }
 
         // 创建一个将 JSON 数据转换为 SSE 格式的流的函数
         function jsonToStream(jsonData) {
@@ -266,16 +265,4 @@ async function handleRequest(req, res, apiBase, apiKey) {
             res.end(JSON.stringify(data)); // 发送处理后的 data
             responseSent = true;
         }
-
-    } catch (error) {
-        console.error('请求处理时发生错误:', error);
-        if (!responseSent) {
-            const statusCode = secondResponse ? secondResponse.status : 500;
-            res.statusCode = statusCode;
-            res.end('Internal Server Error');
-            responseSent = true;
-        }
-    }    
-} 
-
 module.exports = handleRequest;
