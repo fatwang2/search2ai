@@ -59,11 +59,6 @@ module.exports = async (req, res) => {
         response = { status: 500, body: 'Internal Server Error' };
     }
     
-    if (!response || typeof response.status !== 'number') {
-        console.error('无效的响应对象:', response);
-        response = { status: 500, body: 'Invalid response object' };
-    }
-    
     if (!res.headersSent) {
         res.statusCode = response.status;
         Object.entries({...response.headers, ...corsHeaders}).forEach(([key, value]) => {
