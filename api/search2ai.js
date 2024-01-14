@@ -72,7 +72,6 @@ async function handleRequest(req, res, apiBase, apiKey) {
             tool_choice: "auto"
         })
     });
-    console.log('请求体:', body);
     let openAIResponse;
     try {
         openAIResponse = await fetch(`${apiBase}/v1/chat/completions`, {
@@ -175,53 +174,36 @@ async function handleRequest(req, res, apiBase, apiKey) {
                 },
                 body: JSON.stringify(requestBody)
             });
-        } catch (error) {
-            console.error('在尝试获取 secondResponse 时发生错误:', error);
-            res.statusCode = 500;
-            return { status: 500 };
-        }
         
-        if (!secondResponse || !secondResponse.ok) {
-            console.error('无效的 secondResponse:', secondResponse);
-            res.statusCode = 500;
-            return { status: 500 };
-        }
+            if (!secondResponse.ok) {
+                throw new Error('OpenAI API 请求失败');
+            }
         
-        const secondData = await secondResponse.json().catch(error => {
-            console.error('解析 secondResponse 时发生错误:', error);
-            res.statusCode = 500;
-            res.end('解析 secondResponse 失败');
-            return null;
-        });
-        
-        if (!secondData) {
-            return { status: 500 };
-        }
-        
-
-        // 现在你可以安全地访问 secondResponse.status，因为如果 fetch 失败，你的代码将不会到达这里
-        console.log('响应状态码:', secondResponse.status);
-        
-        if (calledCustomFunction) {
-            if (secondResponse) {
-                if (typeof secondResponse !== 'undefined') {
-                    if (stream) {
-                        // 使用 SSE 格式
-                        res.statusCode = secondResponse.status;
-                        res.setHeader('Content-Type', 'text/event-stream');
-                        res.end(secondResponse.body);
-                    } else {
-                        // 使用普通 JSON 格式
-                        const data = await secondResponse.json();
-                        res.statusCode = 200;
-                        res.setHeader('Content-Type', 'application/json');
-                        res.end(JSON.stringify(data));
-                    }
-                } else {
-                    console.error('secondResponse is undefined');
+            if (stream) {
+                // 使用 SSE 格式
+                if (!responseSent) {
+                    res.statusCode = secondResponse.status;
+                    res.setHeader('Content-Type', 'text/event-stream');
+                    res.end(secondResponse.body);
+                    responseSent = true;
+                }
+            } else {
+                // 使用普通 JSON 格式
+                const data = await secondResponse.json();
+                if (!responseSent) {
+                    res.statusCode = secondResponse.status;
+                    res.setHeader('Content-Type', 'application/json');
+                    res.end(JSON.stringify(data));
+                    responseSent = true;
                 }
             }
-            return { status: res.statusCode };
+        } catch (error) {
+            console.error('请求处理时发生错误:', error);
+            if (!responseSent) {
+                res.statusCode = 500;
+                res.end('Internal Server Error');
+                responseSent = true;
+            }
         }
 
         if (!calledCustomFunction) {
