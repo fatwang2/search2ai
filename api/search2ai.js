@@ -13,12 +13,13 @@ const corsHeaders = {
 
 async function handleRequest(req, res, apiBase, apiKey) {
     let responseSent = false;
-    let responseData = { status: 200, body: '' }; // 初始化响应数据
-
     try {
         if (req.method !== 'POST') {
             console.log(`不支持的请求方法: ${req.method}`);
-            throw new Error('Method Not Allowed'); // 抛出错误
+            res.statusCode = 405;
+            res.end('Method Not Allowed');
+            responseSent = true;
+            return;
         }
     const requestData = req.body;
     console.log('请求数据:', requestData);
@@ -89,27 +90,11 @@ async function handleRequest(req, res, apiBase, apiKey) {
         return { status: 500 };
     }
     
-    if (!openAIResponse || !openAIResponse.ok) {
-        console.error('无效的 OpenAI 响应:', openAIResponse);
-        if (!responseSent) {
-            res.statusCode = 500;
-            res.end('OpenAI API 请求失败');
-            responseSent = true; // 更新标志位
-        }
-        return { status: 500 };
+    if (!openAIResponse.ok) {
+        throw new Error('OpenAI API 请求失败');
     }
-    
-    let data;
-    try {
-        data = await openAIResponse.json();
-        console.log('解析后的数据:', data);
 
-    } catch (error) {
-        console.error('解析 OpenAI 响应时发生错误:', error);
-        res.statusCode = 500;
-        res.end('解析 OpenAI 响应失败');
-        return { status: 500 };
-    }
+    let data = await openAIResponse.json();
     console.log('确认解析后的 data 对象:', data);
     if (!data) {
         console.error('OpenAI 响应没有数据');
@@ -298,5 +283,21 @@ async function handleRequest(req, res, apiBase, apiKey) {
                 }
             });
         }
+        if (!responseSent) {
+            res.statusCode = 200; // 或其他适当的状态码
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify(data)); // 发送处理后的 data
+            responseSent = true;
+        }
+
+    } catch (error) {
+        console.error('请求处理时发生错误:', error);
+        if (!responseSent) {
+            res.statusCode = 500;
+            res.end('Internal Server Error');
+            responseSent = true;
+        }
     }
-    module.exports = handleRequest;
+} 
+
+module.exports = handleRequest;
