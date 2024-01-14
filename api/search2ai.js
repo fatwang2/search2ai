@@ -12,6 +12,8 @@ const corsHeaders = {
 };
 
 async function handleRequest(req, res, apiBase, apiKey) {
+    let responseSent = false; // 新增标志位来跟踪响应是否已发送
+
     if (req.method !== 'POST') {
         console.log(`不支持的请求方法: ${req.method}`);
         res.statusCode = 405;
@@ -89,8 +91,11 @@ async function handleRequest(req, res, apiBase, apiKey) {
     
     if (!openAIResponse || !openAIResponse.ok) {
         console.error('无效的 OpenAI 响应:', openAIResponse);
-        res.statusCode = 500;
-        res.end('OpenAI API 请求失败');
+        if (!responseSent) {
+            res.statusCode = 500;
+            res.end('OpenAI API 请求失败');
+            responseSent = true; // 更新标志位
+        }
         return { status: 500 };
     }
     
