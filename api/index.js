@@ -20,6 +20,12 @@ function handleOptions() {
 // 主处理函数
 module.exports = async (req, res) => {
     console.log(`收到请求: ${req.method} ${req.url}`);
+    if (req.url === '/') {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'text/html');
+        res.end('<html><head><meta charset="UTF-8"></head><body><h1>欢迎体验search2ai，让你的大模型自由联网！</h1></body></html>');
+        return;
+    }
     const apiBase = process.env.APIBASE || 'https://api.openai.com';
     const authHeader = req.headers['authorization']; // 从请求的 headers 中获取 Authorization
 
@@ -41,11 +47,7 @@ module.exports = async (req, res) => {
         res.end();
         return;
     }
-    if (req.url === '/') {
-        res.statusCode = 200;
-        res.end('欢迎体验search2ai，让你的大模型自由联网！');
-        return;
-    }
+
     let response;
     try {
         if (req.url === '/v1/chat/completions') {

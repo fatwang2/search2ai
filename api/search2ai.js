@@ -2,6 +2,7 @@ const fetch = require('node-fetch');
 const search = require('../units/search.js');
 const crawer = require('../units/crawer.js');
 const { config } = require('dotenv');
+const Stream = require('stream');
 config();
 
 const corsHeaders = {
@@ -109,7 +110,6 @@ async function handleRequest(req, res, apiBase, apiKey) {
     
     messages.push(data.choices[0].message);
     console.log('更新后的 messages 数组:', messages);
-
     // 检查是否有函数调用
     console.log('开始检查是否有函数调用');
 
@@ -139,20 +139,19 @@ async function handleRequest(req, res, apiBase, apiKey) {
             });
             calledCustomFunction = true;
         }
-        console.log('处理完自定义函数调用后的 messages 数组:', messages);
     } else {
         console.log('没有发现函数调用');
     }
     console.log('结束检查是否有函数调用');
-    let requestBody;
+
+    // 如果调用了自定义函数，再次向 OpenAI API 发送请求
     if (calledCustomFunction) {
-        requestBody = {
+        let requestBody = {
             model: model,
             messages: messages,
             stream: stream
         };
         try {
-            console.log("第五个消息内容:", JSON.stringify(messages[4], null, 2));
             let secondResponse = await fetch(`${apiBase}/v1/chat/completions`, {
                 method: 'POST',
                 headers: {
@@ -162,31 +161,27 @@ async function handleRequest(req, res, apiBase, apiKey) {
                 },
                 body: JSON.stringify(requestBody)
             });
-        
+    
             if (!secondResponse.ok) {
-                const errorBody = await secondResponse.text(); // 或者 secondResponse.json()，取决于期望的格式
+                const errorBody = await secondResponse.text();
                 console.error("Failed OpenAI API request with status:", secondResponse.status, "Response Body:", errorBody);
                 throw new Error('OpenAI API 请求失败');
             }
-            
-        
             if (stream) {
                 // 使用 SSE 格式
-                if (!responseSent) {
-                    res.statusCode = secondResponse.status;
-                    res.setHeader('Content-Type', 'text/event-stream');
-                    res.end(secondResponse.body);
-                    responseSent = true;
-                }
-            } else {
+                res.statusCode = secondResponse.status;
+                res.setHeader('Content-Type', 'text/event-stream');
+                await new Promise((resolve, reject) => {
+                    secondResponse.body.pipe(res);
+                    secondResponse.body.on('end', resolve);
+                    secondResponse.body.on('error', reject);
+                });
+            }else {
                 // 使用普通 JSON 格式
                 const data = await secondResponse.json();
-                if (!responseSent) {
-                    res.statusCode = secondResponse.status;
-                    res.setHeader('Content-Type', 'application/json');
-                    res.end(JSON.stringify(data));
-                    responseSent = true;
-                }
+                res.statusCode = secondResponse.status;
+                res.setHeader('Content-Type', 'application/json');
+                res.end(JSON.stringify(data));
             }
         } catch (error) {
             console.error('请求处理时发生错误:', error);
@@ -196,40 +191,40 @@ async function handleRequest(req, res, apiBase, apiKey) {
                 responseSent = true;
             }
         }
-
     } else {
         // 没有调用自定义函数，直接返回原始回复
         console.log('没有调用自定义函数，返回原始回复');
-    
         if (stream) {
             // 使用 SSE 格式
             console.log('Using SSE format');
             const sseStream = jsonToStream(data);
             res.writeHead(200, { 'Content-Type': 'text/event-stream', ...corsHeaders });
-            res.end(sseStream);
+
+            sseStream.on('data', (chunk) => {
+                res.write(chunk);
+            });
+
+            sseStream.on('end', () => {
+                res.end();
+            });
         } else {
             // 使用普通 JSON 格式
             console.log('Using JSON format');
             res.writeHead(200, { 'Content-Type': 'application/json', ...corsHeaders });
             res.end(JSON.stringify(data));
         }
-    
+
         console.log('Response sent');
         return { status: 200 };
     }
-
-        // 创建一个将 JSON 数据转换为 SSE 格式的流的函数
         function jsonToStream(jsonData) {
-            const encoder = new TextEncoder();
+            const characters = Array.from(jsonData.choices[0].message.content);
+            let currentIndex = 0;
 
-            return new ReadableStream({
-                start(controller) {
-                    // 将消息内容分割为单个字符
-                    const characters = Array.from(jsonData.choices[0].message.content);
-
-                    // 为每个字符创建一个新的 JSON 对象
-                    for (let i = 0; i < characters.length; i++) {
-                        const character = characters[i];
+            return new Stream.Readable({
+                read() {
+                    if (currentIndex < characters.length) {
+                        const character = characters[currentIndex];
                         const newJsonData = {
                             id: jsonData.id,
                             object: 'chat.completion.chunk',
@@ -242,19 +237,19 @@ async function handleRequest(req, res, apiBase, apiKey) {
                                         content: character
                                     },
                                     logprobs: null,
-                                    finish_reason: i === characters.length - 1 ? 'stop' : null
+                                    finish_reason: currentIndex === characters.length - 1 ? 'stop' : null
                                 }
                             ],
                             system_fingerprint: jsonData.system_fingerprint
                         };
 
-                        // 将新的 JSON 对象编码为一个新的 SSE 事件，然后加入 StreamReader
-                        controller.enqueue(encoder.encode(`data: ${JSON.stringify(newJsonData)}\n\n`));
+                        const data = `data: ${JSON.stringify(newJsonData)}\n\n`;
+                        this.push(data, 'utf8');
+                        currentIndex++;
+                    } else {
+                        this.push('data: [DONE]\n\n', 'utf8');
+                        this.push(null);  // 结束流
                     }
-
-                    // 添加一个表示结束的 SSE 事件
-                    controller.enqueue(encoder.encode('data: [DONE]\n\n'));
-                    controller.close();
                 }
             });
         }
