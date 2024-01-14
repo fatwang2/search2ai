@@ -50,7 +50,7 @@ module.exports = async (req, res) => {
     try {
         if (req.url === '/v1/chat/completions') {
             console.log('接收到 fetch 事件');
-            response = await handleRequest(req, apiBase, apiKey);
+            response = await handleRequest(req, res,apiBase, apiKey);
         } else {
             response = await handleOtherRequest(apiBase, apiKey, req, req.url);
         }
