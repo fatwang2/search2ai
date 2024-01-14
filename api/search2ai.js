@@ -158,7 +158,7 @@ async function handleRequest(req, res, apiBase, apiKey) {
             stream: stream
         };
         try {
-            console.log("第二次请求体:", JSON.stringify(requestBody, null, 2));
+            console.log("第五个消息内容:", JSON.stringify(messages[4], null, 2));
             let secondResponse = await fetch(`${apiBase}/v1/chat/completions`, {
                 method: 'POST',
                 headers: {
