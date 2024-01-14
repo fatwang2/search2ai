@@ -10,7 +10,6 @@ const corsHeaders = {
     'Access-Control-Allow-Headers': 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range,Authorization',
     'Access-Control-Max-Age': '86400', // 预检请求结果的缓存时间
 };
-
 async function handleRequest(req, res, apiBase, apiKey) {
     let responseSent = false;
     try {
@@ -88,7 +87,6 @@ async function handleRequest(req, res, apiBase, apiKey) {
         res.end('OpenAI API 请求失败');
         return { status: 500 };
     }
-    
     if (!openAIResponse.ok) {
         throw new Error('OpenAI API 请求失败');
     }
@@ -101,7 +99,6 @@ async function handleRequest(req, res, apiBase, apiKey) {
         res.end('OpenAI 响应没有数据');
         return { status: 500 };
     }
-
     console.log('OpenAI API 响应接收完成，检查是否需要调用自定义函数');
     let messages = requestData.messages;
     if (!data.choices || data.choices.length === 0 || !data.choices[0].message) {
@@ -173,9 +170,11 @@ async function handleRequest(req, res, apiBase, apiKey) {
             });
         
             if (!secondResponse.ok) {
-                console.error("Failed OpenAI API request with status:", secondResponse.status);
+                const errorBody = await secondResponse.text(); // 或者 secondResponse.json()，取决于期望的格式
+                console.error("Failed OpenAI API request with status:", secondResponse.status, "Response Body:", errorBody);
                 throw new Error('OpenAI API 请求失败');
             }
+            
         
             if (stream) {
                 // 使用 SSE 格式
@@ -275,11 +274,12 @@ async function handleRequest(req, res, apiBase, apiKey) {
     } catch (error) {
         console.error('请求处理时发生错误:', error);
         if (!responseSent) {
-            res.statusCode = 500;
+            const statusCode = secondResponse ? secondResponse.status : 500;
+            res.statusCode = statusCode;
             res.end('Internal Server Error');
             responseSent = true;
         }
-    }
+    }    
 } 
 
 module.exports = handleRequest;
