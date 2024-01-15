@@ -293,44 +293,48 @@ async function handleRequest(request, apiBase, apiKey) {
     console.log('响应状态码: 200');
     // 创建一个将 JSON 数据转换为 SSE 格式的流的函数
     function jsonToStream(jsonData) {
-    const encoder = new TextEncoder();
+        const encoder = new TextEncoder();
+        const delay = 10; // 延迟0.01秒
 
-    return new ReadableStream({
-        start(controller) {
-            // 将消息内容分割为单个字符
-            const characters = Array.from(jsonData.choices[0].message.content);
+        return new ReadableStream({
+            start(controller) {
+                const characters = Array.from(jsonData.choices[0].message.content);
+                let i = 0;
 
-            // 为每个字符创建一个新的 JSON 对象
-            for (let i = 0; i < characters.length; i++) {
-                const character = characters[i];
-                const newJsonData = {
-                    id: jsonData.id,
-                    object: 'chat.completion.chunk',
-                    created: jsonData.created,
-                    model: jsonData.model,
-                    choices: [
-                        {
-                            index: 0,
-                            delta: {
-                                content: character
-                            },
-                            logprobs: null,
-                            finish_reason: i === characters.length - 1 ? 'stop' : null
-                        }
-                    ],
-                    system_fingerprint: jsonData.system_fingerprint
-                };
+                function pushCharacter() {
+                    if (i >= characters.length) {
+                        controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+                        controller.close();
+                    } else {
+                        const character = characters[i];
+                        const newJsonData = {
+                            id: jsonData.id,
+                            object: 'chat.completion.chunk',
+                            created: jsonData.created,
+                            model: jsonData.model,
+                            choices: [
+                                {
+                                    index: 0,
+                                    delta: {
+                                        content: character
+                                    },
+                                    logprobs: null,
+                                    finish_reason: i === characters.length - 1 ? 'stop' : null
+                                }
+                            ],
+                            system_fingerprint: jsonData.system_fingerprint
+                        };
 
-                // 将新的 JSON 对象编码为一个新的 SSE 事件，然后加入 StreamReader
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify(newJsonData)}\n\n`));
+                        controller.enqueue(encoder.encode(`data: ${JSON.stringify(newJsonData)}\n\n`));
+                        i++;
+                        setTimeout(pushCharacter, delay);
+                    }
+                }
+
+                pushCharacter();
             }
-
-            // 添加一个表示结束的 SSE 事件
-            controller.enqueue(encoder.encode('data: [DONE]\n\n'));
-            controller.close();
-        }
-    });
-}
+        });
+    }
 
     
     if (stream) {

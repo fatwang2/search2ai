@@ -2,6 +2,7 @@
 [telegram频道 ](https://sum4all.one/telegram)
 
 # 版本更新
+- V0.1.2，20230115，修复cloudflare worker版本非搜索场景下的流式输出问题
 - V0.1.1，20230114，支持vercel一键部署，目前只适合喜欢折腾的人
 - V0.1.0，20230108，兼容非对话场景，图片、语音等，不再报错！
 - V0.0.10，20230107，支持duckduckgo搜索，无需注册，默认地址已切换，自行部署的修改search_service即可
