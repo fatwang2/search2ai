@@ -216,35 +216,38 @@ async function handleRequest(req, res, apiBase, apiKey) {
 
             return new Stream.Readable({
                 read() {
-                    if (currentIndex < characters.length) {
-                        const character = characters[currentIndex];
-                        const newJsonData = {
-                            id: jsonData.id,
-                            object: 'chat.completion.chunk',
-                            created: jsonData.created,
-                            model: jsonData.model,
-                            choices: [
-                                {
-                                    index: 0,
-                                    delta: {
-                                        content: character
-                                    },
-                                    logprobs: null,
-                                    finish_reason: currentIndex === characters.length - 1 ? 'stop' : null
-                                }
-                            ],
-                            system_fingerprint: jsonData.system_fingerprint
-                        };
+                    const pushData = () => {
+                        if (currentIndex < characters.length) {
+                            const character = characters[currentIndex];
+                            const newJsonData = {
+                                id: jsonData.id,
+                                object: 'chat.completion.chunk',
+                                created: jsonData.created,
+                                model: jsonData.model,
+                                choices: [
+                                    {
+                                        index: 0,
+                                        delta: {
+                                            content: character
+                                        },
+                                        logprobs: null,
+                                        finish_reason: currentIndex === characters.length - 1 ? 'stop' : null
+                                    }
+                                ],
+                                system_fingerprint: jsonData.system_fingerprint
+                            };
 
-                        const data = `data: ${JSON.stringify(newJsonData)}\n\n`;
-                        this.push(data, 'utf8');
-                        currentIndex++;
-                    } else {
-                        this.push('data: [DONE]\n\n', 'utf8');
-                        this.push(null);  // 结束流
-                    }
+                            const data = `data: ${JSON.stringify(newJsonData)}\n\n`;
+                            this.push(data, 'utf8');
+                            currentIndex++;
+                        } else {
+                            this.push('data: [DONE]\n\n', 'utf8');
+                            this.push(null);  // 结束流
+                        }
+                    };
+
+                    setTimeout(pushData, 10);  // 延迟 0.01 秒
                 }
             });
-        }
-    }
+        }}
 module.exports = handleRequest;

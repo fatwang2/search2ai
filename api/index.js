@@ -3,7 +3,7 @@ const fetch = require('node-fetch');
 const handleRequest = require('./search2ai.js');
 const process = require('process');
 const Stream = require('stream');
-
+const http = require('http');
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -12,7 +12,6 @@ const corsHeaders = {
     'Access-Control-Max-Age': '86400', // 预检请求结果的缓存时间
 };
 
-// 处理 OPTIONS 请求
 function handleOptions() {
     return {
         status: 204,
@@ -20,7 +19,40 @@ function handleOptions() {
     };
 }
 
-// 主处理函数
+async function handleOtherRequest(apiBase, apiKey, req, pathname) {
+    // 创建一个新的 Headers 对象，复制原始请求的所有头部，但不包括 Host 头部
+    const headers = {...req.headers};
+    delete headers['host'];
+    headers['authorization'] = `Bearer ${apiKey}`;
+
+    // 对所有请求，直接转发
+    const response = await fetch(`${apiBase}${pathname}`, {
+        method: req.method,
+        headers: headers,
+        body: req.body
+    });
+
+    let data;
+    if (pathname.startsWith('/v1/audio/')) {
+        // 如果路径以 '/v1/audio/' 开头，处理音频文件
+        const arrayBuffer = await response.arrayBuffer();
+        data = Buffer.from(arrayBuffer);        
+        return {
+            status: response.status,
+            headers: { ...response.headers, 'Content-Type': 'audio/mpeg', ...corsHeaders },
+            body: data
+        };
+    } else {
+        // 对于其他路径，处理 JSON 数据
+        data = await response.json();
+        return {
+            status: response.status,
+            headers: corsHeaders,
+            body: JSON.stringify(data)
+        };
+    }
+}
+
 module.exports = async (req, res) => {
     console.log(`收到请求: ${req.method} ${req.url}`);
     if (req.url === '/') {
@@ -76,39 +108,36 @@ module.exports = async (req, res) => {
             res.end(response.body);
         }
     }
-    
+}
 
-async function handleOtherRequest(apiBase, apiKey, req, pathname) {
-    // 创建一个新的 Headers 对象，复制原始请求的所有头部，但不包括 Host 头部
-    const headers = {...req.headers};
-    delete headers['host'];
-    headers['authorization'] = `Bearer ${apiKey}`;
-
-    // 对所有请求，直接转发
-    const response = await fetch(`${apiBase}${pathname}`, {
-        method: req.method,
-        headers: headers,
-        body: req.body
+// 创建服务器
+const server = http.createServer((req, res) => {
+    let data = '';
+    req.on('data', chunk => {
+        data += chunk;
     });
+    req.on('end', () => {
+        try {
+            req.body = JSON.parse(data);
+            // 创建一个新的异步函数来处理请求
+            (async () => {
+                try {
+                    await module.exports(req, res);
+                } catch (err) {
+                    console.error('处理请求时发生错误:', err);
+                    res.statusCode = 500;
+                    res.end('Internal Server Error');
+                }
+            })();
+        } catch (error) {
+            res.statusCode = 400;
+            res.end('Invalid JSON');
+        }
+    });
+});
 
-    let data;
-    if (pathname.startsWith('/v1/audio/')) {
-        // 如果路径以 '/v1/audio/' 开头，处理音频文件
-        const arrayBuffer = await response.arrayBuffer();
-        data = Buffer.from(arrayBuffer);        
-        return {
-            status: response.status,
-            headers: { ...response.headers, 'Content-Type': 'audio/mpeg', ...corsHeaders },
-            body: data
-        };
-    } else {
-        // 对于其他路径，处理 JSON 数据
-        data = await response.json();
-        return {
-            status: response.status,
-            headers: corsHeaders,
-            body: JSON.stringify(data)
-        };
-    }
-}
-}
+// 在指定的端口上监听请求
+const PORT = 3014;
+server.listen(PORT, () => {
+    console.log(`Server is listening on port ${PORT}`);
+});

@@ -1,7 +1,7 @@
 const fetch = require('node-fetch');
 const process = require('process');
 const { config } = require('dotenv');
-config();
+config({ path: __dirname + '/../.env' });
 async function search(query) {
     console.log(`正在使用查询进行自定义搜索: ${JSON.stringify(query)}`);
     try {
