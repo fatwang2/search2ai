@@ -112,29 +112,39 @@ module.exports = async (req, res) => {
 
 // 创建服务器
 const server = http.createServer((req, res) => {
-    let data = '';
-    req.on('data', chunk => {
-        data += chunk;
-    });
-    req.on('end', () => {
-        try {
-            req.body = JSON.parse(data);
-            // 创建一个新的异步函数来处理请求
-            (async () => {
-                try {
-                    await module.exports(req, res);
-                } catch (err) {
-                    console.error('处理请求时发生错误:', err);
-                    res.statusCode = 500;
-                    res.end('Internal Server Error');
-                }
-            })();
-        } catch (error) {
-            res.statusCode = 400;
-            res.end('Invalid JSON');
-        }
-    });
+    // 只对 POST 请求读取请求体
+    if (req.method === 'POST') {
+        let data = '';
+        req.on('data', chunk => {
+            data += chunk;
+        });
+        req.on('end', () => {
+            try {
+                req.body = JSON.parse(data);
+            } catch (error) {
+                res.statusCode = 400;
+                res.end('Invalid JSON');
+                return;
+            }
+            processRequest(req, res);
+        });
+    } else {
+        // GET 和其他类型的请求直接处理
+        processRequest(req, res);
+    }
 });
+
+function processRequest(req, res) {
+    (async () => {
+        try {
+            await module.exports(req, res);
+        } catch (err) {
+            console.error('处理请求时发生错误:', err);
+            res.statusCode = 500;
+            res.end('Internal Server Error');
+        }
+    })();
+}
 
 // 在指定的端口上监听请求
 const PORT = process.env.PORT || 3014;
