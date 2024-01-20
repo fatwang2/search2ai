@@ -137,7 +137,7 @@ const server = http.createServer((req, res) => {
 });
 
 // 在指定的端口上监听请求
-const PORT = 3014;
+const PORT = process.env.PORT || 3014;
 server.listen(PORT, () => {
     console.log(`Server is listening on port ${PORT}`);
 });
