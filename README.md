@@ -2,6 +2,7 @@
 [telegram频道 ](https://sum4all.one/telegram)
 
 # 版本更新
+- V0.1.4，20240120，支持Zeabur一键部署，非常方便，强烈推荐！
 - V0.1.3，20240120，支持本地部署，可自行部署在自己的服务器上
 - V0.1.2，20240115，修复cloudflare worker版本非搜索场景下的流式输出问题
 - V0.1.1，20240114，支持vercel一键部署，目前只适合喜欢折腾的人
@@ -46,8 +47,13 @@ https://api.search2ai.online
 
 demo站体验地址：[demo站](https://search2ai.online/demo)，根据提示使用你的key，更换自定义域名即可
 
+**Zeabur一键部署（强烈推荐）**
 
-**本地部署(推荐)**
+点击按钮一键部署，按需配置变量即可
+
+[![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/A4HGYF?referralCode=fatwang2)
+
+**本地部署**
 1. 克隆仓库到本地
 ```
 git clone https://github.com/fatwang2/search2ai
