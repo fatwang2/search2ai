@@ -49,9 +49,13 @@ demo站体验地址：[demo站](https://search2ai.online/demo)，根据提示使
 
 **Zeabur一键部署（强烈推荐）**
 
-点击按钮一键部署，按需配置变量即可
+点击按钮即可一键部署，默认duckduckgo搜索，可自行切换
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/A4HGYF?referralCode=fatwang2)
+
+如需保持项目更新，建议先fork本仓库，再通过Zeabur部署你的分支
+
+[![Deployed on Zeabur](https://zeabur.com/deployed-on-zeabur-dark.svg)](https://zeabur.com?referralCode=fatwang2&utm_source=fatwang2&utm_campaign=oss)
 
 **本地部署**
 1. 克隆仓库到本地
