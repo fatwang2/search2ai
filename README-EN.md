@@ -8,6 +8,7 @@
 - V0.1.3, 20240120, Supports local deployment, can be deployed on your own server
 - V0.1.2, 20240115, Fixes streaming output issues in non-search scenarios for the cloudflare worker version
 - V0.1.1, 20240114, Supports one-click deployment with Vercel, currently suitable for those who like tinkering
+
 For more historical updates, please see [Version History](https://github.com/fatwang2/search2ai/releases)
 
 # Product Introduction
