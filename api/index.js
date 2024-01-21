@@ -80,9 +80,6 @@ module.exports = async (req, res) => {
         res.end('Authorization header is missing');
         return;
     }
-
-
-
     let response;
     try {
         if (req.url === '/v1/chat/completions') {

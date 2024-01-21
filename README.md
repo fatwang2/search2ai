@@ -1,3 +1,6 @@
+
+**简体中文** · [English](README-EN.md) 
+
 ## 用户交流
 [telegram频道 ](https://sum4all.one/telegram)
 
@@ -6,17 +9,7 @@
 - V0.1.3，20240120，支持本地部署，可自行部署在自己的服务器上
 - V0.1.2，20240115，修复cloudflare worker版本非搜索场景下的流式输出问题
 - V0.1.1，20240114，支持vercel一键部署，目前只适合喜欢折腾的人
-- V0.1.0，20240108，兼容非对话场景，图片、语音等，不再报错！
-- V0.0.10，20240107，支持duckduckgo搜索，无需注册，默认地址已切换，自行部署的修改search_service即可
-- V0.0.9，20240105，支持搜索结果回复URL、支持访问URL
-- V0.0.8，20231230，支持接入Serper的Google搜索，注册领取2500次额度，6个月有效
-- V0.0.7，20231230，支持接入Serpapi的Google搜索，每个月免费100次，个人够用，注册简单
-- V0.0.6，20231229，修复自行部署中变量定义的bug，已测试通过
-- V0.0.5，20231229，支持跨域请求，兼容BotGem移动端、ChatGPT-Next-Web等跨域请求的客户端
-- V0.0.4，20231220，支持Google、Bing搜索
-- V0.0.3，20231220，支持流式输出，适配OpenAI三方客户端
-- V0.0.2，20231218，支持OpenAI三方代理，在worker中配置APIBASE的变量为代理地址即可
-- V0.0.1，20231218，开源代码，可直接在cloudflare的worker里部署上线
+更多历史更新，请参见 [版本记录](https://github.com/fatwang2/search2ai/releases)
 
 # 产品介绍
 - search2ai，支持搜索、联网的 OpenAI，而且是让大模型会根据你的输入判断是否联网，不是每次都联网搜索，不需要安装任何插件，也不需要更换key，直接在你常用的 OpenAI 三方客户端替换自定义地址即可，也支持自行部署，不会影响使用 OpenAI 的其他功能，如画图、语音等 
@@ -31,6 +24,7 @@
         <td><img src="pictures/Opencat.png" alt="效果示例"></td>
     </tr>
 </table>
+
 
 # 使用方法
 **直接使用：替换客户端自定义域名为下面地址即可**
@@ -109,9 +103,11 @@ http://localhost:3014/v1/chat/completions
 
 # 后续迭代
 - 支持Gemini
-- 开放自定义prompt
-- 提升网页访问的速度
+- 支持Azure OpenAI
+- 修复Vercel项目流式输出问题
+- 提升流式输出的速度
+- 支持更多垂类搜索
 
 # 特别鸣谢
 - [webpilot](https://github.com/webpilot-ai/Webpilot)
-- [LobeChat](https://github.com/lobehub/lobe-chat?tab=MIT-1-ov-file)
+- [LobeChat](https://github.com/lobehub/lobe-chat)
