@@ -63,16 +63,6 @@ module.exports = async (req, res) => {
     }
     const apiBase = process.env.APIBASE || 'https://api.openai.com';
     const authHeader = req.headers['authorization']; // 从请求的 headers 中获取 Authorization
-
-    let apiKey = '';
-    if (authHeader) {
-        apiKey = authHeader.split(' ')[1]; // 从 Authorization 中获取 API key
-    } else {
-        res.statusCode = 400;
-        res.end('Authorization header is missing');
-        return;
-    }
-
     if (req.method === 'OPTIONS') {
         const optionsResponse = handleOptions();
         res.statusCode = optionsResponse.status;
@@ -82,6 +72,16 @@ module.exports = async (req, res) => {
         res.end();
         return;
     }
+    let apiKey = '';
+    if (authHeader) {
+        apiKey = authHeader.split(' ')[1]; // 从 Authorization 中获取 API key
+    } else {
+        res.statusCode = 400;
+        res.end('Authorization header is missing');
+        return;
+    }
+
+
 
     let response;
     try {
