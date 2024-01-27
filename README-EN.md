@@ -3,6 +3,9 @@
 ## User Communication
 [Telegram Channel](https://sum4all.one/telegram)
 
+## Buy me a coffee
+<a href="https://www.buymeacoffee.com/fatwang2" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
+
 # Version Updates
 - V0.1.4, 20240120, Supports one-click deployment with Zeabur, very convenient, highly recommended!
 - V0.1.3, 20240120, Supports local deployment, can be deployed on your own server

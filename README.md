@@ -4,6 +4,9 @@
 ## 用户交流
 [telegram频道 ](https://sum4all.one/telegram)
 
+## 友情赞助
+<a href="https://www.buymeacoffee.com/fatwang2" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
+
 # 版本更新
 - V0.1.4，20240120，支持Zeabur一键部署，非常方便，强烈推荐！
 - V0.1.3，20240120，支持本地部署，可自行部署在自己的服务器上
