@@ -10,8 +10,7 @@ async function news(query) {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json",
-                "newskey": process.env.NEWS_KEY || '',
-                "Host": "ddg.search2ai.online"
+                "newskey": process.env.NEWS_KEY || ''
             },
             body: JSON.stringify({
                 q: query,

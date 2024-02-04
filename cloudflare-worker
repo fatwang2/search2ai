@@ -119,9 +119,8 @@ async function news(query) {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json",
-                "newskey": typeof NEWS_KEY !== 'undefined' ? NEWS_KEY : '',
-                "Host": "ddg.search2ai.online"
-            },
+                "newskey": typeof NEWS_KEY !== 'undefined' ? NEWS_KEY : ''
+                },
             body: JSON.stringify({
                 q: query,
                 max_results: 10
