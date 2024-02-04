@@ -7,6 +7,7 @@
 <a href="https://www.buymeacoffee.com/fatwang2" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
 # Version Updates
+- V0.1.5, 20240205, supports news search, making it more convenient to quickly browse news
 - V0.1.4, 20240120, Supports one-click deployment with Zeabur, very convenient, highly recommended!
 - V0.1.3, 20240120, Supports local deployment, can be deployed on your own server
 - V0.1.2, 20240115, Fixes streaming output issues in non-search scenarios for the cloudflare worker version
@@ -19,12 +20,12 @@ For more historical updates, please see [Version History](https://github.com/fat
 
 <table>
     <tr>
-        <td><img src="pictures/url.png" alt="Effect Example"></td>
-        <td><img src="pictures/BotGem.png" alt="Effect Example"></td>
+        <td><img src="pictures/Opencatnews.png" alt="效果示例"></td>
+        <td><img src="pictures/BotGem.png" alt="效果示例"></td>
     </tr>
     <tr>
-        <td><img src="pictures/Lobehub.png" alt="Effect Example"></td>
-        <td><img src="pictures/Opencat.png" alt="Effect Example"></td>
+        <td><img src="pictures/Lobehub.png" alt="效果示例"></td>
+        <td><img src="pictures/url.png" alt="效果示例"></td>
     </tr>
 </table>
 
@@ -54,6 +55,16 @@ To keep the project updated, it is recommended to fork this repository first, th
 
 [![Deployed on Zeabur](https://zeabur.com/deployed-on-zeabur-dark.svg)](https://zeabur.com?referralCode=fatwang2&utm_source=fatwang2&utm_campaign=oss)
 
+Environment variables
+- SEARCH_SERVICE: Currently supports google, bing, serpapi, serper, duckduckgo (recommended), required
+- APIBASE: If you are using an OpenAI third-party proxy, you can fill it in here, note that v1 is not needed, not required
+- NEWS_KEY: News search, if you need plz join in [telegram](https://sum4all.one/telegram)for the Key，free now
+- BING_KEY: Required if choosing bing search, please search for tutorials, application address https://search2ai.online/bing
+- GOOGLE_CX: Required if choosing Google search, Search engine ID, please search for tutorials, application address https://search2ai.online/googlecx
+- GOOGLE_KEY: Required if choosing Google search, API key, application address https://search2ai.online/googlekey
+- SERPAPI_KEY: Required if choosing serpapi, free 100 times/month, registration address https://search2ai.online/serpapi
+- SERPER_KEY: Required if choosing serper, free 2500 times for 6 months, note variable name is different from above, registration address https://search2ai.online/serper
+
 **Local Deployment**
 1. Clone the repository locally
 ```
@@ -62,6 +73,7 @@ git clone https://github.com/fatwang2/search2ai
 2. Copy .env.template as .env, configure environment variables
 - SEARCH_SERVICE: Currently supports google, bing, serpapi, serper, duckduckgo (recommended), required
 - APIBASE: If you are using an OpenAI third-party proxy, you can fill it in here, note that v1 is not needed, not required
+- NEWS_KEY: News search, if you need plz join in [telegram](https://sum4all.one/telegram)for the Key，free now
 - BING_KEY: Required if choosing bing search, please search for tutorials, application address https://search2ai.online/bing
 - GOOGLE_CX: Required if choosing Google search, Search engine ID, please search for tutorials, application address https://search2ai.online/googlecx
 - GOOGLE_KEY: Required if choosing Google search, API key, application address https://search2ai.online/googlekey
@@ -83,8 +95,9 @@ http://localhost:3014/v1/chat/completions
 
 2. Configure variables in the worker
 ![Effect Example](pictures/worker.png)
-- SEARCH_SERVICE: Currently supports google, bing, serpapi, serper, duckduckgo, required
+- SEARCH_SERVICE: Currently supports google, bing, serpapi, serper, duckduckgo (recommended), required
 - APIBASE: If you are using an OpenAI third-party proxy, you can fill it in here, note that v1 is not needed, not required
+- NEWS_KEY: News search, if you need plz join in [telegram](https://sum4all.one/telegram)for the Key，free now
 - BING_KEY: Required if choosing bing search, please search for tutorials, application address https://search2ai.online/bing
 - GOOGLE_CX: Required if choosing Google search, Search engine ID, please search for tutorials, application address https://search2ai.online/googlecx
 - GOOGLE_KEY: Required if choosing Google search, API key, application address https://search2ai.online/googlekey
