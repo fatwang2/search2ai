@@ -4,7 +4,7 @@ const { config } = require('dotenv');
 config({ path: __dirname + '/../.env' });
 
 async function news(query) {
-    console.log(`正在使用查询进行新闻搜索: ${JSON.stringify(q)}`);
+    console.log(`正在使用查询进行新闻搜索: ${JSON.stringify(query)}`);
     try {
         const response = await fetch('https://crawler.search2ai.one/searchNews', {
             method: 'POST',
@@ -15,7 +15,7 @@ async function news(query) {
             },
             body: JSON.stringify({
                 q: query,
-                max_results: 5
+                max_results: 10
             })
         });
 
