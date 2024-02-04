@@ -1,7 +1,7 @@
 const fetch = require('node-fetch');
 
 // 爬取函数，调用你的爬取服务
-async function crawer(url) {
+async function crawler(url) {
     console.log(`正在使用 URL 进行自定义爬取:${JSON.stringify(url)}`);
     try {
         const response = await fetch('https://crawer.search2ai.one', {
@@ -29,8 +29,8 @@ async function crawer(url) {
         console.log('自定义爬取服务调用完成');
         return JSON.stringify(data);
     } catch (error) {
-        console.error(`在 crawer 函数中捕获到错误: ${error}`);
-        return `在 crawer 函数中捕获到错误: ${error}`;
+        console.error(`在 crawler 函数中捕获到错误: ${error}`);
+        return `在 crawler 函数中捕获到错误: ${error}`;
     }
 }
-module.exports = crawer;
+module.exports = crawler;

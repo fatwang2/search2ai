@@ -1,6 +1,7 @@
 const fetch = require('node-fetch');
 const search = require('../units/search.js');
-const crawer = require('../units/crawer.js');
+const crawler = require('../units/crawler.js');
+const news = require('../units/news.js');
 const { config } = require('dotenv');
 const Stream = require('stream');
 
@@ -42,7 +43,7 @@ async function handleRequest(req, res, apiBase, apiKey) {
                     type: "function",
                     function: {
                         name: "search",
-                        description: "search for news and factors",
+                        description: "search for factors",
                         parameters: {
                             type: "object",
                             properties: {
@@ -55,8 +56,22 @@ async function handleRequest(req, res, apiBase, apiKey) {
                 {
                     type: "function",
                     function: {
-                        name: "crawer",
-                        description: "Get the content of a specified webpage",
+                        name: "news",
+                        description: "Search for news",
+                        parameters: {
+                            type: "object",
+                            properties: {
+                                query: { type: "string", description: "The query to search for news." }
+                            },
+                            required: ["query"]
+                        }
+                    }
+                },
+                {
+                    type: "function",
+                    function: {
+                        name: "crawler",
+                        description: "Get the content of a specified url",
                         parameters: {
                             type: "object",
                             properties: {
@@ -119,7 +134,8 @@ async function handleRequest(req, res, apiBase, apiKey) {
         const toolCalls = data.choices[0].message.tool_calls;
         const availableFunctions = {
             "search": search,
-            "crawer": crawer        
+            "news": news,
+            "crawler": crawler        
         };
         for (const toolCall of toolCalls) {
             const functionName = toolCall.function.name;
@@ -128,8 +144,10 @@ async function handleRequest(req, res, apiBase, apiKey) {
             let functionResponse;
             if (functionName === 'search') {
                 functionResponse = await functionToCall(functionArgs.query);
-            } else if (functionName === 'crawer') {
+            } else if (functionName === 'crawler') {
                 functionResponse = await functionToCall(functionArgs.url);
+            } else if (functionName === 'news') {
+                functionResponse = await functionToCall(functionArgs.query);
             }
             messages.push({
                 tool_call_id: toolCall.id,
