@@ -124,4 +124,9 @@ http://localhost:3014/v1/chat/completions
 
 为保证更新，也可以先fork本项目后自己在vercel上部署
 
-# 后续迭
+# 后续迭代
+- Gemini支持流式输出、兼容非聊天场景
+- 支持Azure OpenAI
+- 修复Vercel项目流式输出问题
+- 提升流式输出的速度
+- 支持更多垂类搜索
