@@ -50,7 +50,7 @@ https://geminiapi.search2ai.online
     </tr>
 </table>
 
-demo站体验地址：[OpenAI](https://search2ai.online/demo)，根据提示使用你的key，更换自定义域名即可
+demo站体验地址：[OpenAI](https://search2ai.online/demo)，根据提示使用你的key，更换自定义域名即可;[Gemini](https://search2ai.online/gemini)可直接使用
 
 **Zeabur一键部署（强烈推荐）**
 
@@ -98,7 +98,7 @@ http://localhost:3014/v1/chat/completions
 ```
 
 **cloudflare worker部署**
-1. 复制[openai.js](https://search2ai.online/cloudflare)或者[gemini.js](gemini.js)或者的代码，不需要任何修改！在cloudflare的worker里部署，上线后的worker的地址可作为你接口调用时的自定义域名地址，注意拼接，worker地址仅代表v1前的部分
+1. 复制[openai.js](https://search2ai.online/cloudflare)或者[gemini.js](https://search2ai.online/geminicf)的代码，不需要任何修改！在cloudflare的worker里部署，上线后的worker的地址可作为你接口调用时的自定义域名地址，注意拼接，worker地址仅代表v1前的部分
 
 2. 在worker中配置变量(部署openai时需要配置，gemini暂不支持)
 ![效果示例](pictures/worker.png)
@@ -124,9 +124,4 @@ http://localhost:3014/v1/chat/completions
 
 为保证更新，也可以先fork本项目后自己在vercel上部署
 
-# 后续迭代
-- Gemini支持流式输出、兼容非聊天场景
-- 支持Azure OpenAI
-- 修复Vercel项目流式输出问题
-- 提升流式输出的速度
-- 支持更多垂类搜索
+# 后续迭
