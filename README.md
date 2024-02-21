@@ -8,6 +8,7 @@
 <a href="https://www.buymeacoffee.com/fatwang2" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
 # 版本更新
+- V0.1.6，20240221，支持Gemini模型，暂时可通过cloudflare worker的方式配置
 - V0.1.5，20240205，支持新闻搜索，快速浏览新闻更方便
 - V0.1.4，20240120，支持Zeabur一键部署，非常方便，强烈推荐！
 - V0.1.3，20240120，支持本地部署，可自行部署在自己的服务器上
@@ -17,7 +18,7 @@
 更多历史更新，请参见 [版本记录](https://github.com/fatwang2/search2ai/releases)
 
 # 产品介绍
-- search2ai，让你的 OpenAI API 支持联网，搜索、新闻、网页总结，大模型会根据你的输入判断是否联网，不是每次都联网搜索，不需要安装任何插件，也不需要更换key，直接在你常用的 OpenAI 三方客户端替换自定义地址即可，也支持自行部署，不会影响使用 OpenAI 的其他功能，如画图、语音等 
+- search2ai，让你的 LLM API 支持联网，搜索、新闻、网页总结，已支持OpenAI、Gemini，大模型会根据你的输入判断是否联网，不是每次都联网搜索，不需要安装任何插件，也不需要更换key，直接在你常用的 OpenAI/Gemini 三方客户端替换自定义地址即可，也支持自行部署，不会影响使用 OpenAI 的其他功能，如画图、语音等，Gemini的画图功能适配中 
 
 <table>
     <tr>
@@ -32,9 +33,15 @@
 
 # 使用方法
 **直接使用：替换客户端自定义域名为下面地址即可**
+OpenAI
 ```
 https://api.search2ai.online
 ```
+Gemini
+```
+https://geminiapi.search2ai.online
+```
+
 如图所示
 <table>
     <tr>
@@ -43,7 +50,7 @@ https://api.search2ai.online
     </tr>
 </table>
 
-demo站体验地址：[demo站](https://search2ai.online/demo)，根据提示使用你的key，更换自定义域名即可
+demo站体验地址：[OpenAI](https://search2ai.online/demo)，根据提示使用你的key，更换自定义域名即可
 
 **Zeabur一键部署（强烈推荐）**
 
@@ -91,9 +98,9 @@ http://localhost:3014/v1/chat/completions
 ```
 
 **cloudflare worker部署**
-1. 复制[search2ai](https://search2ai.online/cloudflare)的代码，不需要任何修改！在cloudflare的worker里部署，上线后的worker的地址可作为你接口调用时的自定义域名地址，注意拼接，worker地址仅代表v1前的部分 XXX/v1/chat/completions
+1. 复制[openai.js](https://search2ai.online/cloudflare)或者[gemini.js](gemini.js)或者的代码，不需要任何修改！在cloudflare的worker里部署，上线后的worker的地址可作为你接口调用时的自定义域名地址，注意拼接，worker地址仅代表v1前的部分
 
-2. 在worker中配置变量
+2. 在worker中配置变量(部署openai时需要配置，gemini暂不支持)
 ![效果示例](pictures/worker.png)
 - SEARCH_SERVICE：暂时支持google、bing、serpapi、serper、duckduckgo（推荐），必填
 - APIBASE：如果你在用 OpenAI 三方代理，可在这里填入，注意不需要加v1，非必填
@@ -118,7 +125,7 @@ http://localhost:3014/v1/chat/completions
 为保证更新，也可以先fork本项目后自己在vercel上部署
 
 # 后续迭代
-- 支持Gemini
+- Gemini支持流式输出、兼容非聊天场景
 - 支持Azure OpenAI
 - 修复Vercel项目流式输出问题
 - 提升流式输出的速度
