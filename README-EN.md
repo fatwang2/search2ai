@@ -7,6 +7,7 @@
 <a href="https://www.buymeacoffee.com/fatwang2" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
 # Version Updates
+- V0.1.6, 20240221, Supports Gemini model, can be temporarily configured through Cloudflare worker method
 - V0.1.5, 20240205, supports news search, making it more convenient to quickly browse news
 - V0.1.4, 20240120, Supports one-click deployment with Zeabur, very convenient, highly recommended!
 - V0.1.3, 20240120, Supports local deployment, can be deployed on your own server
@@ -16,7 +17,7 @@
 For more historical updates, please see [Version History](https://github.com/fatwang2/search2ai/releases)
 
 # Product Introduction
-- search2ai, supports search and networking for OpenAI, and the large model will decide whether to connect to the network based on your input, not every time. No plugins needed, no need to change the key, just replace the custom address in your commonly used OpenAI third-party client, also supports self-deployment, and will not affect other features of using OpenAI, like drawing, voice, etc.
+- search2ai, so that your LLM API support networking, search, news, web page summarization, has supported OpenAI, Gemini, the big model will be based on your input to determine whether the network, not every time the network search, do not need to install any plug-ins, do not need to replace the key, directly in your commonly used OpenAI/Gemini three-way client replacement of custom You can directly replace the customized address in your usual OpenAI/Gemini three-way client, and also support self-deployment, which will not affect the use of other OpenAI functions, such as drawing, voice, etc. The drawing function of Gemini is in the process of being adapted.
 
 <table>
     <tr>
@@ -32,8 +33,14 @@ For more historical updates, please see [Version History](https://github.com/fat
 
 # How to Use
 **Direct use: Replace the custom domain in the client with the following address**
+
+OpenAI
 ```
 https://api.search2ai.online
+```
+Gemini
+```
+https://geminiapi.search2ai.online
 ```
 As shown in the picture
 <table>
@@ -43,7 +50,7 @@ As shown in the picture
     </tr>
 </table>
 
-Demo site experience address: [Demo Site](https://search2ai.online/demo), follow the instructions to use your key, replace the custom domain
+Demo site experience address: [OpenAI](https://search2ai.online/demo), follow the instructions to use your key, replace the custom domain；[Gemini](https://search2ai.online/gemini)
 
 **One-Click Deployment with Zeabur (Highly Recommended)**
 
@@ -91,9 +98,9 @@ http://localhost:3014/v1/chat/completions
 ```
 
 **Deployment with cloudflare worker**
-1. Copy the code of [search2ai](https://search2ai.online/cloudflare), no modifications needed! Deploy in cloudflare's worker, after going online, the worker's address can be used as your interface call's custom domain address, note the concatenation, worker address only represents the part before v1 XXX/v1/chat/completions
+1. Copy the code of [openai.js](https://search2ai.online/cloudflare), or [gemini.js](https://search2ai.online/geminicf),no modifications needed! Deploy in cloudflare's worker, after going online, the worker's address can be used as your interface call's custom domain address, note the concatenation, worker address only represents the part before v1
 
-2. Configure variables in the worker
+2. Configure variables in the worker（only openai）
 ![Effect Example](pictures/worker.png)
 - SEARCH_SERVICE: Currently supports google, bing, serpapi, serper, duckduckgo (recommended), required
 - APIBASE: If you are using an OpenAI third-party proxy, you can fill it in here, note that v1 is not needed, not required
@@ -118,16 +125,11 @@ One-click deployment
 To ensure updates, you can also first fork this project and then deploy it on Vercel yourself
 
 # Future Iterations
-- Support for Gemini
+- Support for Gemini stream mode
 - Support for Azure OpenAI
 - Fix streaming output issues in Vercel project
 - Improve the speed of streaming output
 - Support more vertical searches
-
-# Special Thanks
-- [webpilot](https://github.com/webpilot-ai/Webpilot)
-- [LobeChat](https://github.com/lobehub/lobe-chat)
-
 
 
 

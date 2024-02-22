@@ -33,6 +33,7 @@
 
 # 使用方法
 **直接使用：替换客户端自定义域名为下面地址即可**
+
 OpenAI
 ```
 https://api.search2ai.online
