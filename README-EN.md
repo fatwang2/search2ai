@@ -7,6 +7,7 @@
 <a href="https://www.buymeacoffee.com/fatwang2" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
 # Version Updates
+- V0.1.7, 20240224, Gemini version supports streaming output and is compatible with vision model
 - V0.1.6, 20240221, Supports Gemini model, can be temporarily configured through Cloudflare worker method
 - V0.1.5, 20240205, supports news search, making it more convenient to quickly browse news
 - V0.1.4, 20240120, Supports one-click deployment with Zeabur, very convenient, highly recommended!
@@ -17,7 +18,7 @@
 For more historical updates, please see [Version History](https://github.com/fatwang2/search2ai/releases)
 
 # Product Introduction
-- search2ai, so that your LLM API support networking, search, news, web page summarization, has supported OpenAI, Gemini, the big model will be based on your input to determine whether the network, not every time the network search, do not need to install any plug-ins, do not need to replace the key, directly in your commonly used OpenAI/Gemini three-way client replacement of custom You can directly replace the customized address in your usual OpenAI/Gemini three-way client, and also support self-deployment, which will not affect the use of other OpenAI functions, such as drawing, voice, etc. The drawing function of Gemini is in the process of being adapted.
+- search2ai, so that your LLM API support networking, search, news, web page summarization, has supported OpenAI, Gemini, the big model will be based on your input to determine whether the network, not every time the network search, do not need to install any plug-ins, do not need to replace the key, directly in your commonly used OpenAI/Gemini three-way client replacement of custom You can directly replace the customized address in your usual OpenAI/Gemini three-way client, and also support self-deployment, which will not affect the use of other functions, such as drawing, voice, etc.
 
 <table>
     <tr>
