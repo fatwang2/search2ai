@@ -290,7 +290,7 @@ async function fetchWithRetry(url, options, maxRetries = 3) {
         if (path.includes('/models/gemini-pro-vision')) {
             // 创建一个新的请求对象，复制原始请求的所有信息
             const index = path.indexOf('/models');
-            const newRequest = new Request('https://gemini.sum4all.site/v1beta' + path.substring(index), {
+            const newRequest = new Request('https://gemini.sum4all.site/v1beta' + path.substring(index) + url.search, {
                 method: request.method,
                 headers: request.headers,
                 body: request.body,
@@ -299,7 +299,15 @@ async function fetchWithRetry(url, options, maxRetries = 3) {
 
             // 使用 fetch API 发送新的请求
             const response = await fetch(newRequest);
-
+            // 检查是否是一个 SSE 响应
+            if (response.headers.get('Content-Type') === 'text/event-stream') {
+                // 如果是 SSE 响应，返回一个新的响应对象，使用原始响应的 body，但设置 headers 为 'text/event-stream'
+                return new Response(response.body, {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: { ...corsHeaders, 'Content-Type': 'text/event-stream' }
+                });
+            }
             // 直接返回响应
             return response;
         }
