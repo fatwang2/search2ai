@@ -101,7 +101,7 @@ async function fetchWithRetry(url, options, maxRetries = 3) {
                 "role":"user",
                 "parts":[
                     {
-                        "text": `Today is ${currentDate}.You are a friendly intelligent assistant with the ability to search online, hopefully you will go online when the user asks for something that requires internet access, otherwise just answer, try to be as simple and clear as possible when answering the user's question, and you can use emoji to make your conversations more interesting!`
+                        "text": `Today is ${currentDate}.You are a friendly intelligent assistant with the ability to search online, and you can use emoji to make your conversations more interesting!`
                     }
                 ]
             },
@@ -190,7 +190,7 @@ async function fetchWithRetry(url, options, maxRetries = 3) {
                                 controller.enqueue(encoder.encode(i === 0 ? '[' : ','));
                                 controller.enqueue(encoder.encode(JSON.stringify(responseJson[i])));
                             }
-                            await new Promise(resolve => setTimeout(resolve, 100));
+                            await new Promise(resolve => setTimeout(resolve, 500));
                         }
                         if (!isSSE) {
                             controller.enqueue(encoder.encode(']'));
