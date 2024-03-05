@@ -79,6 +79,7 @@ async function search(query) {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json",
+                "Authorization": typeof SEARCH1API_KEY !== 'undefined' ? `Bearer ${SEARCH1API_KEY}` : '',
                 "google_cx": typeof GOOGLE_CX !== 'undefined' ? GOOGLE_CX : '',
                 "google_key": typeof GOOGLE_KEY !== 'undefined' ? GOOGLE_KEY : '',
                 "serpapi_key": typeof SERPAPI_KEY !== 'undefined' ? SERPAPI_KEY : '',
@@ -88,7 +89,8 @@ async function search(query) {
             },
             body: JSON.stringify({
                 query: query,
-                search_service: SEARCH_SERVICE
+                search_service: SEARCH_SERVICE,
+                max_results: 5
             })
         });
 
@@ -118,8 +120,7 @@ async function news(query) {
         const response = await fetch('https://ddg.search2ai.online/searchNews', {
             method: 'POST',
             headers: {
-                "Content-Type": "application/json",
-                "newskey": typeof NEWS_KEY !== 'undefined' ? NEWS_KEY : ''
+                "Content-Type": "application/json"
                 },
             body: JSON.stringify({
                 q: query,

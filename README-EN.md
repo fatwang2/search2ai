@@ -7,6 +7,7 @@
 <a href="https://www.buymeacoffee.com/fatwang2" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
 # Version Updates
+- V0.1.8, 20240305, support search1api search service, update Gemini version search variable configuration, open news search capability, add risk statement
 - V0.1.7, 20240224, Gemini version supports streaming output and is compatible with vision model
 - V0.1.6, 20240221, Supports Gemini model, can be temporarily configured through Cloudflare worker method
 - V0.1.5, 20240205, supports news search, making it more convenient to quickly browse news
@@ -64,9 +65,9 @@ To keep the project updated, it is recommended to fork this repository first, th
 [![Deployed on Zeabur](https://zeabur.com/deployed-on-zeabur-dark.svg)](https://zeabur.com?referralCode=fatwang2&utm_source=fatwang2&utm_campaign=oss)
 
 Environment variables
-- SEARCH_SERVICE: Currently supports google, bing, serpapi, serper, duckduckgo (recommended), required
-- APIBASE: If you are using an OpenAI third-party proxy, you can fill it in here, note that v1 is not needed, not required
-- NEWS_KEY: News search, if you need plz join in [telegram](https://sum4all.one/telegram)for the Key，free now
+- SEARCH_SERVICE: temporarily supports search1api, google, bing, serpapi, serper, duckduckgo, required
+- APIBASE: if you are using OpenAI three-way proxy, you can fill in here, note that you do not need to add v1, non-required!
+- SEARCH1API_KEY: such as the selection of search1api required, I build their own search services, 0.99 U.S. dollars / 1000 times per month, the application address https://search2ai.online/docs
 - BING_KEY: Required if choosing bing search, please search for tutorials, application address https://search2ai.online/bing
 - GOOGLE_CX: Required if choosing Google search, Search engine ID, please search for tutorials, application address https://search2ai.online/googlecx
 - GOOGLE_KEY: Required if choosing Google search, API key, application address https://search2ai.online/googlekey
@@ -79,9 +80,9 @@ Environment variables
 git clone https://github.com/fatwang2/search2ai
 ```
 2. Copy .env.template as .env, configure environment variables
-- SEARCH_SERVICE: Currently supports google, bing, serpapi, serper, duckduckgo (recommended), required
-- APIBASE: If you are using an OpenAI third-party proxy, you can fill it in here, note that v1 is not needed, not required
-- NEWS_KEY: News search, if you need plz join in [telegram](https://sum4all.one/telegram)for the Key，free now
+- SEARCH_SERVICE: temporarily supports search1api, google, bing, serpapi, serper, duckduckgo, required
+- APIBASE: if you are using OpenAI three-way proxy, you can fill in here, note that you do not need to add v1, non-required!
+- SEARCH1API_KEY: such as the selection of search1api required, I build their own search services, 0.99 U.S. dollars / 1000 times per month, the application address https://search2ai.online/docs
 - BING_KEY: Required if choosing bing search, please search for tutorials, application address https://search2ai.online/bing
 - GOOGLE_CX: Required if choosing Google search, Search engine ID, please search for tutorials, application address https://search2ai.online/googlecx
 - GOOGLE_KEY: Required if choosing Google search, API key, application address https://search2ai.online/googlekey
@@ -103,9 +104,9 @@ http://localhost:3014/v1/chat/completions
 
 2. Configure variables in the worker（only openai）
 ![Effect Example](pictures/worker.png)
-- SEARCH_SERVICE: Currently supports google, bing, serpapi, serper, duckduckgo (recommended), required
-- APIBASE: If you are using an OpenAI third-party proxy, you can fill it in here, note that v1 is not needed, not required
-- NEWS_KEY: News search, if you need plz join in [telegram](https://sum4all.one/telegram)for the Key，free now
+- SEARCH_SERVICE: temporarily supports search1api, google, bing, serpapi, serper, duckduckgo, required
+- APIBASE: if you are using OpenAI three-way proxy, you can fill in here, note that you do not need to add v1, non-required!
+- SEARCH1API_KEY: such as the selection of search1api required, I build their own search services, 0.99 U.S. dollars / 1000 times per month, the application address https://search2ai.online/docs
 - BING_KEY: Required if choosing bing search, please search for tutorials, application address https://search2ai.online/bing
 - GOOGLE_CX: Required if choosing Google search, Search engine ID, please search for tutorials, application address https://search2ai.online/googlecx
 - GOOGLE_KEY: Required if choosing Google search, API key, application address https://search2ai.online/googlekey
@@ -125,8 +126,10 @@ One-click deployment
 
 To ensure updates, you can also first fork this project and then deploy it on Vercel yourself
 
+# Risk statement
+To ensure the persistence of this project, certain interface requests will be forwarded via [search1api](https://search.search2ai.one). Please be assured that this forwarding service does not save any private data.
+
 # Future Iterations
-- Support for Gemini stream mode
 - Support for Azure OpenAI
 - Fix streaming output issues in Vercel project
 - Improve the speed of streaming output

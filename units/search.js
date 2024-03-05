@@ -9,6 +9,7 @@ async function search(query) {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json",
+                "Authorization": process.env.SEARCH1API_KEY ? `Bearer ${process.env.SEARCH1API_KEY}` : '',
                 "google_cx": process.env.GOOGLE_CX || '',
                 "google_key": process.env.GOOGLE_KEY || '',
                 "serpapi_key": process.env.SERPAPI_KEY || '',

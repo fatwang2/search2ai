@@ -13,10 +13,20 @@ addEventListener('fetch', event => {
   
       try {
         const url = "https://search.search2ai.one";
-        const headers = {"Content-Type": "application/json"};
+        const headers= {
+            "Content-Type": "application/json",
+            "Authorization": typeof SEARCH1API_KEY !== 'undefined' ? `Bearer ${SEARCH1API_KEY}` : '',
+            "google_cx": typeof GOOGLE_CX !== 'undefined' ? GOOGLE_CX : '',
+            "google_key": typeof GOOGLE_KEY !== 'undefined' ? GOOGLE_KEY : '',
+            "serpapi_key": typeof SERPAPI_KEY !== 'undefined' ? SERPAPI_KEY : '',
+            "serper_key": typeof SERPER_KEY !== 'undefined' ? SERPER_KEY : '',
+            "bing_key": typeof BING_KEY !== 'undefined' ? BING_KEY : '',
+            "apibase": typeof APIBASE !== 'undefined' ? APIBASE : 'https://api.openai.com'
+        };
         const body = {
           "query": query,
-          "search_service": "duckduckgo"
+          search_service: SEARCH_SERVICE,
+          max_results: 5
         };
     
         const response = await fetch(url, {

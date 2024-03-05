@@ -6,11 +6,10 @@ config({ path: __dirname + '/../.env' });
 async function news(query) {
     console.log(`正在使用查询进行新闻搜索: ${JSON.stringify(query)}`);
     try {
-        const response = await fetch('https://crawler.search2ai.one/searchNews', {
+        const response = await fetch('https://ddg.search2ai.online/searchNews', {
             method: 'POST',
             headers: {
-                "Content-Type": "application/json",
-                "newskey": process.env.NEWS_KEY || ''
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({
                 q: query,

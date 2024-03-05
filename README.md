@@ -8,13 +8,12 @@
 <a href="https://www.buymeacoffee.com/fatwang2" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
 # 版本更新
+- V0.1.8，20240305，支持search1api搜索服务，更新Gemini版本搜索变量配置，开放新闻搜索能力，增加风险声明
 - V0.1.7，20240224，Gemini版本支持流式输出，且兼容vision model
 - V0.1.6，20240221，支持Gemini模型，暂时可通过cloudflare worker的方式配置
 - V0.1.5，20240205，支持新闻搜索，快速浏览新闻更方便
 - V0.1.4，20240120，支持Zeabur一键部署，非常方便，强烈推荐！
 - V0.1.3，20240120，支持本地部署，可自行部署在自己的服务器上
-- V0.1.2，20240115，修复cloudflare worker版本非搜索场景下的流式输出问题
-- V0.1.1，20240114，支持vercel一键部署，目前只适合喜欢折腾的人
 
 更多历史更新，请参见 [版本记录](https://github.com/fatwang2/search2ai/releases)
 
@@ -65,9 +64,9 @@ demo站体验地址：[OpenAI](https://search2ai.online/demo)，根据提示使�
 [![Deployed on Zeabur](https://zeabur.com/deployed-on-zeabur-dark.svg)](https://zeabur.com?referralCode=fatwang2&utm_source=fatwang2&utm_campaign=oss)
 
 环境变量
-- SEARCH_SERVICE：暂时支持google、bing、serpapi、serper、duckduckgo（推荐），必填
-- APIBASE：如果你在用 OpenAI 三方代理，可在这里填入，注意不需要加v1，非必填
-- NEWS_KEY: 单独的新闻搜索服务，如需体验可加入 [telegram频道 ](https://sum4all.one/telegram)申请Key，暂时免费
+- SEARCH_SERVICE：暂时支持search1api、google、bing、serpapi、serper、duckduckgo，必填
+- APIBASE：如果你在用 OpenAI 三方代理，在这里填入，注意不需要加v1，非必填
+- SEARCH1API_KEY：如选search1api必填，我自己搭建的搜索服务，0.99美金/1000次每个月，申请地址 https://search2ai.online/docs
 - BING_KEY：如选bing搜索必填，请自行搜索教程，申请地址 https://search2ai.online/bing
 - GOOGLE_CX：如选Google搜索必填，Search engine ID，请自行搜索教程，申请地址 https://search2ai.online/googlecx
 - GOOGLE_KEY：如选Google搜索必填，API key，申请地址 https://search2ai.online/googlekey
@@ -80,9 +79,9 @@ demo站体验地址：[OpenAI](https://search2ai.online/demo)，根据提示使�
 git clone https://github.com/fatwang2/search2ai
 ```
 2. 复制.env.template为.env，配置环境变量
-- SEARCH_SERVICE：暂时支持google、bing、serpapi、serper、duckduckgo（推荐），必填
+- SEARCH_SERVICE：暂时支持search1api、google、bing、serpapi、serper、duckduckgo，必填
 - APIBASE：如果你在用 OpenAI 三方代理，可在这里填入，注意不需要加v1，非必填
-- NEWS_KEY: 单独的新闻搜索服务，如需体验可加入 [telegram频道 ](https://sum4all.one/telegram)申请Key，暂时免费
+- SEARCH1API_KEY：如选search1api必填，我自己搭建的搜索服务，0.99美金/1000次每个月，申请地址 https://search2ai.online/docs
 - BING_KEY：如选bing搜索必填，请自行搜索教程，申请地址 https://search2ai.online/bing
 - GOOGLE_CX：如选Google搜索必填，Search engine ID，请自行搜索教程，申请地址 https://search2ai.online/googlecx
 - GOOGLE_KEY：如选Google搜索必填，API key，申请地址 https://search2ai.online/googlekey
@@ -102,11 +101,11 @@ http://localhost:3014/v1/chat/completions
 **cloudflare worker部署**
 1. 复制[openai.js](https://search2ai.online/cloudflare)或者[gemini.js](https://search2ai.online/geminicf)的代码，不需要任何修改！在cloudflare的worker里部署，上线后的worker的地址可作为你接口调用时的自定义域名地址，注意拼接，worker地址仅代表v1前的部分
 
-2. 在worker中配置变量(部署openai时需要配置，gemini暂不支持)
+2. 在worker中配置变量
 ![效果示例](pictures/worker.png)
-- SEARCH_SERVICE：暂时支持google、bing、serpapi、serper、duckduckgo（推荐），必填
+- SEARCH_SERVICE：暂时支持search1api、google、bing、serpapi、serper、duckduckgo，必填
 - APIBASE：如果你在用 OpenAI 三方代理，可在这里填入，注意不需要加v1，非必填
-- NEWS_KEY: 单独的新闻搜索服务，如需体验可加入 [telegram频道 ](https://sum4all.one/telegram)申请Key，暂时免费
+- SEARCH1API_KEY：如选search1api必填，我自己搭建的搜索服务，0.99美金/1000次每个月，申请地址 https://search2ai.online/docs
 - BING_KEY：如选bing搜索必填，请自行搜索教程，申请地址 https://search2ai.online/bing
 - GOOGLE_CX：如选Google搜索必填，Search engine ID，请自行搜索教程，申请地址 https://search2ai.online/googlecx
 - GOOGLE_KEY：如选Google搜索必填，API key，申请地址 https://search2ai.online/googlekey
@@ -125,6 +124,9 @@ http://localhost:3014/v1/chat/completions
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Ffatwang2%2Fsearch2ai&env=SEARCH_SERVICE&envDescription=%E6%9A%82%E6%97%B6%E6%94%AF%E6%8C%81google%E3%80%81bing%E3%80%81serpapi%E3%80%81serper%E3%80%81duckduckgo%EF%BC%8C%E5%BF%85%E5%A1%AB)
 
 为保证更新，也可以先fork本项目后自己在vercel上部署
+
+# 风险声明
+为了确保本项目的持久运行，某些接口请求将通过[search1api](https://search.search2ai.one)进行转发。请放心，该转发服务不会保存任何隐私数据。
 
 # 后续迭代
 - 支持Azure OpenAI
