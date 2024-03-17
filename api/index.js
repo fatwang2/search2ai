@@ -109,28 +109,36 @@ module.exports = async (req, res) => {
 
 // 创建服务器
 const server = http.createServer((req, res) => {
-    // 只对 POST 请求读取请求体
-    if (req.method === 'POST') {
-        let data = '';
-        req.on('data', chunk => {
-            data += chunk;
-        });
-        req.on('end', () => {
-            try {
-                req.body = JSON.parse(data);
-            } catch (error) {
-                res.statusCode = 400;
-                res.end('Invalid JSON');
-                return;
-            }
-            processRequest(req, res);
-        });
-    } else {
-        // GET 和其他类型的请求直接处理
+    if (req.method === "POST") {
+      let body = []; // 使用数组来收集数据块
+      req.on("data", chunk => {
+        body.push(chunk); // 收集数据块
+      });
+      req.on("end", () => {
+        // 将数据块组合成完整的数据
+        const combinedData = Buffer.concat(body);
+        // 如果请求是音频，直接使用二进制数据
+        if (!req.url.startsWith("/v1/audio/")) {
+          try {
+            // 尝试解析JSON
+            req.body = JSON.parse(combinedData.toString());
+          } catch (error) {
+            res.statusCode = 400;
+            console.error("Invalid JSON:", error);
+            res.end("Invalid JSON");
+            return;
+          }
+        } else {
+          // 对于音频请求，直接使用二进制数据
+          req.body = combinedData;
+        }
         processRequest(req, res);
+      });
+    } else {
+      // GET 和其他类型的请求直接处理
+      processRequest(req, res);
     }
-});
-
+  });
 function processRequest(req, res) {
     (async () => {
         try {
