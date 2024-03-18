@@ -8,6 +8,7 @@
 <a href="https://www.buymeacoffee.com/fatwang2" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
 # 版本更新
+- V0.1.9，20240318，优化openai.js对流式的处理方式，速度更快，建议更新；修复服务器部署版本的语音问题；增加Github赞助按钮
 - V0.1.8，20240305，支持search1api搜索服务，更新Gemini版本搜索变量配置，开放新闻搜索能力，增加风险声明
 - V0.1.7，20240224，Gemini版本支持流式输出，且兼容vision model
 - V0.1.6，20240221，支持Gemini模型，暂时可通过cloudflare worker的方式配置
