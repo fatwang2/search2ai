@@ -133,4 +133,9 @@ To ensure the persistence of this project, certain interface requests will be fo
 
 # Future Iterations
 - Support for Azure OpenAI
-- Fix streaming output issues
+- Fix streaming output issues in Vercel project
+- Improve the speed of streaming output
+- Support more vertical searches
+
+
+

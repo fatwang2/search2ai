@@ -131,4 +131,7 @@ http://localhost:3014/v1/chat/completions
 为了确保本项目的持久运行，某些接口请求将通过[search1api](https://search.search2ai.one)进行转发。请放心，该转发服务不会保存任何隐私数据。
 
 # 后续迭代
-- 支持Azure OpenA
+- 支持Azure OpenAI
+- 修复Vercel项目流式输出问题
+- 提升流式输出的速度
+- 支持更多垂类搜索
