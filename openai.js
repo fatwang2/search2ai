@@ -260,8 +260,25 @@
             buffer += decoder.decode(value, { stream: true });
   
             if (buffer.startsWith('data:')) {
-              buffer_ = buffer.substring(5); // 去掉"data:"及其后的空格，留下JSON部分
-            }
+              buffer_ = buffer.substring(5).trim(); // 去掉"data:"及其后的空格，留下JSON部分
+          } else if (buffer.includes('"error":')) { // 检查是否包含错误信息
+              try {
+                  const jsonData = JSON.parse(buffer);
+                  if (jsonData.error) {
+                      console.log("发现接口错误信息，将返回错误内容", buffer);
+                      
+                      // 创建并返回错误信息的Response对象
+                      const response = new Response(JSON.stringify(jsonData), {
+                          status: 400, // HTTP状态码
+                          headers: { 'Content-Type': 'application/json' }
+                      });
+                      return response;
+                  }
+              } catch (err) {
+                  console.error('Error parsing JSON:', err);
+                  console.log("接口返回信息：", buffer);
+              }
+          }
   
             // 尝试解析第一块数据
             try {
@@ -273,7 +290,7 @@
                 }
             } catch (err) {
                 console.error('Error parsing JSON:', err);
-                // 解析出错时的处理
+                console.log("接口返回信息：", buffer);
             }
   
             if (shouldDirectlyReturn) {
