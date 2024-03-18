@@ -7,6 +7,7 @@
 <a href="https://www.buymeacoffee.com/fatwang2" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
 # Version Updates
+- V0.2.0，20240310，Optimized openai.js, cloudflare worker version, really faster this time!
 - V0.1.9, 20240318, optimized the handling of streams in openai.js for faster speed, recommend updating; fixed the audio issue in the server deployment version; added a sponsored button on Github.
 - V0.1.8, 20240305, support search1api search service, update Gemini version search variable configuration, open news search capability, add risk statement
 - V0.1.7, 20240224, Gemini version supports streaming output and is compatible with vision model
@@ -132,9 +133,4 @@ To ensure the persistence of this project, certain interface requests will be fo
 
 # Future Iterations
 - Support for Azure OpenAI
-- Fix streaming output issues in Vercel project
-- Improve the speed of streaming output
-- Support more vertical searches
-
-
-
+- Fix streaming output issues

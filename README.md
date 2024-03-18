@@ -8,6 +8,7 @@
 <a href="https://www.buymeacoffee.com/fatwang2" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
 # 版本更新
+- V0.2.0，20240310，优化openai.js，cloudflare worker版本，这次速度真的更快了！
 - V0.1.9，20240318，优化openai.js对流式的处理方式，速度更快，建议更新；修复服务器部署版本的语音问题；增加Github赞助按钮
 - V0.1.8，20240305，支持search1api搜索服务，更新Gemini版本搜索变量配置，开放新闻搜索能力，增加风险声明
 - V0.1.7，20240224，Gemini版本支持流式输出，且兼容vision model
@@ -130,7 +131,4 @@ http://localhost:3014/v1/chat/completions
 为了确保本项目的持久运行，某些接口请求将通过[search1api](https://search.search2ai.one)进行转发。请放心，该转发服务不会保存任何隐私数据。
 
 # 后续迭代
-- 支持Azure OpenAI
-- 修复Vercel项目流式输出问题
-- 提升流式输出的速度
-- 支持更多垂类搜索
+- 支持Azure OpenA
