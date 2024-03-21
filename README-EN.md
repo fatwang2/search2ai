@@ -131,18 +131,4 @@ Special note: Vercel project does not support streaming output and has a 10s res
 
 One-click deployment
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Ffatwang2%2Fsearch2ai&env=SEARCH_SERVICE&envDescription=%E6%9A%82%E6%97%B6%E6%94%AF%E6%8C%81google%E3%80%81bing%E3%80%81serpapi%E3%80%81serper%E3%80%81duckduckgo%EF%BC%8C%E5%BF%85%E5%A1%AB)
-
-To ensure updates, you can also first fork this project and then deploy it on Vercel yourself
-
-# Risk statement
-To ensure the persistence of this project, certain interface requests will be forwarded via [search1api](https://search.search2ai.one). Please be assured that this forwarding service does not save any private data.
-
-# Future Iterations
-- Support for Azure OpenAI
-- Fix streaming output issues in Vercel project
-- Improve the speed of streaming output
-- Support more vertical searches
-
-
-
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Ffatwang2%2Fsearch2ai&env=SEARCH_SERVICE&envDescription=%E6%9A%82%E6%97%B6%E6%94%AF%E6%8C%81google%E3%80%81bing%E3%80%81se

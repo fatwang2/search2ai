@@ -27,22 +27,4 @@ async function news(query) {
 
         if (!response.ok) {
             console.error(`API 请求失败, 状态码: ${response.status}`);
-            return `API 请求失败, 状态码: ${response.status}`;
-        }
-
-        const contentType = response.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
-            console.error("收到的响应不是有效的 JSON 格式");
-            return "收到的响应不是有效的 JSON 格式";
-        }
-
-        const data = await response.json();
-        console.log('新闻搜索服务调用完成');
-        return JSON.stringify(data); 
-    } catch (error) {
-        console.error(`在 news 函数中捕获到错误: ${error}`);
-        return `在 news 函数中捕获到错误: ${error}`;
-    }
-}
-
-module.exports = news;
+            return `API 请求失败, 状态码: ${response.s
