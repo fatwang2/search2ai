@@ -7,6 +7,7 @@
 <a href="https://www.buymeacoffee.com/fatwang2" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
 # Version Updates
+- V0.2.1, 20240310, supports Google, Bing, Duckduckgo, Search1API for news-type searches; supports adjusting the number of search results via the MAX_RESULTS environment variable; supports adjusting the number of in-depth searches desired via the CRAWL_RESULTS environment variable.
 - V0.2.0，20240310，Optimized openai.js, cloudflare worker version, really faster this time!
 - V0.1.9, 20240318, optimized the handling of streams in openai.js for faster speed, recommend updating; fixed the audio issue in the server deployment version; added a sponsored button on Github.
 - V0.1.8, 20240305, support search1api search service, update Gemini version search variable configuration, open news search capability, add risk statement
@@ -69,6 +70,8 @@ To keep the project updated, it is recommended to fork this repository first, th
 Environment variables
 - SEARCH_SERVICE: temporarily supports search1api, google, bing, serpapi, serper, duckduckgo, required
 - APIBASE: if you are using OpenAI three-way proxy, you can fill in here, note that you do not need to add v1, non-required!
+- MAX_RESULTS：the results of search
+- CRAWL_RESULTS：the reults of search you want to crawl
 - SEARCH1API_KEY: such as the selection of search1api required, I build their own search services, 0.99 U.S. dollars / 1000 times per month, the application address https://search2ai.online/docs
 - BING_KEY: Required if choosing bing search, please search for tutorials, application address https://search2ai.online/bing
 - GOOGLE_CX: Required if choosing Google search, Search engine ID, please search for tutorials, application address https://search2ai.online/googlecx
@@ -84,6 +87,8 @@ git clone https://github.com/fatwang2/search2ai
 2. Copy .env.template as .env, configure environment variables
 - SEARCH_SERVICE: temporarily supports search1api, google, bing, serpapi, serper, duckduckgo, required
 - APIBASE: if you are using OpenAI three-way proxy, you can fill in here, note that you do not need to add v1, non-required!
+- MAX_RESULTS：the results of search
+- CRAWL_RESULTS：the reults of search you want to crawl
 - SEARCH1API_KEY: such as the selection of search1api required, I build their own search services, 0.99 U.S. dollars / 1000 times per month, the application address https://search2ai.online/docs
 - BING_KEY: Required if choosing bing search, please search for tutorials, application address https://search2ai.online/bing
 - GOOGLE_CX: Required if choosing Google search, Search engine ID, please search for tutorials, application address https://search2ai.online/googlecx
@@ -108,6 +113,8 @@ http://localhost:3014/v1/chat/completions
 ![Effect Example](pictures/worker.png)
 - SEARCH_SERVICE: temporarily supports search1api, google, bing, serpapi, serper, duckduckgo, required
 - APIBASE: if you are using OpenAI three-way proxy, you can fill in here, note that you do not need to add v1, non-required!
+- MAX_RESULTS：the results of search
+- CRAWL_RESULTS：the reults of search you want to crawl
 - SEARCH1API_KEY: such as the selection of search1api required, I build their own search services, 0.99 U.S. dollars / 1000 times per month, the application address https://search2ai.online/docs
 - BING_KEY: Required if choosing bing search, please search for tutorials, application address https://search2ai.online/bing
 - GOOGLE_CX: Required if choosing Google search, Search engine ID, please search for tutorials, application address https://search2ai.online/googlecx

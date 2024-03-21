@@ -26,7 +26,8 @@ addEventListener('fetch', event => {
         const body = {
           "query": query,
           search_service: SEARCH_SERVICE,
-          max_results: 5
+          max_results: typeof MAX_RESULTS !== "undefined" ? MAX_RESULTS : "5",
+          crawl_results:typeof CRAWL_RESULTS !== "undefined" ? MAX_RESULTS : "0",
         };
     
         const response = await fetch(url, {

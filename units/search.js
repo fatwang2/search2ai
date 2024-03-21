@@ -2,6 +2,7 @@ const fetch = require('node-fetch');
 const process = require('process');
 const { config } = require('dotenv');
 config({ path: __dirname + '/../.env' });
+
 async function search(query) {
     console.log(`正在使用查询进行自定义搜索: ${JSON.stringify(query)}`);
     try {
@@ -19,7 +20,9 @@ async function search(query) {
             },
             body: JSON.stringify({
                 query: query,
-                search_service: process.env.SEARCH_SERVICE
+                search_service: process.env.SEARCH_SERVICE,
+                max_results: process.env. MAX_RESULTS || "10",
+                crawl_results:process.env.CRAWL_RESULTS || "0"
             })
         });
 

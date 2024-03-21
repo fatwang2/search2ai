@@ -8,6 +8,7 @@
 <a href="https://www.buymeacoffee.com/fatwang2" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
 # 版本更新
+- V0.2.1，20240310，支持Google、Bing、Duckduckgo、Search1API新闻类搜索；支持通过环境变量MAX_RESULTS调整搜索结果数量；支持通过环境变量CRAWL_RESULTS调整希望深度搜索的数量
 - V0.2.0，20240310，优化openai.js，cloudflare worker版本，这次速度真的更快了！
 - V0.1.9，20240318，优化openai.js对流式的处理方式，速度更快，建议更新；修复服务器部署版本的语音问题；增加Github赞助按钮
 - V0.1.8，20240305，支持search1api搜索服务，更新Gemini版本搜索变量配置，开放新闻搜索能力，增加风险声明
@@ -68,6 +69,8 @@ demo站体验地址：[OpenAI](https://search2ai.online/demo)，根据提示使�
 环境变量
 - SEARCH_SERVICE：暂时支持search1api、google、bing、serpapi、serper、duckduckgo，必填
 - APIBASE：如果你在用 OpenAI 三方代理，在这里填入，注意不需要加v1，非必填
+- MAX_RESULTS：你需要保留的搜索结果的数量
+- CRAWL_RESULTS：你需要进行深度搜索的结果数量，目前仅支持 search1api
 - SEARCH1API_KEY：如选search1api必填，我自己搭建的搜索服务，0.99美金/1000次每个月，申请地址 https://search2ai.online/docs
 - BING_KEY：如选bing搜索必填，请自行搜索教程，申请地址 https://search2ai.online/bing
 - GOOGLE_CX：如选Google搜索必填，Search engine ID，请自行搜索教程，申请地址 https://search2ai.online/googlecx
@@ -83,6 +86,8 @@ git clone https://github.com/fatwang2/search2ai
 2. 复制.env.template为.env，配置环境变量
 - SEARCH_SERVICE：暂时支持search1api、google、bing、serpapi、serper、duckduckgo，必填
 - APIBASE：如果你在用 OpenAI 三方代理，可在这里填入，注意不需要加v1，非必填
+- MAX_RESULTS：你需要保留的搜索结果的数量
+- CRAWL_RESULTS：你需要进行深度搜索的结果数量，目前仅支持 search1api
 - SEARCH1API_KEY：如选search1api必填，我自己搭建的搜索服务，0.99美金/1000次每个月，申请地址 https://search2ai.online/docs
 - BING_KEY：如选bing搜索必填，请自行搜索教程，申请地址 https://search2ai.online/bing
 - GOOGLE_CX：如选Google搜索必填，Search engine ID，请自行搜索教程，申请地址 https://search2ai.online/googlecx
@@ -107,6 +112,8 @@ http://localhost:3014/v1/chat/completions
 ![效果示例](pictures/worker.png)
 - SEARCH_SERVICE：暂时支持search1api、google、bing、serpapi、serper、duckduckgo，必填
 - APIBASE：如果你在用 OpenAI 三方代理，可在这里填入，注意不需要加v1，非必填
+- MAX_RESULTS：你需要保留的搜索结果的数量
+- CRAWL_RESULTS：你需要进行深度搜索的结果数量，目前仅支持 search1api
 - SEARCH1API_KEY：如选search1api必填，我自己搭建的搜索服务，0.99美金/1000次每个月，申请地址 https://search2ai.online/docs
 - BING_KEY：如选bing搜索必填，请自行搜索教程，申请地址 https://search2ai.online/bing
 - GOOGLE_CX：如选Google搜索必填，Search engine ID，请自行搜索教程，申请地址 https://search2ai.online/googlecx
