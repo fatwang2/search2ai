@@ -365,4 +365,8 @@ async function fetchWithRetry(url, options, maxRetries = 3) {
         });
     }
     function errorResponse(message, statusCode = 400) {
-        return new Response(JSON.stringi
+        return new Response(JSON.stringify({ error: message }), {
+            status: statusCode,
+            headers: { 'Content-Type': 'application/json' },
+        });
+    }

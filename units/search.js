@@ -41,4 +41,9 @@ async function search(query) {
         console.log('自定义搜索服务调用完成');
         return JSON.stringify(data); 
     } catch (error) {
-        console.error(`在 search 函数�
+        console.error(`在 search 函数中捕获到错误: ${error}`);
+        return `在 search 函数中捕获到错误: ${error}`;
+    }
+}
+
+module.exports = search;
