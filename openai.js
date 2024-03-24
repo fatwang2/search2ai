@@ -145,7 +145,7 @@
   async function crawer(url) {
     console.log(`\u6B63\u5728\u4F7F\u7528 URL \u8FDB\u884C\u81EA\u5B9A\u4E49\u722C\u53D6:${JSON.stringify(url)}`);
     try {
-      const response = await fetch("https://crawer.search2ai.one", {
+      const response = await fetch("https://crawler.search2ai.online", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
