@@ -55,7 +55,9 @@ As shown in the picture
     </tr>
 </table>
 
-Demo site experience address: [OpenAI](https://search2ai.online/demo), follow the instructions to use your key, replace the custom domain；[Gemini](https://search2ai.online/gemini)
+Demo site experience address:
+- [OpenAI](https://search2ai.online/demo), follow the instructions to use your key, replace the custom domain
+- [Gemini](https://search2ai.online/gemini)
 
 **One-Click Deployment with Zeabur (Highly Recommended)**
 
@@ -72,7 +74,7 @@ Environment variables
 - APIBASE: if you are using OpenAI three-way proxy, you can fill in here, note that you do not need to add v1, non-required!
 - MAX_RESULTS：the results of search
 - CRAWL_RESULTS：the reults of search you want to crawl
-- SEARCH1API_KEY: such as the selection of search1api required, I build their own search services, 0.99 U.S. dollars / 1000 times per month, the application address https://search2ai.online/docs
+- SEARCH1API_KEY: such as the selection of search1api required, I build their own search services, 0.99 U.S. dollars / 1000 times per month, the application address https://search21api.com
 - BING_KEY: Required if choosing bing search, please search for tutorials, application address https://search2ai.online/bing
 - GOOGLE_CX: Required if choosing Google search, Search engine ID, please search for tutorials, application address https://search2ai.online/googlecx
 - GOOGLE_KEY: Required if choosing Google search, API key, application address https://search2ai.online/googlekey
@@ -89,7 +91,7 @@ git clone https://github.com/fatwang2/search2ai
 - APIBASE: if you are using OpenAI three-way proxy, you can fill in here, note that you do not need to add v1, non-required!
 - MAX_RESULTS：the results of search
 - CRAWL_RESULTS：the reults of search you want to crawl
-- SEARCH1API_KEY: such as the selection of search1api required, I build their own search services, 0.99 U.S. dollars / 1000 times per month, the application address https://search2ai.online/docs
+- SEARCH1API_KEY: such as the selection of search1api required, I build their own search services, 0.99 U.S. dollars / 1000 times per month, the application address https://search21api.com
 - BING_KEY: Required if choosing bing search, please search for tutorials, application address https://search2ai.online/bing
 - GOOGLE_CX: Required if choosing Google search, Search engine ID, please search for tutorials, application address https://search2ai.online/googlecx
 - GOOGLE_KEY: Required if choosing Google search, API key, application address https://search2ai.online/googlekey
@@ -115,7 +117,7 @@ http://localhost:3014/v1/chat/completions
 - APIBASE: if you are using OpenAI three-way proxy, you can fill in here, note that you do not need to add v1, non-required!
 - MAX_RESULTS：the results of search
 - CRAWL_RESULTS：the reults of search you want to crawl
-- SEARCH1API_KEY: such as the selection of search1api required, I build their own search services, 0.99 U.S. dollars / 1000 times per month, the application address https://search2ai.online/docs
+- SEARCH1API_KEY: such as the selection of search1api required, I build their own search services, 0.99 U.S. dollars / 1000 times per month, the application address https://search21api.com
 - BING_KEY: Required if choosing bing search, please search for tutorials, application address https://search2ai.online/bing
 - GOOGLE_CX: Required if choosing Google search, Search engine ID, please search for tutorials, application address https://search2ai.online/googlecx
 - GOOGLE_KEY: Required if choosing Google search, API key, application address https://search2ai.online/googlekey

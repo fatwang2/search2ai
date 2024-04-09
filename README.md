@@ -54,7 +54,9 @@ https://geminiapi.search2ai.online
     </tr>
 </table>
 
-demo站体验地址：[OpenAI](https://search2ai.online/demo)，根据提示使用你的key，更换自定义域名即可;[Gemini](https://search2ai.online/gemini)可直接使用
+demo站体验地址
+- [OpenAI](https://search2ai.online/demo) 根据提示使用你的key，更换自定义域名即可
+- [Gemini](https://search2ai.online/gemini) 可直接使用
 
 **Zeabur一键部署（强烈推荐）**
 
@@ -71,7 +73,7 @@ demo站体验地址：[OpenAI](https://search2ai.online/demo)，根据提示使�
 - APIBASE：如果你在用 OpenAI 三方代理，在这里填入，注意不需要加v1，非必填
 - MAX_RESULTS：你需要保留的搜索结果的数量
 - CRAWL_RESULTS：你需要进行深度搜索的结果数量，目前仅支持 search1api
-- SEARCH1API_KEY：如选search1api必填，我自己搭建的搜索服务，0.99美金/1000次每个月，申请地址 https://search2ai.online/docs
+- SEARCH1API_KEY：如选search1api必填，我自己搭建的搜索服务，0.99美金/1000次每个月，申请地址 https://search21api.com
 - BING_KEY：如选bing搜索必填，请自行搜索教程，申请地址 https://search2ai.online/bing
 - GOOGLE_CX：如选Google搜索必填，Search engine ID，请自行搜索教程，申请地址 https://search2ai.online/googlecx
 - GOOGLE_KEY：如选Google搜索必填，API key，申请地址 https://search2ai.online/googlekey
@@ -88,7 +90,7 @@ git clone https://github.com/fatwang2/search2ai
 - APIBASE：如果你在用 OpenAI 三方代理，可在这里填入，注意不需要加v1，非必填
 - MAX_RESULTS：你需要保留的搜索结果的数量
 - CRAWL_RESULTS：你需要进行深度搜索的结果数量，目前仅支持 search1api
-- SEARCH1API_KEY：如选search1api必填，我自己搭建的搜索服务，0.99美金/1000次每个月，申请地址 https://search2ai.online/docs
+- SEARCH1API_KEY：如选search1api必填，我自己搭建的搜索服务，0.99美金/1000次每个月，申请地址 https://search21api.com
 - BING_KEY：如选bing搜索必填，请自行搜索教程，申请地址 https://search2ai.online/bing
 - GOOGLE_CX：如选Google搜索必填，Search engine ID，请自行搜索教程，申请地址 https://search2ai.online/googlecx
 - GOOGLE_KEY：如选Google搜索必填，API key，申请地址 https://search2ai.online/googlekey
@@ -114,7 +116,7 @@ http://localhost:3014/v1/chat/completions
 - APIBASE：如果你在用 OpenAI 三方代理，可在这里填入，注意不需要加v1，非必填
 - MAX_RESULTS：你需要保留的搜索结果的数量
 - CRAWL_RESULTS：你需要进行深度搜索的结果数量，目前仅支持 search1api
-- SEARCH1API_KEY：如选search1api必填，我自己搭建的搜索服务，0.99美金/1000次每个月，申请地址 https://search2ai.online/docs
+- SEARCH1API_KEY：如选search1api必填，我自己搭建的搜索服务，0.99美金/1000次每个月，申请地址 https://search21api.com
 - BING_KEY：如选bing搜索必填，请自行搜索教程，申请地址 https://search2ai.online/bing
 - GOOGLE_CX：如选Google搜索必填，Search engine ID，请自行搜索教程，申请地址 https://search2ai.online/googlecx
 - GOOGLE_KEY：如选Google搜索必填，API key，申请地址 https://search2ai.online/googlekey
