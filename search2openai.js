@@ -142,10 +142,10 @@
       return `\u5728 news \u51FD\u6570\u4E2D\u6355\u83B7\u5230\u9519\u8BEF: ${error}`;
     }
   }
-  async function crawer(url) {
+  async function crawler(url) {
     console.log(`\u6B63\u5728\u4F7F\u7528 URL \u8FDB\u884C\u81EA\u5B9A\u4E49\u722C\u53D6:${JSON.stringify(url)}`);
     try {
-      const response = await fetch("https://crawler.search2ai.online", {
+      const response = await fetch("https://crawler.search2ai.one", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -168,7 +168,7 @@
       return JSON.stringify(data);
     } catch (error) {
       console.error(`\u5728 crawl \u51FD\u6570\u4E2D\u6355\u83B7\u5230\u9519\u8BEF: ${error}`);
-      return `\u5728 crawer \u51FD\u6570\u4E2D\u6355\u83B7\u5230\u9519\u8BEF: ${error}`;
+      return `\u5728 crawler \u51FD\u6570\u4E2D\u6355\u83B7\u5230\u9519\u8BEF: ${error}`;
     }
   }
   async function handleRequest(request, apiBase, apiKey) {
@@ -224,7 +224,7 @@
           {
             type: "function",
             function: {
-              name: "crawer",
+              name: "crawler",
               description: "Get the content of a specified url",
               parameters: {
                 type: "object",
@@ -401,7 +401,7 @@
       const availableFunctions = {
         search: search,
         news: news,
-        crawer: crawer,
+        crawler: crawler,
       };
 
       let assistantMessage = {
@@ -431,7 +431,7 @@
         let functionResponse;
         if (functionName === "search" && typeof functionArgs.query === "string") {
           functionResponse = await functionToCall(functionArgs.query);
-        } else if (functionName === "crawer" && typeof functionArgs.url === "string") {
+        } else if (functionName === "crawler" && typeof functionArgs.url === "string") {
           functionResponse = await functionToCall(functionArgs.url);
         } else if (functionName === "news" && typeof functionArgs.query === "string") {
           functionResponse = await functionToCall(functionArgs.query);
@@ -506,7 +506,7 @@
         const availableFunctions = {
           "search": search,
           "news": news,
-          "crawer": crawer
+          "crawler": crawler
         };
         for (const toolCall of toolCalls) {
           const functionName = toolCall.function.name;
@@ -515,7 +515,7 @@
           let functionResponse;
           if (functionName === "search") {
             functionResponse = await functionToCall(functionArgs.query);
-          } else if (functionName === "crawer") {
+          } else if (functionName === "crawler") {
             functionResponse = await functionToCall(functionArgs.url);
           } else if (functionName === "news") {
             functionResponse = await functionToCall(functionArgs.query);
@@ -526,7 +526,7 @@
             name: functionName,
             content: functionResponse
           });
-          if (functionName === "search" || functionName === "crawer" || functionName === "news") {
+          if (functionName === "search" || functionName === "crawler" || functionName === "news") {
             calledCustomFunction = true;
           }
         }
