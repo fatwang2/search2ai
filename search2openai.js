@@ -8,6 +8,7 @@
     "Access-Control-Max-Age": "86400"
     // 预检请求结果的缓存时间
   };
+  const req_path='chat/completions';
   addEventListener("fetch", (event) => {
     console.log(`\u6536\u5230\u8BF7\u6C42: ${event.request.method} ${event.request.url}`);
     const url = new URL(event.request.url);
