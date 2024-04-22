@@ -20,9 +20,13 @@
   const deployName = typeof DEPLOY_NAME !== "undefined" ? DEPLOY_NAME : "gpt-35-turbo";
   const api_ver = typeof API_VERSION !== "undefined" ? API_VERSION : "2024-03-01-preview";
   
-  var fetchAPI = `${apiBase}/v1/chat/completions`;
-  var request_header = new Headers(); //request header for forward
-
+  let fetchAPI = "";
+  let request_header = new Headers({
+    "Content-Type": "application/json",
+    "Authorization": "",
+    "api-key": ""        
+  });
+  
   addEventListener("fetch", (event) => {     
     console.log(`\u6536\u5230\u8BF7\u6C42: ${event.request.method} ${event.request.url}`);
     const url = new URL(event.request.url);
@@ -41,15 +45,12 @@
     if ( api_type === "azure" ){
       fetchAPI = `https://${resource_name}.openai.azure.com/openai/deployments/${deployName}/chat/completions?api-version=${api_ver}`;
       header_auth = "api-key";
-      header_auth_val = "";      
-    }
-    
-    request_header.append("Content-Type", "application/json");
-    request_header.append(`${header_auth}`, `${header_auth_val} ${apiKey}`);
-    console.log("headers: ");
-    request_header.forEach((value, name) => {
-      console.log(`${name}: ${value}`);
-    });
+      header_auth_val = "";       
+    }else{
+      fetchAPI = `${apiBase}/v1/chat/completions`;
+      header_auth = "Authorization";
+      header_auth_val = "Bearer ";
+    }    
 
     if (url.pathname === '/v1/chat/completions') { //openai-style request
       console.log('接收到 fetch 事件');
@@ -285,14 +286,15 @@
       }
     });    
 
-    if (stream) {     
-      
+    request_header.set(`${header_auth}`, `${header_auth_val} ${apiKey}`);
+
+    if (stream) {   
       const openAIResponse = await fetch(fetchAPI, {
         method: "POST",
         headers: request_header,
         body
       });
-      console.log('url: '+fetchAPI+' header: ' + header_auth +":"+ `${header_auth_val} ${apiKey}`);
+      
       let messages = requestData.messages;
       let toolCalls = [];
       let currentToolCall = null;
@@ -575,7 +577,7 @@
         };
         const secondResponse = await fetch(fetchAPI, {
           method: "POST",
-          headers: headers,
+          headers: request_header,
           body: JSON.stringify(requestBody)
         });
         console.log("\u54CD\u5E94\u72B6\u6001\u7801: 200");
