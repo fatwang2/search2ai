@@ -19,6 +19,9 @@
   const resource_name = typeof RESOURCE_NAME !== "undefined" ? RESOURCE_NAME : "xxxxx";
   const deployName = typeof DEPLOY_NAME !== "undefined" ? DEPLOY_NAME : "gpt-35-turbo";
   const api_ver = typeof API_VERSION !== "undefined" ? API_VERSION : "2024-03-01-preview";
+  const openai_key = typeof OPENAI_API_KEY !== "undefined" ? OPENAI_API_KEY : "sk-xxxx";
+  const azure_key = typeof AZURE_API_KEY !== "undefined" ? AZURE_API_KEY : "0000";
+  const auth_keys = typeof AUTH_KEYS !== "undefined" ? AUTH_KEYS : [""];
   
   let fetchAPI = "";
   let request_header = new Headers({
@@ -38,6 +41,9 @@
     let apiKey = "";
     if (authHeader) {
       apiKey = authHeader.split(" ")[1];
+      if ( !auth_keys.includes(apiKey) ){
+        return event.respondWith(new Response("invaild Auth code", { status: 400, headers: corsHeaders }));
+      }
     } else {
       return event.respondWith(new Response("Authorization header is missing", { status: 400, headers: corsHeaders }));
     }
@@ -45,11 +51,13 @@
     if ( api_type === "azure" ){
       fetchAPI = `https://${resource_name}.openai.azure.com/openai/deployments/${deployName}/chat/completions?api-version=${api_ver}`;
       header_auth = "api-key";
-      header_auth_val = "";       
-    }else{
+      header_auth_val = "";
+      apiKey = azure_key;       
+    }else{ //openai
       fetchAPI = `${apiBase}/v1/chat/completions`;
       header_auth = "Authorization";
       header_auth_val = "Bearer ";
+      apiKey = openai_key;
     }    
 
     if (url.pathname === '/v1/chat/completions') { //openai-style request
@@ -288,13 +296,19 @@
 
     request_header.set(`${header_auth}`, `${header_auth_val} ${apiKey}`);
 
+    console.log("headers: ");
+      request_header.forEach((value, name) => {
+        console.log(`${name}: ${value}`);
+      });
+
     if (stream) {   
+
       const openAIResponse = await fetch(fetchAPI, {
         method: "POST",
         headers: request_header,
         body
       });
-      
+      console.log('url: '+fetchAPI+' header: ' + header_auth +":"+ `${header_auth_val} ${apiKey}`);
       let messages = requestData.messages;
       let toolCalls = [];
       let currentToolCall = null;
