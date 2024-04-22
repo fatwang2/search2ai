@@ -296,11 +296,6 @@
 
     request_header.set(`${header_auth}`, `${header_auth_val} ${apiKey}`);
 
-    console.log("headers: ");
-      request_header.forEach((value, name) => {
-        console.log(`${name}: ${value}`);
-      });
-
     if (stream) {   
 
       const openAIResponse = await fetch(fetchAPI, {
@@ -308,7 +303,7 @@
         headers: request_header,
         body
       });
-      console.log('url: '+fetchAPI+' header: ' + header_auth +":"+ `${header_auth_val} ${apiKey}`);
+      
       let messages = requestData.messages;
       let toolCalls = [];
       let currentToolCall = null;
