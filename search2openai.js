@@ -8,14 +8,28 @@
     "Access-Control-Max-Age": "86400"
     // 预检请求结果的缓存时间
   };
-  const req_path='chat/completions';
-  addEventListener("fetch", (event) => {
+
+  var header_auth="Authorization"; //azure use "api-key"
+  var header_auth_val="Bearer ";
+
+  // get variables from env
+  const api_type = typeof OPENAI_API !== "undefined" ? OPENAI_API : "openai";
+  const chat_model = typeof MODEL !== "undefined" ? MODEL : "gpt-3.5-turbo";
+  const apiBase = typeof APIBASE !== "undefined" ? APIBASE : "https://api.openai.com";
+  const resource_name = typeof RESOURCE_NAME !== "undefined" ? RESOURCE_NAME : "xxxxx";
+  const deployName = typeof DEPLOY_NAME !== "undefined" ? DEPLOY_NAME : "gpt-35-turbo";
+  const api_ver = typeof API_VERSION !== "undefined" ? API_VERSION : "2024-03-01-preview";
+  
+  var fetchAPI = `${apiBase}/v1/chat/completions`;
+  var request_header = new Headers(); //request header for forward
+
+  addEventListener("fetch", (event) => {     
     console.log(`\u6536\u5230\u8BF7\u6C42: ${event.request.method} ${event.request.url}`);
     const url = new URL(event.request.url);
     if (event.request.method === "OPTIONS") {
       return event.respondWith(handleOptions());
     }
-    const apiBase = typeof APIBASE !== "undefined" ? APIBASE : "https://api.openai.com";
+
     const authHeader = event.request.headers.get("Authorization");
     let apiKey = "";
     if (authHeader) {
@@ -23,10 +37,24 @@
     } else {
       return event.respondWith(new Response("Authorization header is missing", { status: 400, headers: corsHeaders }));
     }
-    if (url.pathname === '/v1/chat/completions') {
+
+    if ( api_type === "azure" ){
+      fetchAPI = `https://${resource_name}.openai.azure.com/openai/deployments/${deployName}/chat/completions?api-version=${api_ver}`;
+      header_auth = "api-key";
+      header_auth_val = "";      
+    }
+    
+    request_header.append("Content-Type", "application/json");
+    request_header.append(`${header_auth}`, `${header_auth_val} ${apiKey}`);
+    console.log("headers: ");
+    request_header.forEach((value, name) => {
+      console.log(`${name}: ${value}`);
+    });
+
+    if (url.pathname === '/v1/chat/completions') { //openai-style request
       console.log('接收到 fetch 事件');
       event.respondWith(handleRequest(event.request, apiBase, apiKey));
-    } else {
+    } else { //other request
       event.respondWith(handleOtherRequest(apiBase, apiKey, event.request, url.pathname).then((response) => {
         return new Response(response.body, {
           status: response.status,
@@ -44,7 +72,12 @@
   async function handleOtherRequest(apiBase, apiKey, request, pathname) {
     const headers = new Headers(request.headers);
     headers.delete("Host");
-    headers.set("Authorization", `Bearer ${apiKey}`);
+    if ( api_type === "azure"){
+      headers.set("api-key", `${apiKey}`);
+    }else{
+      headers.set("Authorization", `Bearer ${apiKey}`);
+    }
+    
     const response = await fetch(`${apiBase}${pathname}`, {
       method: request.method,
       headers,
@@ -173,11 +206,13 @@
     }
   }
   async function handleRequest(request, apiBase, apiKey) {
+
     console.log(`\u5F00\u59CB\u5904\u7406\u8BF7\u6C42: ${request.method} ${request.url}`);
     if (request.method !== "POST") {
       console.log(`\u4E0D\u652F\u6301\u7684\u8BF7\u6C42\u65B9\u6CD5: ${request.method}`);
       return new Response("Method Not Allowed", { status: 405, headers: corsHeaders });
     }
+
     const requestData = await request.json();
     console.log("\u8BF7\u6C42\u6570\u636E:", requestData);
     const stream = requestData.stream || false;
@@ -202,7 +237,10 @@
               parameters: {
                 type: "object",
                 properties: {
-                  query: { type: "string", "description": "The query to search." }
+                  query: { 
+                    type: "string", 
+                    "description": "The query to search." 
+                  }
                 },
                 required: ["query"]
               }
@@ -216,7 +254,10 @@
               parameters: {
                 type: "object",
                 properties: {
-                  query: { type: "string", description: "The query to search for news." }
+                  query: { 
+                    type: "string", 
+                    description: "The query to search for news." 
+                  }
                 },
                 required: ["query"]
               }
@@ -242,16 +283,16 @@
         ],
         tool_choice: "auto"
       }
-    });
-    if (stream) {
-      const openAIResponse = await fetch(`${apiBase}/v1/chat/completions`, {
+    });    
+
+    if (stream) {     
+      
+      const openAIResponse = await fetch(fetchAPI, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`
-        },
+        headers: request_header,
         body
       });
+      console.log('url: '+fetchAPI+' header: ' + header_auth +":"+ `${header_auth_val} ${apiKey}`);
       let messages = requestData.messages;
       let toolCalls = [];
       let currentToolCall = null;
@@ -456,12 +497,9 @@
         });
       }
       console.log("Messages before sending second request:", JSON.stringify(messages, null, 2));
-      const secondResponse = await fetch(`${apiBase}/v1/chat/completions`, {
+      const secondResponse = await fetch(fetchAPI, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`
-        },
+        headers: request_header,
         body: JSON.stringify({
           model,
           messages,
@@ -476,13 +514,9 @@
         }
       });
     } else {
-      const openAIResponse = await fetch(`${apiBase}/v1/chat/completions`, {
+      const openAIResponse = await fetch(fetchAPI, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`
-          // 使用从请求的 headers 中获取的 API key
-        },
+        headers: request_header,
         body
       });
       if (openAIResponse.status !== 200) {
@@ -539,13 +573,9 @@
           model,
           messages
         };
-        const secondResponse = await fetch(`${apiBase}/v1/chat/completions`, {
+        const secondResponse = await fetch(fetchAPI, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-            "Authorization": `Bearer ${apiKey}`
-          },
+          headers: headers,
           body: JSON.stringify(requestBody)
         });
         console.log("\u54CD\u5E94\u72B6\u6001\u7801: 200");
