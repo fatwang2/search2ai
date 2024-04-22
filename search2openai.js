@@ -19,8 +19,8 @@
   const resource_name = typeof RESOURCE_NAME !== "undefined" ? RESOURCE_NAME : "xxxxx";
   const deployName = typeof DEPLOY_NAME !== "undefined" ? DEPLOY_NAME : "gpt-35-turbo";
   const api_ver = typeof API_VERSION !== "undefined" ? API_VERSION : "2024-03-01-preview";
-  const openai_key = typeof OPENAI_API_KEY !== "undefined" ? OPENAI_API_KEY : "sk-xxxx";
-  const azure_key = typeof AZURE_API_KEY !== "undefined" ? AZURE_API_KEY : "0000";
+  let openai_key = typeof OPENAI_API_KEY !== "undefined" ? OPENAI_API_KEY : "";
+  const azure_key = typeof AZURE_API_KEY !== "undefined" ? AZURE_API_KEY : "";
   const auth_keys = typeof AUTH_KEYS !== "undefined" ? AUTH_KEYS : [""];
   
   let fetchAPI = "";
@@ -41,8 +41,8 @@
     let apiKey = "";
     if (authHeader) {
       apiKey = authHeader.split(" ")[1];
-      if ( !auth_keys.includes(apiKey) ){
-        return event.respondWith(new Response("invaild Auth code", { status: 400, headers: corsHeaders }));
+      if (!auth_keys.includes(apiKey) || !openai_key) {
+        openai_key = apiKey;
       }
     } else {
       return event.respondWith(new Response("Authorization header is missing", { status: 400, headers: corsHeaders }));
@@ -62,7 +62,7 @@
 
     if (url.pathname === '/v1/chat/completions') { //openai-style request
       console.log('接收到 fetch 事件');
-      event.respondWith(handleRequest(event.request, apiBase, apiKey));
+      event.respondWith(handleRequest(event.request, fetchAPI, apiKey));
     } else { //other request
       event.respondWith(handleOtherRequest(apiBase, apiKey, event.request, url.pathname).then((response) => {
         return new Response(response.body, {
@@ -214,7 +214,7 @@
       return `\u5728 crawler \u51FD\u6570\u4E2D\u6355\u83B7\u5230\u9519\u8BEF: ${error}`;
     }
   }
-  async function handleRequest(request, apiBase, apiKey) {
+  async function handleRequest(request, fetchAPI, apiKey) {
 
     console.log(`\u5F00\u59CB\u5904\u7406\u8BF7\u6C42: ${request.method} ${request.url}`);
     if (request.method !== "POST") {
@@ -294,10 +294,9 @@
       }
     });    
 
-    request_header.set(`${header_auth}`, `${header_auth_val} ${apiKey}`);
+    request_header.set(`${header_auth}`,`${header_auth_val}${apiKey}`);
 
     if (stream) {   
-
       const openAIResponse = await fetch(fetchAPI, {
         method: "POST",
         headers: request_header,
@@ -366,7 +365,6 @@
               reader.read().then(({ done, value }) => {
                 if (done) {
                   console.log("Custom function called, processing tool calls");
-                  console.log("Function arguments:", functionArguments);
                   controller.close();
                   return;
                 }
@@ -376,9 +374,7 @@
                 // 检查是否获得完整的 JSON 字符串
                 if (functionArguments.startsWith('{"') && functionArguments.endsWith('"}')) {
                   console.log("Custom function called, processing tool calls");
-                  console.log("Function arguments:", functionArguments);
                 } else {
-                  console.log("Incomplete JSON, buffering");
                 }
 
                 controller.enqueue(value);
@@ -475,10 +471,8 @@
             console.error("Function arguments are empty.");
             continue; // 跳过当前工具调用，继续处理下一个
           }
-          console.log("Function arguments:", toolCall.function.arguments);
           functionArgs = JSON.parse(toolCall.function.arguments);
         } catch (err) {
-          console.error("Error parsing function arguments:", err);
           continue;
         }
         let functionResponse;
@@ -507,7 +501,6 @@
           }
         });
       }
-      console.log("Messages before sending second request:", JSON.stringify(messages, null, 2));
       const secondResponse = await fetch(fetchAPI, {
         method: "POST",
         headers: request_header,
