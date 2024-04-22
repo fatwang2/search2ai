@@ -117,6 +117,11 @@ http://localhost:3014/v1/chat/completions
 | `RESOURCE_NAME`     | No      | 如选azure必填| `xxxx`|
 | `DEPLOY_NAME`     | No      | 如选azure必填| `gpt-35-turbo`|
 | `API_VERSION`     | No      | 如选azure必填| `2024-03-01-preview`|
+| `AUTH_KEYS`     | Yes      | 必填,对外授权码| `000,1111,2222`|
+| `AZURE_API_KEY`     | No      | 如选azure必填| `xxxx`|
+| `OPENAI_API_KEY`     | No      | 如选Openai必填| `sk-xxx`|
+
+
 
 # 风险声明
 为了确保本项目的持久运行，某些接口请求将通过[search1api](https://search.search2ai.one)进行转发。请放心，该转发服务不会保存任何隐私数据。
