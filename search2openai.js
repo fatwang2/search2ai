@@ -13,7 +13,7 @@
   var header_auth_val="Bearer ";
 
   // get variables from env
-  const api_type = typeof OPENAI_TYPE !== "undefined" ? OPENAI_API : "openai";
+  const api_type = typeof OPENAI_TYPE !== "undefined" ? OPENAI_TYPE : "openai";
   const apiBase = typeof APIBASE !== "undefined" ? APIBASE : "https://api.openai.com";
   const resource_name = typeof RESOURCE_NAME !== "undefined" ? RESOURCE_NAME : "xxxxx";
   const deployName = typeof DEPLOY_NAME !== "undefined" ? DEPLOY_NAME : "gpt-35-turbo";
