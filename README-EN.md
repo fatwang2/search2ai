@@ -40,6 +40,7 @@ Help your LLM API support networking, search, news, web page summarization, has 
 | -------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | `OpenAI`     | search, news, crawler      | stream, unstream| Zeabur, Local deployment, Cloudflare Worker, Vercel|
 | `Azure OpenAI`     | search, news, crawler      | stream, unstream| Cloudflare Worker|
+| `Groq`     | search, news, crawler      | stream, unstream| Cloudflare Worker|
 | `Gemini`     | search      | stream, unstream| Cloudflare Worker|
 | `Moonshot`     | search, news, crawler      | unstream| Zeabur, Local deployment, Cloudflare Worker, Vercel|
 
@@ -81,7 +82,7 @@ http://localhost:3014/v1/chat/completions
 ```
 
 **Cloudflare worker**
-1. Copy the code of [search2openai.js](search2openai.js), or [search2gemini.js](search2gemini.js),no modifications needed! Deploy in cloudflare's worker, after going online, the worker's address can be used as your interface call's custom domain address, note the concatenation, worker address only represents the part before v1
+1. Copy the code of [search2openai.js](search2openai.js), or [search2gemini.js](search2gemini.js), or [search2groq.js](search2groq.js), no modifications needed! Deploy in cloudflare's worker, after going online, the worker's address can be used as your interface call's custom domain address, note the concatenation, worker address only represents the part before v1
 
 2. Configure variables in the worker（only openai）
 ![Effect Example](pictures/worker.png)
@@ -105,7 +106,7 @@ This project provides some additional configuration options, which can be set th
 | Environment Variable | Required | Description                                                                                                                                                               | Example                                                                                                              |
 | -------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | `SEARCH_SERVICE`     | Yes      | Your search service. The key of the service you choose needs to be configured. Supports search1api, google, bing, serpapi, serper, duckduckgo. | `search1api, google, bing, serpapi, serper, duckduckgo` |
-| `APIBASE`     | No      | OpenAI third-party proxy address. If using Moonshot, fill in `https://api.moonshot.cn`. | `https://api.openai.com` |
+| `APIBASE`     | No      | Third-party proxy address. | `https://api.openai.com, https://api.moonshot.cn, https://api.groq.com/openai` |
 | `MAX_RESULTS`     | No      | Number of search results. | `10` |
 | `CRAWL_RESULTS`     | No      | The number of deep searches (retrieve the main text of the webpage after searching). Currently only supports search1api, deep search will be slow. | `1` |
 | `SEARCH1API_KEY`     | Conditional      | Required if search1api is selected. My own fast and cheap search service. Apply at https://search21api.com. | `xxx` |

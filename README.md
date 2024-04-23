@@ -8,6 +8,7 @@
 <a href="https://www.buymeacoffee.com/fatwang2" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
 # 版本更新
+- V0.2.4，20240424，支持 Groq 的llama-3、mistral等模型，速度起飞
 - V0.2.3，20240423，Cloudflare Worker版本支持Azure OpenAI；支持授权码，可自定义用户的请求key
 - V0.2.2，20240420，支持Moonshot的非流式模式
 - V0.2.1，20240310，支持Google、Bing、Duckduckgo、Search1API新闻类搜索；支持通过环境变量MAX_RESULTS调整搜索结果数量；支持通过环境变量CRAWL_RESULTS调整希望深度搜索的数量
@@ -34,6 +35,7 @@
 | -------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | `OpenAI`     | 联网、新闻、内容爬取      | 流式、非流式| Zeabur、本地部署、Cloudflare Worker、Vercel|
 | `Azure OpenAI`     | 联网、新闻、内容爬取      | 流式、非流式| Cloudflare Worker|
+| `Groq`     | 联网、新闻、内容爬取      | 流式、非流式| Cloudflare Worker|
 | `Gemini`     | 联网      | 流式、非流式| Cloudflare Worker|
 | `Moonshot`     | 联网、新闻、内容爬取      | 非流式| Zeabur、本地部署、Cloudflare Worker、Vercel|
 
@@ -75,7 +77,7 @@ http://localhost:3014/v1/chat/completions
 ```
 
 **Cloudflare Worker部署**
-1. 复制[search2openai.js](search2openai.js)或者[search2gemini.js](search2gemini.js)的代码，不需要任何修改！在cloudflare的worker里部署，上线后的worker的地址可作为你接口调用时的自定义域名地址，注意拼接，worker地址仅代表v1前的部分
+1. 复制[search2openai.js](search2openai.js)或者[search2gemini.js](search2gemini.js)或者[search2groq.js](search2groq.js)的代码，不需要任何修改！在cloudflare的worker里部署，上线后的worker的地址可作为你接口调用时的自定义域名地址，注意拼接，worker地址仅代表v1前的部分
 
 2. 在worker中配置环境变量
 ![效果示例](pictures/worker.png)
@@ -99,7 +101,7 @@ http://localhost:3014/v1/chat/completions
 | 环境变量 | 是否必须 | 描述                                                                                                                                                               | 例子                                                                                                              |
 | -------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | `SEARCH_SERVICE`     | Yes      | 你的搜索服务，选择什么服务，就需要配置什么服务的key支持search1api、google、bing、serpapi、serper、duckduckgo| `search1api, google, bing, serpapi, serper, duckduckgo`|
-| `APIBASE`     | No      | OpenAI 三方代理地址，使用Moonshot则填写`https://api.moonshot.cn`| `https://api.openai.com`|
+| `APIBASE`     | No      | 三方代理地址`| `https://api.openai.com, https://api.moonshot.cn, https://api.groq.com/openai`|
 | `MAX_RESULTS`     | No      | 搜索结果条数| `10`|
 | `CRAWL_RESULTS`     | No      | 要进行深度搜索（搜索后获取网页正文）的数量，目前仅支持 search1api，深度速度会慢| `1`|
 | `SEARCH1API_KEY`     | No      | 如选search1api必填，我自己搭建的搜索服务，又快又便宜，申请地址 https://search21api.com| `xxx`|
