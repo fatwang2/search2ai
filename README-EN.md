@@ -7,6 +7,7 @@
 <a href="https://www.buymeacoffee.com/fatwang2" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
 # Version Updates
+- V0.2.3, 20240423, support for Azure OpenAI in Cloudflare Worker. It also introduces the ability to use an authorization code and customize the user's request key.
 - V0.2.2, 20240420, support Moonshot API
 - V0.2.1, 20240310, supports Google, Bing, Duckduckgo, Search1API for news-type searches; supports adjusting the number of search results via the MAX_RESULTS environment variable; supports adjusting the number of in-depth searches desired via the CRAWL_RESULTS environment variable.
 - V0.2.0，20240310，Optimized openai.js, cloudflare worker version, really faster this time!
@@ -38,6 +39,7 @@ Help your LLM API support networking, search, news, web page summarization, has 
 | Model | Features | Stream                                                                                                                                                               | Deployments                                                                                                              |
 | -------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | `OpenAI`     | search, news, crawler      | stream, unstream| Zeabur, Local deployment, Cloudflare Worker, Vercel|
+| `Azure OpenAI`     | search, news, crawler      | stream, unstream| Cloudflare Worker|
 | `Gemini`     | search      | stream, unstream| Cloudflare Worker|
 | `Moonshot`     | search, news, crawler      | unstream| Zeabur, Local deployment, Cloudflare Worker, Vercel|
 
@@ -112,12 +114,18 @@ This project provides some additional configuration options, which can be set th
 | `GOOGLE_KEY`     | Conditional      | Required if Google search is selected. API key. Apply at https://search2ai.online/googlekey. | `xxx` |
 | `SERPAPI_KEY`     | Conditional      | Required if serpapi is selected. Free 100 times/month. Register at https://search2ai.online/serpapi. | `xxx` |
 | `SERPER_KEY`     | Conditional      | Required if serper is selected. Free 2500 times for 6 months. Register at https://search2ai.online/serper. | `xxx` |
+| `OPENAI_TYPE` | No | OpenAI provider source, default is openai | `openai, azure` |
+| `RESOURCE_NAME` | Conditional | Required if azure is selected | `xxxx` |
+| `DEPLOY_NAME` | Conditional | Required if azure is selected | `gpt-35-turbo` |
+| `API_VERSION` | Conditional | Required if azure is selected | `2024-02-15-preview` |
+| `AZURE_API_KEY` | Conditional | Required if azure is selected | `xxxx` |
+| `AUTH_KEYS` | No | If you want users to define a separate authorization code as a key when making requests, you need to fill this in. Required if azure is selected | `000,1111,2222` |
+| `OPENAI_API_KEY` | No | If you want users to define a separate authorization code as a key when requesting openai, you need to fill this in | `sk-xxx` |
 
 # Risk statement
 To ensure the persistence of this project, certain interface requests will be forwarded via [search1api](https://search.search2ai.one). Please be assured that this forwarding service does not save any private data.
 
 # Future Iterations
-- Support for Azure OpenAI
 - Fix streaming output issues in Vercel project
 - Improve the speed of streaming output
 - Support more vertical searches

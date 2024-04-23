@@ -8,16 +8,10 @@
 <a href="https://www.buymeacoffee.com/fatwang2" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
 # 版本更新
+- V0.2.3，20240423，Cloudflare Worker版本支持Azure OpenAI；支持授权码，可自定义用户的请求key
 - V0.2.2，20240420，支持Moonshot的非流式模式
 - V0.2.1，20240310，支持Google、Bing、Duckduckgo、Search1API新闻类搜索；支持通过环境变量MAX_RESULTS调整搜索结果数量；支持通过环境变量CRAWL_RESULTS调整希望深度搜索的数量
 - V0.2.0，20240310，优化openai.js，cloudflare worker版本，这次速度真的更快了！
-- V0.1.9，20240318，优化openai.js对流式的处理方式，速度更快，建议更新；修复服务器部署版本的语音问题；增加Github赞助按钮
-- V0.1.8，20240305，支持search1api搜索服务，更新Gemini版本搜索变量配置，开放新闻搜索能力，增加风险声明
-- V0.1.7，20240224，Gemini版本支持流式输出，且兼容vision model
-- V0.1.6，20240221，支持Gemini模型，暂时可通过cloudflare worker的方式配置
-- V0.1.5，20240205，支持新闻搜索，快速浏览新闻更方便
-- V0.1.4，20240120，支持Zeabur一键部署，非常方便，强烈推荐！
-- V0.1.3，20240120，支持本地部署，可自行部署在自己的服务器上
 
 更多历史更新，请参见 [版本记录](https://github.com/fatwang2/search2ai/releases)
 
@@ -39,6 +33,7 @@
 | 模型 | 功能 | 流式输出                                                                                                                                                               | 部署方式                                                                                                              |
 | -------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | `OpenAI`     | 联网、新闻、内容爬取      | 流式、非流式| Zeabur、本地部署、Cloudflare Worker、Vercel|
+| `Azure OpenAI`     | 联网、新闻、内容爬取      | 流式、非流式| Cloudflare Worker|
 | `Gemini`     | 联网      | 流式、非流式| Cloudflare Worker|
 | `Moonshot`     | 联网、新闻、内容爬取      | 非流式| Zeabur、本地部署、Cloudflare Worker、Vercel|
 
@@ -113,13 +108,13 @@ http://localhost:3014/v1/chat/completions
 | `GOOGLE_KEY`     | No      | 如选Google搜索必填，API key，申请地址 https://search2ai.online/googlekey| `xxx`|
 | `SERPAPI_KEY`     | No      | 如选serpapi必填，免费100次/月，注册地址 https://search2ai.online/serpapi| `xxx`|
 | `SERPER_KEY`     | No      | 如选serper必填，6个月免费额度2500次，注册地址 https://search2ai.online/serper| `xxx`|
-| `OPENAI_API`     | No      | 默认为openai，支持openai, azure| `openai`|
+| `OPENAI_TYPE`     | No      | openai供给来源，默认为openai| `openai, azure`|
 | `RESOURCE_NAME`     | No      | 如选azure必填| `xxxx`|
 | `DEPLOY_NAME`     | No      | 如选azure必填| `gpt-35-turbo`|
-| `API_VERSION`     | No      | 如选azure必填| `2024-03-01-preview`|
-| `AUTH_KEYS`     | Yes      | 必填,对外授权码| `000,1111,2222`|
+| `API_VERSION`     | No      | 如选azure必填| `2024-02-15-preview`|
 | `AZURE_API_KEY`     | No      | 如选azure必填| `xxxx`|
-| `OPENAI_API_KEY`     | No      | 如选Openai必填| `sk-xxx`|
+| `AUTH_KEYS`     | No      | 如果希望用户请求的时候单独定义授权码作为key，则需要填写，如选azure则必填| `000,1111,2222`|
+| `OPENAI_API_KEY`     | No      | 如果希望用户请求openai的时候也单独定义授权码作为key，则需要填写| `sk-xxx`|
 
 
 
@@ -127,7 +122,6 @@ http://localhost:3014/v1/chat/completions
 为了确保本项目的持久运行，某些接口请求将通过[search1api](https://search.search2ai.one)进行转发。请放心，该转发服务不会保存任何隐私数据。
 
 # 后续迭代
-- 支持Azure OpenAI
 - 修复Vercel项目流式输出问题
 - 提升流式输出的速度
 - 支持更多垂类搜索

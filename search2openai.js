@@ -13,8 +13,7 @@
   var header_auth_val="Bearer ";
 
   // get variables from env
-  const api_type = typeof OPENAI_API !== "undefined" ? OPENAI_API : "openai";
-  const chat_model = typeof MODEL !== "undefined" ? MODEL : "gpt-3.5-turbo";
+  const api_type = typeof OPENAI_TYPE !== "undefined" ? OPENAI_API : "openai";
   const apiBase = typeof APIBASE !== "undefined" ? APIBASE : "https://api.openai.com";
   const resource_name = typeof RESOURCE_NAME !== "undefined" ? RESOURCE_NAME : "xxxxx";
   const deployName = typeof DEPLOY_NAME !== "undefined" ? DEPLOY_NAME : "gpt-35-turbo";
@@ -316,15 +315,46 @@
       let shouldDirectlyReturn = true; // 默认直接返回
 
       async function processFirstBlock() {
-        const { value, done } = await reader.read();
+        const promptFilterResultsRegex = /"prompt_filter_results"/;
+        const functionRegex = /"function"/;
+      
+        let { value, done } = await reader.read();
         if (done) {
           return;
         }
-        const block = decoder.decode(value, { stream: true });
+        let block = decoder.decode(value, { stream: true });
         buffer += block;
-        if (buffer.includes('"function"')) {
+      
+        if (promptFilterResultsRegex.test(buffer)) {
+          const blocks = [buffer];
+      
+          // 读取第二个块
+          while (!done) {
+            ({ value, done } = await reader.read({ size: 65536 })); // 使用更大的缓冲区大小
+            block = decoder.decode(value, { stream: true });
+            blocks.push(block);
+      
+            // 检查是否读取到第二个块的结束位置
+            if (block.includes('}')) {
+              break;
+            }
+          }
+      
+          const secondBlock = blocks.join('').slice(0, blocks.join('').lastIndexOf('}') + 1);
+      
+          // 检查第二个块是否包含 "function"
+          if (functionRegex.test(secondBlock)) {
+            shouldDirectlyReturn = false;
+            console.log("发现 function,将进行特定处理");
+          }
+      
+          // 更新缓冲区,包括第一个块和第二个块
+          buffer = blocks.join('');
+        } else if (functionRegex.test(buffer)) {
           shouldDirectlyReturn = false;
           console.log("发现 function,将进行特定处理");
+        } else {
+          return;
         }
       }
 
@@ -364,7 +394,6 @@
             function push() {
               reader.read().then(({ done, value }) => {
                 if (done) {
-                  console.log("Custom function called, processing tool calls");
                   controller.close();
                   return;
                 }
@@ -432,9 +461,6 @@
                   }
                 }
               } catch (err) {
-                console.error('Error parsing JSON:', err);
-                console.error('Invalid JSON string:', data);
-                console.log('Incomplete JSON, buffering');
               }
             }
           }
