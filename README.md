@@ -120,6 +120,7 @@ http://localhost:3014/v1/chat/completions
 | `OPENAI_API_KEY`     | No      | 如果希望用户请求openai的时候也单独定义授权码作为key，则需要填写| `sk-xxx`|
 
 # 后续迭代
+- 支持SearXNG搜索服务
 - 修复Vercel项目流式输出问题
 - 提升流式输出的速度
 - 支持更多垂类搜索

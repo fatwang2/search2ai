@@ -119,6 +119,7 @@ This project provides some additional configuration options, which can be set th
 | `OPENAI_API_KEY` | No | If you want users to define a separate authorization code as a key when requesting openai, you need to fill this in | `sk-xxx` |
 
 # Future Iterations
+- Support SearXNG
 - Fix streaming output issues in Vercel project
 - Improve the speed of streaming output
 - Support more vertical searches
