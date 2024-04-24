@@ -8,6 +8,7 @@
 <a href="https://www.buymeacoffee.com/fatwang2" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
 # 版本更新
+- V0.2.5，20240425，为了解决隐私担忧，开源搜索接口部分的代码
 - V0.2.4，20240424，支持 Groq 的llama-3、mistral等模型，速度起飞
 - V0.2.3，20240423，Cloudflare Worker版本支持Azure OpenAI；支持授权码，可自定义用户的请求key
 - V0.2.2，20240420，支持Moonshot的非流式模式
@@ -117,11 +118,6 @@ http://localhost:3014/v1/chat/completions
 | `AZURE_API_KEY`     | No      | 如选azure必填| `xxxx`|
 | `AUTH_KEYS`     | No      | 如果希望用户请求的时候单独定义授权码作为key，则需要填写，如选azure则必填| `000,1111,2222`|
 | `OPENAI_API_KEY`     | No      | 如果希望用户请求openai的时候也单独定义授权码作为key，则需要填写| `sk-xxx`|
-
-
-
-# 风险声明
-为了确保本项目的持久运行，某些接口请求将通过[search1api](https://search.search2ai.one)进行转发。请放心，该转发服务不会保存任何隐私数据。
 
 # 后续迭代
 - 修复Vercel项目流式输出问题

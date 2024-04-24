@@ -9,43 +9,119 @@ addEventListener('fetch', event => {
       'Access-Control-Max-Age': '86400', // 预检请求结果的缓存时间
   };
   async function search(query) {
-      console.log('search function started with query:', query);
-  
-      try {
-        const url = "https://search.search2ai.one";
-        const headers= {
-            "Content-Type": "application/json",
-            "Authorization": typeof SEARCH1API_KEY !== 'undefined' ? `Bearer ${SEARCH1API_KEY}` : '',
-            "google_cx": typeof GOOGLE_CX !== 'undefined' ? GOOGLE_CX : '',
-            "google_key": typeof GOOGLE_KEY !== 'undefined' ? GOOGLE_KEY : '',
-            "serpapi_key": typeof SERPAPI_KEY !== 'undefined' ? SERPAPI_KEY : '',
-            "serper_key": typeof SERPER_KEY !== 'undefined' ? SERPER_KEY : '',
-            "bing_key": typeof BING_KEY !== 'undefined' ? BING_KEY : '',
-            "apibase": typeof APIBASE !== 'undefined' ? APIBASE : 'https://api.openai.com'
-        };
-        const body = {
-          "query": query,
-          search_service: SEARCH_SERVICE,
-          max_results: typeof MAX_RESULTS !== "undefined" ? MAX_RESULTS : "5",
-          crawl_results:typeof CRAWL_RESULTS !== "undefined" ? MAX_RESULTS : "0",
-        };
-    
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: headers,
-          body: JSON.stringify(body)
-        });
-    
-        if (response.ok) {
-          console.log('search function successfully completed');
-          return response.json();
-        } else {
-          throw new Error("Unable to make request");
-        }
-      } catch (error) {
-        return {"status": "ERROR: " + error.message};
+    console.log(`正在使用 ${SEARCH_SERVICE} 进行自定义搜索: ${JSON.stringify(query)}`);    
+    try {
+      let response;
+      
+      switch (SEARCH_SERVICE) {
+        case "search1api":
+          response = await fetch("https://search.search2ai.one", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: typeof SEARCH1API_KEY !== "undefined" ? `Bearer ${SEARCH1API_KEY}` : "",
+            },
+            body: JSON.stringify({
+              query,
+              max_results: typeof MAX_RESULTS !== "undefined" ? MAX_RESULTS : "5",
+              crawl_results: typeof CRAWL_RESULTS !== "undefined" ? MAX_RESULTS : "0",
+            }),
+          });
+          break;
+          
+          case "google":
+            const googleApiUrl = `https://www.googleapis.com/customsearch/v1?cx=${GOOGLE_CX}&key=${GOOGLE_KEY}&q=${encodeURIComponent(query)}`;
+            const googleResponse = await fetch(googleApiUrl);
+            const googleData = await googleResponse.json();
+            results = googleData.items.slice(0, MAX_RESULTS).map((item) => ({
+              title: item.title,
+              link: item.link,
+              snippet: item.snippet
+            }));
+            break;
+            
+          case "bing":
+            const bingApiUrl = `https://api.bing.microsoft.com/v7.0/search?q=${encodeURIComponent(query)}`;
+            const bingResponse = await fetch(bingApiUrl, {
+              headers: { "Ocp-Apim-Subscription-Key": BING_KEY }
+            });
+            const bingData = await bingResponse.json();
+            results = bingData.webPages.value.slice(0, MAX_RESULTS).map((item) => ({
+              title: item.name,
+              link: item.url,
+              snippet: item.snippet
+            }));
+            break;
+            
+          case "serpapi":
+            const serpApiUrl = `https://serpapi.com/search?api_key=${SERPAPI_KEY}&engine=google&q=${encodeURIComponent(query)}&google_domain=google.com`;
+            const serpApiResponse = await fetch(serpApiUrl);
+            const serpApiData = await serpApiResponse.json();
+            results = serpApiData.organic_results.slice(0, MAX_RESULTS).map((item) => ({
+              title: item.title,
+              link: item.link,
+              snippet: item.snippet
+            }));
+            break;
+            
+          case "serper":
+            const gl = typeof GL !== "undefined" ? GL : "us";
+            const hl = typeof HL !== "undefined" ? HL : "en";
+            const serperApiUrl = "https://google.serper.dev/search";
+            const serperResponse = await fetch(serperApiUrl, {
+              method: "POST",
+              headers: {
+                "X-API-KEY": SERPER_KEY,
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({ q: query, gl: gl, hl: hl })
+            });
+            const serperData = await serperResponse.json();
+            results = serperData.organic.slice(0, MAX_RESULTS).map((item) => ({
+              title: item.title,
+              link: item.link,
+              snippet: item.snippet
+            }));
+            break;
+            
+          case "duckduckgo":
+            const duckDuckGoApiUrl = "https://ddg.search2ai.online/search";
+            const body = {
+              q: query,
+              max_results: typeof MAX_RESULTS !== "undefined" ? MAX_RESULTS : "5"
+            };
+            const duckDuckGoResponse = await fetch(duckDuckGoApiUrl, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify(body)
+            });
+            const duckDuckGoData = await duckDuckGoResponse.json();
+            results = duckDuckGoData.results.map((item) => ({
+              title: item.title,
+              link: item.href,
+              snippet: item.body
+            }));
+            break;
+          
+        default:
+          console.error(`不支持的搜索服务: ${SEARCH_SERVICE}`);
+          return `不支持的搜索服务: ${SEARCH_SERVICE}`;
       }
+      
+      const data = {
+        results: results
+      };
+      
+      console.log('自定义搜索服务调用完成');
+      return JSON.stringify(data);
+      
+    } catch (error) {
+      console.error(`在 search 函数中捕获到错误: ${error}`);
+      return `在 search 函数中捕获到错误: ${error}`;
     }
+  }
     
   async function parse_function_response(message) {
       const function_call = message[0]["functionCall"];

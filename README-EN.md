@@ -7,18 +7,12 @@
 <a href="https://www.buymeacoffee.com/fatwang2" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
 # Version Updates
-- V0.2.4, 20240424，support for Groq in Cloudflare Worker
+- V0.2.5, 20240425, open source the code for the search api
+- V0.2.4, 20240424, support for Groq in Cloudflare Worker
 - V0.2.3, 20240423, support for Azure OpenAI in Cloudflare Worker. It also introduces the ability to use an authorization code and customize the user's request key.
 - V0.2.2, 20240420, support Moonshot API
 - V0.2.1, 20240310, supports Google, Bing, Duckduckgo, Search1API for news-type searches; supports adjusting the number of search results via the MAX_RESULTS environment variable; supports adjusting the number of in-depth searches desired via the CRAWL_RESULTS environment variable.
 - V0.2.0，20240310，Optimized openai.js, cloudflare worker version, really faster this time!
-- V0.1.9, 20240318, optimized the handling of streams in openai.js for faster speed, recommend updating; fixed the audio issue in the server deployment version; added a sponsored button on Github.
-- V0.1.8, 20240305, support search1api search service, update Gemini version search variable configuration, open news search capability, add risk statement
-- V0.1.7, 20240224, Gemini version supports streaming output and is compatible with vision model
-- V0.1.6, 20240221, Supports Gemini model, can be temporarily configured through Cloudflare worker method
-- V0.1.5, 20240205, supports news search, making it more convenient to quickly browse news
-- V0.1.4, 20240120, Supports one-click deployment with Zeabur, very convenient, highly recommended!
-- V0.1.3, 20240120, Supports local deployment, can be deployed on your own server
 
 For more historical updates, please see [Version History](https://github.com/fatwang2/search2ai/releases)
 
@@ -123,9 +117,6 @@ This project provides some additional configuration options, which can be set th
 | `AZURE_API_KEY` | Conditional | Required if azure is selected | `xxxx` |
 | `AUTH_KEYS` | No | If you want users to define a separate authorization code as a key when making requests, you need to fill this in. Required if azure is selected | `000,1111,2222` |
 | `OPENAI_API_KEY` | No | If you want users to define a separate authorization code as a key when requesting openai, you need to fill this in | `sk-xxx` |
-
-# Risk statement
-To ensure the persistence of this project, certain interface requests will be forwarded via [search1api](https://search.search2ai.one). Please be assured that this forwarding service does not save any private data.
 
 # Future Iterations
 - Fix streaming output issues in Vercel project
