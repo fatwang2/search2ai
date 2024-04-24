@@ -11,7 +11,7 @@ addEventListener('fetch', event => {
   async function search(query) {
     console.log(`正在使用 ${SEARCH_SERVICE} 进行自定义搜索: ${JSON.stringify(query)}`);    
     try {
-      let response;
+      let results;
       
       switch (SEARCH_SERVICE) {
         case "search1api":
