@@ -132,7 +132,7 @@
       
       switch (SEARCH_SERVICE) {
         case "search1api":
-          response = await fetch("https://search.search2ai.one", {
+          const search1apiResponse = await fetch("https://search.search2ai.one", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -144,6 +144,7 @@
               crawl_results: typeof CRAWL_RESULTS !== "undefined" ? MAX_RESULTS : "0",
             }),
           });
+          results = await search1apiResponse.json();
           break;
           
           case "google":
@@ -259,8 +260,7 @@
               crawl_results: typeof CRAWL_RESULTS !== "undefined" ? MAX_RESULTS : "0",
             }),
           });
-          const search1apiData = await search1apiResponse.json();
-          results = search1apiData.results;
+          results = await search1apiResponse.json();
           break;
           
         case "google":

@@ -23,8 +23,7 @@ async function news(query) {
               crawl_results: process.env.CRAWL_RESULTS || "0"
             })
           });
-          const search1apiData = await search1apiResponse.json();
-          results = search1apiData.results;
+          results = await search1apiResponse.json();
           break;
           
         case "google":

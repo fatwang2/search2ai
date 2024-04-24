@@ -15,7 +15,7 @@ addEventListener('fetch', event => {
       
       switch (SEARCH_SERVICE) {
         case "search1api":
-          response = await fetch("https://search.search2ai.one", {
+            const search1apiResponse = await fetch("https://search.search2ai.one/search", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -23,10 +23,12 @@ addEventListener('fetch', event => {
             },
             body: JSON.stringify({
               query,
+              search_service: "google",
               max_results: typeof MAX_RESULTS !== "undefined" ? MAX_RESULTS : "5",
               crawl_results: typeof CRAWL_RESULTS !== "undefined" ? MAX_RESULTS : "0",
             }),
           });
+          results = await search1apiResponse.json();
           break;
           
           case "google":
