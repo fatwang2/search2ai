@@ -101,7 +101,20 @@ async function search(query) {
             snippet: item.body
           }));
           break;
-          
+
+          case "searXNG":
+            const searXNGUrl = `${process.env.SEARXNG_BASE_URL}/search?q=${encodeURIComponent(
+              query
+          )}&category=general&format=json`;
+          const searXNGResponse = await fetch(searXNGUrl);
+            const searXNGData = await searXNGResponse.json();
+            results = searXNGData.results.slice(0, MAX_RESULTS).map((item) => ({
+              title: item.title,
+              link: item.url,
+              snippet: item.content
+            }));
+            break;
+            
         default:
           console.error(`不支持的搜索服务: ${process.env.SEARCH_SERVICE}`);
           return `不支持的搜索服务: ${process.env.SEARCH_SERVICE}`;
