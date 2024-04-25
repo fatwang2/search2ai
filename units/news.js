@@ -102,7 +102,7 @@ async function news(query) {
           }));
           break;
           
-          case "searXNG":
+          case "searxng":
             const searXNGUrl = `${process.env.SEARXNG_BASE_URL}/search?q=${encodeURIComponent(
               query
           )}&category=news&format=json`;

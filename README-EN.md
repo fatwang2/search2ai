@@ -9,11 +9,11 @@
 <a href="https://www.buymeacoffee.com/fatwang2" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
 
 # Version Updates
-
+- V0.2.6, 20240425, support the searxng search service, support the moonshot API in stream mode
 - V0.2.5, 20240425, open source the code for the search api
 - V0.2.4, 20240424, support for Groq in Cloudflare Worker
 - V0.2.3, 20240423, support for Azure OpenAI in Cloudflare Worker. It also introduces the ability to use an authorization code and customize the user's request key.
-- V0.2.2, 20240420, support Moonshot API
+- V0.2.2, 20240420, support Moonshot API on unstream mode
 - V0.2.1, 20240310, supports Google, Bing, Duckduckgo, Search1API for news-type searches; supports adjusting the number of search results via the MAX_RESULTS environment variable; supports adjusting the number of in-depth searches desired via the CRAWL_RESULTS environment variable.
 - V0.2.0，20240310，Optimized openai.js, cloudflare worker version, really faster this time!
 
@@ -42,7 +42,7 @@ Help your LLM API support networking, search, news, web page summarization, has 
 | `Azure OpenAI` | search, news, crawler | stream, unstream | Cloudflare Worker                                   |
 | `Groq`         | search, news, crawler | stream, unstream | Cloudflare Worker                                   |
 | `Gemini`       | search                | stream, unstream | Cloudflare Worker                                   |
-| `Moonshot`     | search, news, crawler | unstream         | Zeabur, Local deployment, Cloudflare Worker, Vercel |
+| `Moonshot`     | search, news, crawler | stream(only on cf), unstream         | Zeabur, Local deployment, Cloudflare Worker(stream), Vercel |
 
 # Usage
 
@@ -111,7 +111,7 @@ This project provides some additional configuration options, which can be set th
 
 | Environment Variable | Required    | Description                                                                                                                                                                 | Example                                                                          |
 | -------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `SEARCH_SERVICE`   | Yes         | Your search service. The key of the service you choose needs to be configured. Supports search1api, google, bing, serpapi, serper, duckduckgo.                              | `search1api, google, bing, serpapi, serper, duckduckgo`                        |
+| `SEARCH_SERVICE`   | Yes         | Your search service. The key of the service you choose needs to be configured.                              | `search1api, google, bing, serpapi, serper, duckduckgo, searxng`                        |
 | `APIBASE`          | No          | Third-party proxy address.                                                                                                                                                  | `https://api.openai.com, https://api.moonshot.cn, https://api.groq.com/openai` |
 | `MAX_RESULTS`      | No          | Number of search results.                                                                                                                                                   | `10`                                                                           |
 | `CRAWL_RESULTS`    | No          | The number of deep searches (retrieve the main text of the webpage after searching). Currently only supports search1api, deep search will be slow.                          | `1`                                                                            |
@@ -121,7 +121,7 @@ This project provides some additional configuration options, which can be set th
 | `GOOGLE_KEY`       | Conditional | Required if Google search is selected. API key. Apply at https://search2ai.online/googlekey.                                                                                | `xxx`                                                                          |
 | `SERPAPI_KEY`      | Conditional | Required if serpapi is selected. Free 100 times/month. Register at https://search2ai.online/serpapi.                                                                        | `xxx`                                                                          |
 | `SERPER_KEY`       | Conditional | Required if serper is selected. Free 2500 times for 6 months. Register at https://search2ai.online/serper.                                                                  | `xxx`                                                                          |
-| `SEARXNG_BASE_URL` | Conditional | Required if searXNG is selected. Fill in the domain name of the self-built searXNG service, e.g. https://search.xxx.xxx. (Must contain https/http without a / at the end.) | `xxx`                                                                          |
+| `SEARXNG_BASE_URL` | Conditional | Required if searxng is selected. Fill in the domain name of the self-built searXNG service, refer to this repo https://github.com/searxng/searxng, plz open the json mode | `https://search.xxx.xxx`                                                                          |
 | `OPENAI_TYPE`      | No          | OpenAI provider source, default is openai                                                                                                                                   | `openai, azure`                                                                |
 | `RESOURCE_NAME`    | Conditional | Required if azure is selected                                                                                                                                               | `xxxx`                                                                         |
 | `DEPLOY_NAME`      | Conditional | Required if azure is selected                                                                                                                                               | `gpt-35-turbo`                                                                 |

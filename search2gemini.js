@@ -126,7 +126,7 @@ async function search(query) {
 				}));
 				break;
 				
-			case "searXNG":
+			case "searxng":
 				const searXNGUrl = `${SEARXNG_BASE_URL}/search?q=${encodeURIComponent(
                     query
                 )}&category=general&format=json`;

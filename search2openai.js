@@ -205,7 +205,7 @@
           }));
           break;
         
-        case "searXNG":
+        case "searxng":
           const searXNGUrl = `${SEARXNG_BASE_URL}/search?q=${encodeURIComponent(
             query
         )}&category=general&format=json`;
@@ -334,7 +334,7 @@ console.log(`搜索结果: ${JSON.stringify(results)}`);
           }));
           break;
 
-        case "searXNG":
+        case "searxng":
           const searXNGUrl = `${SEARXNG_BASE_URL}/search?q=${encodeURIComponent(
             query
         )}&category=news&format=json`;
