@@ -227,7 +227,6 @@
         results: results
       };
       
-console.log(`搜索结果: ${JSON.stringify(results)}`);
       return JSON.stringify(data);
       
     } catch (error) {
@@ -778,7 +777,6 @@ console.log(`搜索结果: ${JSON.stringify(results)}`);
       }
       if (calledCustomFunction) {
         console.log("\u51C6\u5907\u53D1\u9001\u7B2C\u4E8C\u6B21 OpenAI API \u8BF7\u6C42");
-        console.log("Messages before sending second request:", JSON.stringify(messages, null, 2));
         const requestBody = {
           model,
           messages
