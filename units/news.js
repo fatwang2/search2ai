@@ -11,7 +11,7 @@ async function news(query) {
       
       switch (process.env.SEARCH_SERVICE) {
         case "search1api":
-          const search1apiResponse = await fetch('https://search.search2ai.one/news', {
+          const search1apiResponse = await fetch('https://api.search1api.com/news', {
             method: 'POST',
             headers: {
               "Content-Type": "application/json",

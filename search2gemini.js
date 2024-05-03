@@ -19,7 +19,7 @@ async function search(query) {
 		switch (SEARCH_SERVICE) {
 			case "search1api":
 				const search1apiResponse = await fetch(
-					"https://search.search2ai.one/search",
+					"https://api.search1api.com/search/",
 					{
 						method: "POST",
 						headers: {
