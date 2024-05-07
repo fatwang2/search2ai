@@ -66,23 +66,23 @@ async function handleRequest(req, res, apiBase, apiKey) {
                             required: ["query"]
                         }
                     }
-                },
-                {
-                    type: "function",
-                    function: {
-                        name: "crawler",
-                        description: "Get the content of a specified url",
-                        parameters: {
-                            type: "object",
-                            properties: {
-                                url: {
-                                    type: "string",
-                                    description: "The URL of the webpage"},
-                            },
-                            required: ["url"],
-                        }
-                    }
                 }
+                // {
+                //     type: "function",
+                //     function: {
+                //         name: "crawler",
+                //         description: "Get the content of a specified url",
+                //         parameters: {
+                //             type: "object",
+                //             properties: {
+                //                 url: {
+                //                     type: "string",
+                //                     description: "The URL of the webpage"},
+                //             },
+                //             required: ["url"],
+                //         }
+                //     }
+                // }
             ],
             tool_choice: "auto"
         })
