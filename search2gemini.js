@@ -35,7 +35,7 @@ async function search(query) {
 							max_results:
 								typeof MAX_RESULTS !== "undefined" ? MAX_RESULTS : "5",
 							crawl_results:
-								typeof CRAWL_RESULTS !== "undefined" ? MAX_RESULTS : "0",
+								typeof CRAWL_RESULTS !== "undefined" ? CRAWL_RESULTS : "0",
 						}),
 					}
 				);
