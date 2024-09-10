@@ -25,12 +25,12 @@ Help your LLM API support networking, search, news, web page summarization, has 
 
 <table>
     <tr>
-        <td><img src="pictures/Opencatnews.png" alt="效果示例"></td>
-        <td><img src="pictures/BotGem.png" alt="效果示例"></td>
+        <td><img src="https://github.com/user-attachments/assets/0f9b9c2e-3e99-4132-b19f-15b5fdfcf43d" alt="效果示例"></td>
+        <td><img src="https://github.com/user-attachments/assets/698cea75-0760-4ee4-8501-cda1628b582e" alt="效果示例"></td>
     </tr>
     <tr>
-        <td><img src="pictures/Lobehub.png" alt="效果示例"></td>
-        <td><img src="pictures/url.png" alt="效果示例"></td>
+        <td><img src="https://github.com/user-attachments/assets/d834ad68-b4b0-4d72-bf2c-96931fa9e55a" alt="效果示例"></td>
+        <td><img src="https://github.com/user-attachments/assets/19bba006-10c3-4af2-9afd-314efebda73b" alt="效果示例"></td>
     </tr>
 </table>
 
@@ -48,11 +48,9 @@ Help your LLM API support networking, search, news, web page summarization, has 
 
 **Replace the custom domain in any client with the following address**
 
-<table>
-    <tr>
-        <td><img src="pictures/NextChat.png" alt="Effect Example"></td>
-    </tr>
-</table>
+![image](https://github.com/user-attachments/assets/ac321325-2253-4e94-bec8-8e84f8301108)
+
+
 
 # Deployment
 
