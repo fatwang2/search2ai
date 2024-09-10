@@ -89,9 +89,10 @@ http://localhost:3014/v1/chat/completions
 
 1. Copy the code of [search2openai.js](search2openai.js), or [search2gemini.js](search2gemini.js), or [search2groq.js](search2groq.js), no modifications needed! Deploy in cloudflare's worker, after going online, the worker's address can be used as your interface call's custom domain address, note the concatenation, worker address only represents the part before v1
 2. Configure variables in the worker（only openai）
-   ![Effect Example](pictures/worker.png)
+   ![Effect Example](https://github.com/user-attachments/assets/05746a9d-0772-4b60-a228-63396fa1614a)
 3. Configure triggers - custom domain in the worker, direct access to the worker's address in China might have issues, need to replace with custom domain
-   ![Alt text](pictures/域名.png)
+   ![Alt text](https://github.com/user-attachments/assets/01f5b013-e758-438e-ab53-2065892b0a24)
+
 
 **Vercel**
 
