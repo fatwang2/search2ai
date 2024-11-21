@@ -389,7 +389,7 @@
       )}`
     );
     try {
-      const response = await fetch("https://crawl.search1api.com", {
+      const response = await fetch("https://crawler.search2ai.one", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -4,7 +4,7 @@ const fetch = require('node-fetch');
 async function crawler(url) {
     console.log(`正在使用 URL 进行自定义爬取:${JSON.stringify(url)}`);
     try {
-        const response = await fetch('https://crawl.search1api.com', {
+        const response = await fetch('https://crawler.search2ai.one', {
             method: 'POST',
             headers: {
                 "Content-Type": "application/json"
