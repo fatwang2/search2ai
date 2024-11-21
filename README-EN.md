@@ -25,12 +25,12 @@ Help your LLM API support networking, search, news, web page summarization, has 
 
 <table>
     <tr>
-        <td><img src="pictures/Opencatnews.png" alt="效果示例"></td>
-        <td><img src="pictures/BotGem.png" alt="效果示例"></td>
+        <td><img src="https://github.com/user-attachments/assets/0f9b9c2e-3e99-4132-b19f-15b5fdfcf43d" alt="效果示例"></td>
+        <td><img src="https://github.com/user-attachments/assets/698cea75-0760-4ee4-8501-cda1628b582e" alt="效果示例"></td>
     </tr>
     <tr>
-        <td><img src="pictures/Lobehub.png" alt="效果示例"></td>
-        <td><img src="pictures/url.png" alt="效果示例"></td>
+        <td><img src="https://github.com/user-attachments/assets/d834ad68-b4b0-4d72-bf2c-96931fa9e55a" alt="效果示例"></td>
+        <td><img src="https://github.com/user-attachments/assets/19bba006-10c3-4af2-9afd-314efebda73b" alt="效果示例"></td>
     </tr>
 </table>
 
@@ -48,11 +48,9 @@ Help your LLM API support networking, search, news, web page summarization, has 
 
 **Replace the custom domain in any client with the following address**
 
-<table>
-    <tr>
-        <td><img src="pictures/NextChat.png" alt="Effect Example"></td>
-    </tr>
-</table>
+![image](https://github.com/user-attachments/assets/ac321325-2253-4e94-bec8-8e84f8301108)
+
+
 
 # Deployment
 
@@ -91,9 +89,10 @@ http://localhost:3014/v1/chat/completions
 
 1. Copy the code of [search2openai.js](search2openai.js), or [search2gemini.js](search2gemini.js), or [search2groq.js](search2groq.js), no modifications needed! Deploy in cloudflare's worker, after going online, the worker's address can be used as your interface call's custom domain address, note the concatenation, worker address only represents the part before v1
 2. Configure variables in the worker（only openai）
-   ![Effect Example](pictures/worker.png)
+   ![Effect Example](https://github.com/user-attachments/assets/05746a9d-0772-4b60-a228-63396fa1614a)
 3. Configure triggers - custom domain in the worker, direct access to the worker's address in China might have issues, need to replace with custom domain
-   ![Alt text](pictures/域名.png)
+   ![Alt text](https://github.com/user-attachments/assets/01f5b013-e758-438e-ab53-2065892b0a24)
+
 
 **Vercel**
 
@@ -113,9 +112,9 @@ This project provides some additional configuration options, which can be set th
 | -------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | `SEARCH_SERVICE`   | Yes         | Your search service. The key of the service you choose needs to be configured.                              | `search1api, google, bing, serpapi, serper, duckduckgo, searxng`                        |
 | `APIBASE`          | No          | Third-party proxy address.                                                                                                                                                  | `https://api.openai.com, https://api.moonshot.cn, https://api.groq.com/openai` |
-| `MAX_RESULTS`      | No          | Number of search results.                                                                                                                                                   | `10`                                                                           |
+| `MAX_RESULTS`      | Yes          | Number of search results.                                                                                                                                                   | `10`                                                                           |
 | `CRAWL_RESULTS`    | No          | The number of deep searches (retrieve the main text of the webpage after searching). Currently only supports search1api, deep search will be slow.                          | `1`                                                                            |
-| `SEARCH1API_KEY`   | Conditional | Required if search1api is selected. My own fast and cheap search service. Apply at https://search21api.com.                                                                 | `xxx`                                                                          |
+| `SEARCH1API_KEY`   | Conditional | Required if search1api is selected. My own fast and cheap search service. Apply at https://search1api.com.                                                                 | `xxx`                                                                          |
 | `BING_KEY`         | Conditional | Required if Bing search is selected. Please search for the tutorial yourself. Apply at https://search2ai.online/bing.                                                       | `xxx`                                                                          |
 | `GOOGLE_CX`        | Conditional | Required if Google search is selected. Search engine ID. Please search for the tutorial yourself. Apply at https://search2ai.online/googlecx.                               | `xxx`                                                                          |
 | `GOOGLE_KEY`       | Conditional | Required if Google search is selected. API key. Apply at https://search2ai.online/googlekey.                                                                                | `xxx`                                                                          |

@@ -141,7 +141,7 @@
             body: JSON.stringify({
               query,
               max_results: typeof MAX_RESULTS !== "undefined" ? MAX_RESULTS : "5",
-              crawl_results: typeof CRAWL_RESULTS !== "undefined" ? MAX_RESULTS : "0",
+              crawl_results: typeof CRAWL_RESULTS !== "undefined" ? CRAWL_RESULTS : "0",
             }),
           });
           results = await search1apiResponse.json();
@@ -270,7 +270,7 @@
             body: JSON.stringify({
               query,
               max_results: typeof MAX_RESULTS !== "undefined" ? MAX_RESULTS : "10",
-              crawl_results: typeof CRAWL_RESULTS !== "undefined" ? MAX_RESULTS : "0",
+              crawl_results: typeof CRAWL_RESULTS !== "undefined" ? CRAWL_RESULTS : "0",
             }),
           });
           results = await search1apiResponse.json();
