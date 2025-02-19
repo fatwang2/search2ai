@@ -2,7 +2,7 @@
 
 ## 用户交流
 
-[telegram频道](https://sum4all.one/telegram)
+[discord 频道](https://discord.gg/AKXYq32Bxc)
 
 ## 友情赞助
 
@@ -115,7 +115,7 @@ http://localhost:3014/v1/chat/completions
 | `APIBASE`          | No       | 三方代理地址                                                                                                         | `https://api.openai.com, https://api.moonshot.cn, https://api.groq.com/openai` |
 | `MAX_RESULTS`      | Yes      | 搜索结果条数                                                                                                          | `10`                                                                           |
 | `CRAWL_RESULTS`    | No       | 要进行深度搜索（搜索后获取网页正文）的数量，目前仅支持 search1api，深度速度会慢                                       | `1`                                                                            |
-| `SEARCH1API_KEY`   | No       | 如选search1api必填，我自己搭建的搜索服务，又快又便宜，点击[链接](https://search1api.com) 注册                                | `xxx`                                                                          |
+| `SEARCH1API_KEY`   | No       | 如选search1api必填，我自己的搜索服务，注册免费领取 100 积分，点击[链接](https://www.search1api.com/?utm_source=search2ai)                                 | `xxx`                                                                          |
 | `BING_KEY`         | No       | 如选bing搜索必填，请自行搜索教程，点击[链接](https://www.microsoft.com/en-us/bing/apis/bing-web-search-api) 创建                                              | `xxx`                                                                          |
 | `GOOGLE_CX`        | No       | 如选Google搜索必填，Search engine ID，请自行搜索教程，点击[链接](https://programmablesearchengine.google.com/controlpanel/create) 创建                      | `xxx`                                                                          |
 | `GOOGLE_KEY`       | No       | 如选Google搜索必填，API key，点击[链接](https://console.cloud.google.com/apis/credentials) 创建                                              | `xxx`                                                                          |

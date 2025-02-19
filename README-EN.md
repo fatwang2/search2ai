@@ -2,7 +2,7 @@
 
 ## User Communication
 
-[Telegram Channel](https://sum4all.one/telegram)
+[discord](https://discord.gg/AKXYq32Bxc)
 
 ## Buy me a coffee
 
@@ -114,7 +114,7 @@ This project provides some additional configuration options, which can be set th
 | `APIBASE`          | No          | Third-party proxy address.                                                                                                                                                  | `https://api.openai.com, https://api.moonshot.cn, https://api.groq.com/openai` |
 | `MAX_RESULTS`      | Yes          | Number of search results.                                                                                                                                                   | `10`                                                                           |
 | `CRAWL_RESULTS`    | No          | The number of deep searches (retrieve the main text of the webpage after searching). Currently only supports search1api, deep search will be slow.                          | `1`                                                                            |
-| `SEARCH1API_KEY`   | No       | Required if using search1api. Fast and affordable search service I built. Click [here](https://search1api.com) to register                                | `xxx`                                                                          |
+| `SEARCH1API_KEY`   | No       | Required if using search1api. Free 100 credits now. Click [here](https://www.search1api.com/?utm_source=search2ai) to register                                | `xxx`                                                                          |
 | `BING_KEY`         | No       | Required if using Bing search. Please search for tutorials. Click [here](https://www.microsoft.com/en-us/bing/apis/bing-web-search-api) to create                                              | `xxx`                                                                          |
 | `GOOGLE_CX`        | No       | Required if using Google search. Search engine ID. Please search for tutorials. Click [here](https://programmablesearchengine.google.com/controlpanel/create) to create                      | `xxx`                                                                          |
 | `GOOGLE_KEY`       | No       | Required if using Google search. API key. Click [here](https://console.cloud.google.com/apis/credentials) to create                                              | `xxx`                                                                          |
