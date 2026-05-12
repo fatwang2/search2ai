@@ -101,6 +101,7 @@ Special note: Vercel project does not support streaming output and has a 10s res
 One-click deployment
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Ffatwang2%2Fsearch2ai&env=SEARCH_SERVICE&envDescription=%E6%9A%82%E6%97%B6%E6%94%AF%E6%8C%81google%E3%80%81bing%E3%80%81serpapi%E3%80%81serper%E3%80%81duckduckgo%EF%BC%8C%E5%BF%85%E5%A1%AB)
+[![Deploy to PandaStack](https://dashboard.pandastack.io/deploy-button.svg)](https://dashboard.pandastack.io/deploy?repo=fatwang2/search2ai&type=static&buildCmd=npm+run+build&outputDir=dist)
 
 To ensure updates, you can also first fork this project and then deploy it on Vercel yourself
 
