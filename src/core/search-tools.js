@@ -76,6 +76,13 @@ async function search(query) {
         results = (data.organic || []).slice(0, limit).map((i) => ({ title: i.title, link: i.link, snippet: i.snippet }));
         break;
       }
+            case 'talordata': {
+            const url = `https://talordata.com{cfg.talordataKey}&q=${encodeURIComponent(query)}`;
+            const res = await fetch(url);
+            const data = await res.json();
+            results = (data.organic_results || []).slice(0, limit).map((i) => ({ title: i.title, link: i.link, snippet: i.snippet }));
+            break;
+        }
       case 'duckduckgo': {
         // 自托管 DDG 端点(原项目自带, 可能不可用)
         const res = await fetch('https://ddg.search2ai.online/search', {
