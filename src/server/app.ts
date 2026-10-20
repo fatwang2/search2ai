@@ -91,7 +91,10 @@ export function createApp(opts: AppOptions): Hono {
   );
 
   app.onError((err, c) => {
-    if (err instanceof GatewayError) return errorJson(c, err.status, err.message, err.code, err.warnings.length ? { warnings: err.warnings } : {});
+    if (err instanceof GatewayError) return errorJson(c, err.status, err.message, err.code, {
+      ...(err.warnings.length ? { warnings: err.warnings } : {}),
+      ...(err.session_id ? { session_id: err.session_id } : {}),
+    });
     if (err instanceof UpstreamError) return errorJson(c, err.status, err.message, 'upstream_error');
     if (err instanceof HTTPException) return err.getResponse();
     console.error('search2ai error:', err);

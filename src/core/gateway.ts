@@ -34,6 +34,15 @@ export function searchSessionId(value?: string): string {
   return value ?? crypto.randomUUID();
 }
 
+async function withSearchSession<T>(sessionId: string, run: () => Promise<T>): Promise<T> {
+  try {
+    return await run();
+  } catch (error) {
+    if (error instanceof GatewayError) error.session_id = sessionId;
+    throw error;
+  }
+}
+
 export interface Gateway {
   search(req: SearchRequest, options?: GatewayRunOptions): Promise<SearchResponse>;
   news(req: SearchRequest, options?: GatewayRunOptions): Promise<SearchResponse>;
@@ -171,55 +180,57 @@ export function createGateway(config: GatewayConfig = configFromEnv({})): Gatewa
 
   async function runSearch(op: 'search' | 'news', req: SearchRequest, options: GatewayRunOptions = {}): Promise<SearchResponse> {
     const sessionId = searchSessionId(req.session_id);
-    const runOpts: ChainOptions = { ...chainOpts, signal: options.signal, sessionId };
-    options.signal?.throwIfAborted();
-    const queries = (Array.isArray(req.query) ? req.query : [req.query]).map((q) => String(q ?? '').trim()).filter(Boolean);
-    if (queries.length === 0) throw new GatewayError(400, 'invalid_request', 'query is required');
-    const params = normalize(req);
-    const chain = resolveChain(op, req.providers);
-    const names = chain.map((p) => p.name);
-    const maxChars = req.max_tokens_per_page ? req.max_tokens_per_page * 4 : undefined;
-    const cacheKey = `${op}:${JSON.stringify([queries, params, names])}`;
-
-    const response = await withCache(cacheKey, async () => {
-      const settled = await Promise.allSettled(
-        queries.map((query) => runChain(chain, op, (p, ctx) => p[op]!({ ...params, query }, ctx), (r) => r.length === 0, runOpts))
-      );
+    return withSearchSession(sessionId, async () => {
+      const runOpts: ChainOptions = { ...chainOpts, signal: options.signal, sessionId };
       options.signal?.throwIfAborted();
-      const warnings: ProviderWarning[] = [];
-      const seen = new Set<string>();
-      const results: SearchResult[] = [];
-      const providersUsed: string[] = [];
-      let failures = 0;
-      for (const s of settled) {
-        if (s.status === 'rejected') {
-          failures++;
-          const e = s.reason;
-          if (e instanceof GatewayError) warnings.push(...e.warnings);
-          else warnings.push({ provider: 'gateway', code: 'upstream', message: String((e as Error)?.message ?? e) });
-          continue;
+      const queries = (Array.isArray(req.query) ? req.query : [req.query]).map((q) => String(q ?? '').trim()).filter(Boolean);
+      if (queries.length === 0) throw new GatewayError(400, 'invalid_request', 'query is required');
+      const params = normalize(req);
+      const chain = resolveChain(op, req.providers);
+      const names = chain.map((p) => p.name);
+      const maxChars = req.max_tokens_per_page ? req.max_tokens_per_page * 4 : undefined;
+      const cacheKey = `${op}:${JSON.stringify([queries, params, names])}`;
+
+      const response = await withCache(cacheKey, async () => {
+        const settled = await Promise.allSettled(
+          queries.map((query) => runChain(chain, op, (p, ctx) => p[op]!({ ...params, query }, ctx), (r) => r.length === 0, runOpts))
+        );
+        options.signal?.throwIfAborted();
+        const warnings: ProviderWarning[] = [];
+        const seen = new Set<string>();
+        const results: SearchResult[] = [];
+        const providersUsed: string[] = [];
+        let failures = 0;
+        for (const s of settled) {
+          if (s.status === 'rejected') {
+            failures++;
+            const e = s.reason;
+            if (e instanceof GatewayError) warnings.push(...e.warnings);
+            else warnings.push({ provider: 'gateway', code: 'upstream', message: String((e as Error)?.message ?? e) });
+            continue;
+          }
+          warnings.push(...s.value.warnings);
+          if (!providersUsed.includes(s.value.provider)) providersUsed.push(s.value.provider);
+          for (const r of s.value.value) {
+            const key = urlKey(r.url);
+            if (!key || seen.has(key)) continue;
+            seen.add(key);
+            results.push(maxChars && r.content ? { ...r, content: truncate(r.content, maxChars) } : r);
+          }
         }
-        warnings.push(...s.value.warnings);
-        if (!providersUsed.includes(s.value.provider)) providersUsed.push(s.value.provider);
-        for (const r of s.value.value) {
-          const key = urlKey(r.url);
-          if (!key || seen.has(key)) continue;
-          seen.add(key);
-          results.push(maxChars && r.content ? { ...r, content: truncate(r.content, maxChars) } : r);
+        if (failures === queries.length) {
+          throw new GatewayError(502, 'all_providers_failed', `All ${op} providers failed (${names.join(', ')})`, warnings);
         }
-      }
-      if (failures === queries.length) {
-        throw new GatewayError(502, 'all_providers_failed', `All ${op} providers failed (${names.join(', ')})`, warnings);
-      }
-      if (params.crawlResults && params.crawlResults > 0) {
-        await enrich(results, params.crawlResults, maxChars, warnings, runOpts);
-      }
-      const response: SearchResponse = { object: op, id: newId(), provider: providersUsed.join(','), results };
-      if (warnings.length) response.warnings = warnings;
+        if (params.crawlResults && params.crawlResults > 0) {
+          await enrich(results, params.crawlResults, maxChars, warnings, runOpts);
+        }
+        const response: SearchResponse = { object: op, id: newId(), provider: providersUsed.join(','), results };
+        if (warnings.length) response.warnings = warnings;
+        return response;
+      });
+      if (response.provider.split(',').includes('parallel') || req.session_id) response.session_id = sessionId;
       return response;
     });
-    if (response.provider.split(',').includes('parallel') || req.session_id) response.session_id = sessionId;
-    return response;
   }
 
   return {
@@ -229,19 +240,21 @@ export function createGateway(config: GatewayConfig = configFromEnv({})): Gatewa
     fallbackOnEmpty: !!config.fallbackOnEmpty,
     async crawl(req, options = {}) {
       const sessionId = searchSessionId(req.session_id);
-      const runOpts: ChainOptions = { ...chainOpts, signal: options.signal, sessionId };
-      options.signal?.throwIfAborted();
-      const url = String(req.url ?? '').trim();
-      if (!url) throw new GatewayError(400, 'invalid_request', 'url is required');
-      const names = resolveChain('crawl', req.providers).map((p) => p.name);
-      const response = await withCache(`crawl:${JSON.stringify([url, names])}`, async () => {
-        const r = await crawlOne(url, req.providers, runOpts);
-        const response: CrawlResponse = { object: 'crawl', id: newId(), provider: r.provider, ...r.value };
-        if (r.warnings.length) response.warnings = r.warnings;
+      return withSearchSession(sessionId, async () => {
+        const runOpts: ChainOptions = { ...chainOpts, signal: options.signal, sessionId };
+        options.signal?.throwIfAborted();
+        const url = String(req.url ?? '').trim();
+        if (!url) throw new GatewayError(400, 'invalid_request', 'url is required');
+        const names = resolveChain('crawl', req.providers).map((p) => p.name);
+        const response = await withCache(`crawl:${JSON.stringify([url, names])}`, async () => {
+          const r = await crawlOne(url, req.providers, runOpts);
+          const response: CrawlResponse = { object: 'crawl', id: newId(), provider: r.provider, ...r.value };
+          if (r.warnings.length) response.warnings = r.warnings;
+          return response;
+        });
+        if (response.provider.split(',').includes('parallel') || req.session_id) response.session_id = sessionId;
         return response;
       });
-      if (response.provider.split(',').includes('parallel') || req.session_id) response.session_id = sessionId;
-      return response;
     },
     providers: () => [...instances.values()].map(describeProvider),
     chain: (op) => {

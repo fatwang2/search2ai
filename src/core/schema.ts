@@ -74,6 +74,7 @@ export const CrawlResponseSchema = z.object({
 
 export const ErrorResponseSchema = z.object({
   error: z.object({
+    session_id: SessionId.optional(),
     message: z.string(),
     type: z.string(),
     code: z.union([z.string(), z.number()]).optional(),

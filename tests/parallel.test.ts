@@ -267,3 +267,53 @@ describe('scripted chat tool execution', () => {
     expect(ids.filter((id) => id === reset.headers['X-Search2AI-Session-Id'])).toHaveLength(3);
   });
 });
+
+describe('first-failure research identity', () => {
+  function quotaThenSuccess() {
+    let first = true;
+    return parallelRemote((rpc) => {
+      if (rpc.method !== 'tools/call' || !first) return undefined;
+      first = false;
+      return { isError: true, content: [{ type: 'text', text: 'anonymous quota exceeded' }] };
+    });
+  }
+
+  it('returns the initially generated UUID on a library error for retry', async () => {
+    const { fetch, calls } = quotaThenSuccess();
+    const g = gateway(fetch);
+    const error = await g.search({ query: 'first failure' }).catch((e) => e);
+    expect(error.session_id).toMatch(/^[a-f0-9-]{36}$/);
+    const result = await g.search({ query: 'first failure', session_id: error.session_id });
+    expect(toolCalls(calls).map((c) => c.arguments.session_id)).toEqual([error.session_id, error.session_id]);
+    expect(result.session_id).toBe(error.session_id);
+  });
+
+  it('keeps the initial task UUID in REST errors and retries', async () => {
+    const { fetch, calls } = quotaThenSuccess();
+    const app = createApp({ gateway: gateway(fetch) });
+    const first = await post(app, '/v1/search', { query: 'first failure' });
+    expect(first.status).toBe(502);
+    const { error } = await first.json();
+    expect(error.session_id).toMatch(/^[a-f0-9-]{36}$/);
+    const retry = await post(app, '/v1/search', { query: 'first failure', session_id: error.session_id });
+    expect(retry.status).toBe(200);
+    expect(toolCalls(calls).map((c) => c.arguments.session_id)).toEqual([error.session_id, error.session_id]);
+  });
+
+  it('keeps the initial task UUID in MCP errors and retries through the HTTP dispatcher', async () => {
+    const { fetch, calls } = quotaThenSuccess();
+    const app = createApp({ gateway: gateway(fetch) });
+    const client = new Client({ name: 'test', version: '1' });
+    try {
+      await client.connect(new StreamableHTTPClientTransport(new URL('http://localhost/mcp'), { fetch: async (input, init) => app.fetch(new Request(input, init)) }));
+      const first = await client.callTool({ name: 'search', arguments: { query: 'first failure' } });
+      expect(first.isError).toBe(true);
+      const session_id = (first.structuredContent as { error: { session_id: string } }).error.session_id;
+      expect(session_id).toMatch(/^[a-f0-9-]{36}$/);
+      expect((first.content as Array<{ text: string }>)[0].text).toContain(session_id);
+      const retry = await client.callTool({ name: 'search', arguments: { query: 'first failure', session_id } });
+      expect(retry.isError).not.toBe(true);
+      expect(toolCalls(calls).map((c) => c.arguments.session_id)).toEqual([session_id, session_id]);
+    } finally { await client.close(); }
+  });
+});

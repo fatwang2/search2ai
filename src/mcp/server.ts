@@ -13,7 +13,12 @@ function textResult(value: unknown) {
 
 function errorResult(error: unknown) {
   const message = error instanceof GatewayError ? `${error.message}${error.warnings.length ? ` (${error.warnings.map((w) => w.message).join('; ')})` : ''}` : String((error as Error)?.message ?? error);
-  return { content: [{ type: 'text' as const, text: message }], isError: true };
+  const sessionId = error instanceof GatewayError ? error.session_id : undefined;
+  return {
+    content: [{ type: 'text' as const, text: `${message}${sessionId ? ` [session_id=${sessionId}]` : ''}` }],
+    ...(sessionId ? { structuredContent: { error: { message, session_id: sessionId } } } : {}),
+    isError: true,
+  };
 }
 
 export function createMcpServer(gateway: Gateway, version: string): McpServer {
