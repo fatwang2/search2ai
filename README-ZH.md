@@ -153,10 +153,21 @@ export default app;
 | `searxng` | ✓ | ✓ | — | `SEARXNG_BASE_URL`，需开启 JSON 输出 |
 | `jina` | — | — | ✓ | `JINA_KEY`，或在 `CRAWL_SERVICE` 中显式列出 `jina` |
 | `firecrawl` | — | — | ✓ | `FIRECRAWL_KEY` 或自托管的 `FIRECRAWL_BASE_URL` |
+| `parallel` | ✓ | — | 需显式开启 | 免 key；把 `parallel` 写进 `SEARCH_SERVICE`，正文抓取再写进 `CRAWL_SERVICE` |
 
 ¹ Google 的 `news` 使用普通搜索的 `sort=date`，并非独立的新闻搜索接口。
 
 以上密钥变量均接受 `*_API_KEY` 别名，例如 `TAVILY_API_KEY`；Google 搜索引擎 ID 也接受 `GOOGLE_CSE_ID`。
+
+### Parallel 免 key 搜索
+
+未配置 provider 或 fallback 链时，`npx search2ai mcp` 与 `npx search2ai serve` 默认使用 [Parallel Search MCP](https://docs.parallel.ai/integrations/mcp/search-mcp) 的 Fast 模式免费搜索，无需账号或 API key。CLI 仍会读取 `.env.local` 和 `.env`。已有 key、provider 和显式 fallback 链保持原有行为，不会自动追加 Parallel。
+
+显式选择搜索可设 `SEARCH_SERVICE=parallel`；正文抓取需额外设置 `CRAWL_SERVICE=parallel`，不会默认启用。无 key 时设 `SEARCH_SERVICE=none` 可禁用搜索。库中 `createGateway()` 使用相同的仅搜索默认配置；显式 `{ providers: {} }` 或空链保持禁用。`{ providers: { parallel: { crawl: true } } }` 可显式启用搜索与抓取。环境入口的显式 provider 或链覆盖也会抑制未配置时的默认值。
+
+Parallel 返回排序后的摘录，并按 `max_results` 裁剪；实际数量由服务决定。它不支持 `news` 或严格的国家、语言、域名、日期过滤，这些请求会返回 `unsupported` warning/error，请选择支持相应能力的其他 provider。免费服务面向探索和轻量使用，有调用限额；失败沿用现有错误与 warning 机制。
+
+search / crawl 可传入不含个人信息的 UUID `session_id`。同一对话或研究任务中的搜索、抓取、重试、后续调用复用返回的 ID；新任务或重置时省略或换新 ID。数组查询和 `crawl_results` 共用任务 ID；共享 gateway 的独立调用会生成不同 ID。聊天代理通过 `X-Search2AI-Session-Id` 返回 ID，后续聊天请求可用 `search_session_id` 继续该任务；此字段仅本地使用，不会转发给模型服务。未传入时，每个聊天请求开始新研究任务。库方法第二个参数可传 `{ signal }` 取消调用。
 
 ### 配置自动回退
 

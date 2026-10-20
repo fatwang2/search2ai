@@ -7,7 +7,7 @@
  * const { results, provider } = await gateway.search({ query: 'hono cloudflare workers' });
  * ```
  */
-export { createGateway, type Gateway } from './gateway.ts';
+export { createGateway, type Gateway, type GatewayRunOptions } from './gateway.ts';
 export { configFromEnv, parseList, type GatewayConfig, type Env } from './config.ts';
 export { GatewayError, ProviderError, codeFromStatus, toProviderError } from './errors.ts';
 export { runChain, type ChainOptions, type ChainResult } from './fallback.ts';
@@ -19,6 +19,8 @@ export {
   isProviderName,
   capabilitiesOf,
   describeProvider,
+  createParallel,
+  type ParallelOptions,
   createBrave,
   createExa,
   createFirecrawl,

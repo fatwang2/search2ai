@@ -7,7 +7,7 @@
  *   执行搜索后发起下一轮, 最终回答仍由上游真流式输出。
  * - 模型若调用了客户端自己定义的工具, 原样交还客户端处理。
  */
-import type { Gateway } from '../core/gateway.ts';
+import { searchSessionId, type Gateway, type GatewayRunOptions } from '../core/gateway.ts';
 import { callChatCompletions, type ChatProxyConfig } from './upstream.ts';
 
 type Json = Record<string, unknown>;
@@ -55,16 +55,16 @@ export function gatewayToolDefinitions(gateway: Gateway): ToolDef[] {
   return defs;
 }
 
-async function executeGatewayTool(gateway: Gateway, name: string, args: Json): Promise<string> {
+async function executeGatewayTool(gateway: Gateway, name: string, args: Json, sessionId: string, options: GatewayRunOptions): Promise<string> {
   try {
     if (name === 'search' || name === 'news') {
       if (typeof args.query !== 'string') return '无效参数: 缺少 query';
-      const r = await gateway[name]({ query: args.query });
+      const r = await gateway[name]({ query: args.query, session_id: sessionId }, options);
       return JSON.stringify({ provider: r.provider, results: r.results });
     }
     if (name === 'crawler') {
       if (typeof args.url !== 'string') return '无效参数: 缺少 url';
-      const r = await gateway.crawl({ url: args.url });
+      const r = await gateway.crawl({ url: args.url, session_id: sessionId }, options);
       return JSON.stringify({ provider: r.provider, url: r.url, title: r.title, content: r.content });
     }
     return `未知工具: ${name}`;
@@ -112,7 +112,7 @@ export function createChatProxy(gateway: Gateway, cfg: ChatProxyConfig) {
     return { own, client };
   }
 
-  async function runOwnTools(messages: ChatMessage[], assistant: ChatMessage, ownCalls: ToolCall[]): Promise<ChatMessage[]> {
+  async function runOwnTools(messages: ChatMessage[], assistant: ChatMessage, ownCalls: ToolCall[], sessionId: string, options: GatewayRunOptions): Promise<ChatMessage[]> {
     const results = await Promise.all(
       ownCalls.map(async (tc) => {
         let args: Json = {};
@@ -121,7 +121,7 @@ export function createChatProxy(gateway: Gateway, cfg: ChatProxyConfig) {
         } catch {
           args = {};
         }
-        const content = await executeGatewayTool(gateway, tc.function.name, args);
+        const content = await executeGatewayTool(gateway, tc.function.name, args, sessionId, options);
         return { role: 'tool', tool_call_id: tc.id, name: tc.function.name, content } as ChatMessage;
       })
     );
@@ -132,7 +132,7 @@ export function createChatProxy(gateway: Gateway, cfg: ChatProxyConfig) {
 
   // ---------- 非流式 ----------
 
-  async function handleNonStream(apiKey: string, base: Json, ownTools: Set<string>, messages: ChatMessage[]): Promise<Json> {
+  async function handleNonStream(apiKey: string, base: Json, ownTools: Set<string>, messages: ChatMessage[], sessionId: string, options: GatewayRunOptions): Promise<Json> {
     let data: Json = {};
     for (let round = 0; round < maxRounds; round++) {
       data = (await callUpstream(apiKey, roundBody(base, messages, round), false)) as Json;
@@ -143,7 +143,7 @@ export function createChatProxy(gateway: Gateway, cfg: ChatProxyConfig) {
         message!.tool_calls = client;
         return data;
       }
-      messages = await runOwnTools(messages, message!, own);
+      messages = await runOwnTools(messages, message!, own, sessionId, options);
     }
     const message = (data.choices as Array<{ message?: ChatMessage }> | undefined)?.[0]?.message;
     if (message) delete message.tool_calls;
@@ -269,7 +269,9 @@ export function createChatProxy(gateway: Gateway, cfg: ChatProxyConfig) {
     ownTools: Set<string>,
     messages: ChatMessage[],
     firstUpstream: Response,
-    controller: ReadableStreamDefaultController<Uint8Array>
+    controller: ReadableStreamDefaultController<Uint8Array>,
+    sessionId: string,
+    options: GatewayRunOptions
   ): Promise<void> {
     const encoder = new TextEncoder();
     const write = (text: string) => controller.enqueue(encoder.encode(text));
@@ -280,7 +282,7 @@ export function createChatProxy(gateway: Gateway, cfg: ChatProxyConfig) {
         const r = await relayRound(upstream.body!, ownTools, write);
         upstream = null;
         if (r.done) break;
-        messages = await runOwnTools(messages, r.assistant, r.own);
+        messages = await runOwnTools(messages, r.assistant, r.own, sessionId, options);
       }
     } catch (error) {
       const e = error as { status?: number; message?: string };
@@ -291,23 +293,27 @@ export function createChatProxy(gateway: Gateway, cfg: ChatProxyConfig) {
   }
 
   /** 处理一次 chat/completions 请求; requestKey 已通过 resolveApiKey 解析为上游 key */
-  async function handleChat(apiKey: string, requestData: Json): Promise<ChatResult> {
+  async function handleChat(apiKey: string, requestData: Json, options: GatewayRunOptions = {}): Promise<ChatResult> {
+    const rawSession = requestData.search_session_id;
+    const sessionId = searchSessionId(rawSession === undefined ? undefined : typeof rawSession === 'string' ? rawSession : 'invalid');
+    requestData = { ...requestData };
+    delete requestData.search_session_id;
     const { body: base, ownTools } = buildRequestBody(requestData);
     const messages = Array.isArray(requestData.messages) ? ([...(requestData.messages as ChatMessage[])] as ChatMessage[]) : [];
 
     if (!requestData.stream) {
-      const data = await handleNonStream(apiKey, base, ownTools, messages);
-      return { status: 200, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) };
+      const data = await handleNonStream(apiKey, base, ownTools, messages, sessionId, options);
+      return { status: 200, headers: { 'Content-Type': 'application/json', 'X-Search2AI-Session-Id': sessionId }, body: JSON.stringify(data) };
     }
 
     // 首轮在建流之前发起: 上游 4xx/5xx 仍能以 HTTP 状态码返回给客户端
     const first = (await callUpstream(apiKey, { ...roundBody(base, messages, 0), stream: true }, true)) as Response;
     const body = new ReadableStream<Uint8Array>({
       start(controller) {
-        void pumpStream(apiKey, base, ownTools, messages, first, controller);
+        void pumpStream(apiKey, base, ownTools, messages, first, controller, sessionId, options);
       },
     });
-    return { status: 200, headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' }, body };
+    return { status: 200, headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'X-Search2AI-Session-Id': sessionId }, body };
   }
 
   return { handleChat, toolDefinitions: () => gatewayToolDefinitions(gateway) };

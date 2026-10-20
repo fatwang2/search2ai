@@ -153,10 +153,21 @@ Configure only the services you want to use. Keys usually come from the provider
 | `searxng` | ✓ | ✓ | — | `SEARXNG_BASE_URL`, with JSON output enabled |
 | `jina` | — | — | ✓ | `JINA_KEY`, or explicitly list `jina` in `CRAWL_SERVICE` |
 | `firecrawl` | — | — | ✓ | `FIRECRAWL_KEY` or a self-hosted `FIRECRAWL_BASE_URL` |
+| `parallel` | ✓ | — | Opt-in | No key; list `parallel` in `SEARCH_SERVICE`, and in `CRAWL_SERVICE` for page extraction |
 
 ¹ Google's `news` operation uses regular search with `sort=date`, not a dedicated news search endpoint.
 
 All provider key variables above accept a `*_API_KEY` alias, such as `TAVILY_API_KEY`. The Google search engine ID also accepts `GOOGLE_CSE_ID`.
+
+### Anonymous Parallel search
+
+Run `npx search2ai mcp` or `npx search2ai serve` in a directory without provider settings to search immediately. Local `.env.local` and `.env` files are still loaded. To select Parallel explicitly, set `SEARCH_SERVICE=parallel`. Page extraction is opt-in with `CRAWL_SERVICE=parallel`. Set `SEARCH_SERVICE=none` to keep an installation with no provider keys from enabling search.
+
+For the library, `createGateway()` selects the same search-only default. Explicit `createGateway({ providers: {} })` or an empty chain keeps search disabled. Configure `{ providers: { parallel: { crawl: true } } }` to opt into search and page extraction. Environment overrides that explicitly supply providers or chains also suppress the unconfigured default.
+
+Parallel returns ranked excerpts and slices them to `max_results`; the anonymous service controls how many results it supplies. It does not implement `news` or strict country, language, domain or date filters. Such filter requests return an `unsupported` provider warning/error rather than silently ignoring the filters. Choose another configured provider when those features are needed. The free service is intended for exploration and light use and has rate limits; failures use the existing error/warning contract.
+
+Search and crawl accept an optional opaque UUID `session_id`. Reuse the returned ID for related search, extraction, retries and follow-up calls in one conversation or research run; omit it for a new run or reset. Array queries and `crawl_results` enrichment share the run ID. Do not put personal data in it. Independent calls generate separate IDs even when they share a gateway. The chat proxy returns `X-Search2AI-Session-Id`; pass it back as `search_session_id` in later chat requests to continue that run. This field is consumed locally and is not forwarded to the model provider. A chat request without it starts a new research run. Library gateway methods also accept `{ signal }` as a second argument for cancellation.
 
 ### Configure fallback
 

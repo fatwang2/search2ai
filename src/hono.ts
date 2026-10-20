@@ -36,7 +36,7 @@ export function parseAuthKeys(env: Env): string[] {
 }
 
 export function createGatewayFromEnv(env: Env, overrides: Partial<GatewayConfig> & { cache?: Cache } = {}): Gateway {
-  const base = configFromEnv(env);
+  const base = configFromEnv(env, { defaultSearch: !('providers' in overrides || 'chain' in overrides || 'chains' in overrides) });
   return createGateway({
     ...base,
     ...overrides,

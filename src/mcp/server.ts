@@ -27,9 +27,9 @@ export function createMcpServer(gateway: Gateway, version: string): McpServer {
         'Search the web. Returns ranked results with title, url, snippet and date. Tries the configured search providers in order (fallback) and reports which provider answered.',
       inputSchema: SearchRequestSchema.shape,
     },
-    async (args) => {
+    async (args, extra) => {
       try {
-        return textResult(await gateway.search(args));
+        return textResult(await gateway.search(args, { signal: extra.signal }));
       } catch (error) {
         return errorResult(error);
       }
@@ -43,9 +43,9 @@ export function createMcpServer(gateway: Gateway, version: string): McpServer {
       description: 'Search recent news. Same parameters and result shape as search, restricted to news sources.',
       inputSchema: SearchRequestSchema.shape,
     },
-    async (args) => {
+    async (args, extra) => {
       try {
-        return textResult(await gateway.news(args));
+        return textResult(await gateway.news(args, { signal: extra.signal }));
       } catch (error) {
         return errorResult(error);
       }
@@ -59,9 +59,9 @@ export function createMcpServer(gateway: Gateway, version: string): McpServer {
       description: 'Fetch a URL and return its main text content (markdown or plain text) plus title.',
       inputSchema: CrawlRequestSchema.shape,
     },
-    async (args) => {
+    async (args, extra) => {
       try {
-        return textResult(await gateway.crawl(args));
+        return textResult(await gateway.crawl(args, { signal: extra.signal }));
       } catch (error) {
         return errorResult(error);
       }

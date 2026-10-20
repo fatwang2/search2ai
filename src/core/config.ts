@@ -65,7 +65,7 @@ function bool(v: string | undefined): boolean | undefined {
  *   (以上 *_KEY 也接受 *_API_KEY 写法)
  * - MAX_RESULTS, CRAWL_RESULTS, GL, HL, FALLBACK_ON_EMPTY, PROVIDER_TIMEOUT_MS, CACHE_TTL
  */
-export function configFromEnv(env: Env): GatewayConfig {
+export function configFromEnv(env: Env, options: { defaultSearch?: boolean } = {}): GatewayConfig {
   const gl = pick(env, 'GL');
   const hl = pick(env, 'HL');
   const chain = parseList(pick(env, 'SEARCH_SERVICE'));
@@ -107,6 +107,13 @@ export function configFromEnv(env: Env): GatewayConfig {
   const firecrawlKey = pick(env, 'FIRECRAWL_KEY', 'FIRECRAWL_API_KEY');
   const firecrawlBase = pick(env, 'FIRECRAWL_BASE_URL');
   if (firecrawlKey || firecrawlBase || mentioned.has('firecrawl')) providers.firecrawl = { apiKey: firecrawlKey, baseUrl: firecrawlBase };
+
+  // Explicit configuration always wins. An empty installation gets search only;
+  // unlike search, keyless page fetching must still be explicitly enabled.
+  if (mentioned.has('parallel')) providers.parallel = { crawl: crawlChain?.includes('parallel') ?? false };
+  if (options.defaultSearch !== false && Object.keys(providers).length === 0 && !googleKey && !googleCx && !chain && !newsChain && !crawlChain) {
+    providers.parallel = {};
+  }
 
   const chains: Partial<Record<Operation, string[]>> = {};
   if (newsChain) chains.news = newsChain;

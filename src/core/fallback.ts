@@ -12,6 +12,7 @@ export interface ChainOptions {
   timeoutMs: number;
   onEmpty: boolean;
   signal?: AbortSignal;
+  sessionId?: string;
 }
 
 export interface ChainResult<T> {
@@ -38,7 +39,7 @@ export async function runChain<T>(
     const timer = setTimeout(() => controller.abort(), opts.timeoutMs);
     try {
       const signal = opts.signal ? AbortSignal.any([opts.signal, controller.signal]) : controller.signal;
-      const value = await call(provider, { fetch: opts.fetch, signal });
+      const value = await call(provider, { fetch: opts.fetch, signal, sessionId: opts.sessionId });
       opts.signal?.throwIfAborted();
       if (isEmpty(value)) {
         if (!firstEmpty) firstEmpty = { value, provider: provider.name };

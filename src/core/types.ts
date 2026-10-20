@@ -8,6 +8,8 @@ export type RecencyFilter = 'hour' | 'day' | 'week' | 'month' | 'year';
 export type Operation = 'search' | 'news' | 'crawl';
 
 export interface SearchRequest {
+  /** Opaque UUID for related calls in one conversation/research run. Omit for a new run. */
+  session_id?: string;
   /** 查询词, 支持数组(并行查询后合并去重) */
   query: string | string[];
   /** 返回条数, 默认 10, 上限 50 */
@@ -64,6 +66,7 @@ export interface ProviderWarning {
 }
 
 export interface SearchResponse {
+  session_id?: string;
   object: 'search' | 'news';
   id: string;
   /** 实际给出结果的 provider */
@@ -75,6 +78,7 @@ export interface SearchResponse {
 }
 
 export interface CrawlRequest {
+  session_id?: string;
   url: string;
   providers?: string[];
 }
@@ -87,6 +91,7 @@ export interface CrawlResult {
 }
 
 export interface CrawlResponse extends CrawlResult {
+  session_id?: string;
   object: 'crawl';
   id: string;
   provider: string;
@@ -110,6 +115,8 @@ export interface ProviderSearchParams {
 }
 
 export interface ProviderContext {
+  /** Supplied by the research-run owner, independent of any MCP connection. */
+  sessionId?: string;
   fetch: typeof fetch;
   signal: AbortSignal;
 }
