@@ -55,6 +55,10 @@ describe('Parallel configuration and caller', () => {
     expect(configFromEnv({ JINA_KEY: 'saved' }).providers).not.toHaveProperty('parallel');
     expect(configFromEnv({ GOOGLE_KEY: 'incomplete-saved' }).providers).not.toHaveProperty('parallel');
     expect(configFromEnv({ GOOGLE_CX: 'incomplete-saved' }).providers).not.toHaveProperty('parallel');
+    const engineOnly = createGatewayFromEnv({ SEARCH1API_SERVICE: 'arxiv' }, { fetch });
+    expect(engineOnly.chain('search')).toEqual([]);
+    await expect(engineOnly.search({ query: 'saved engine without a key' })).rejects.toMatchObject({ code: 'no_provider' });
+    expect(calls).toHaveLength(0);
     expect(createGatewayFromEnv({ SEARCH_SERVICE: 'none' }).chain('search')).toEqual([]);
     expect(createGatewayFromEnv({ SEARCH_SERVICE: 'tavily' }).chain('search')).toEqual([]);
     expect(createGatewayFromEnv({}, { providers: { tavily: { apiKey: 'saved' } } }).chain('search')).toEqual(['tavily']);

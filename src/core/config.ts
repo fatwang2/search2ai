@@ -76,7 +76,8 @@ export function configFromEnv(env: Env, options: { defaultSearch?: boolean } = {
   const providers: Partial<ProviderOptionsMap> = {};
 
   const search1api = pick(env, 'SEARCH1API_KEY', 'SEARCH1API_API_KEY');
-  if (search1api) providers.search1api = { apiKey: search1api, searchService: pick(env, 'SEARCH1API_SERVICE') };
+  const search1apiService = pick(env, 'SEARCH1API_SERVICE');
+  if (search1api) providers.search1api = { apiKey: search1api, searchService: search1apiService };
 
   const tavily = pick(env, 'TAVILY_KEY', 'TAVILY_API_KEY');
   if (tavily) providers.tavily = { apiKey: tavily };
@@ -111,7 +112,8 @@ export function configFromEnv(env: Env, options: { defaultSearch?: boolean } = {
   // Explicit configuration always wins. An empty installation gets search only;
   // unlike search, keyless page fetching must still be explicitly enabled.
   if (mentioned.has('parallel')) providers.parallel = { crawl: crawlChain?.includes('parallel') ?? false };
-  if (options.defaultSearch !== false && Object.keys(providers).length === 0 && !googleKey && !googleCx && !chain && !newsChain && !crawlChain) {
+  const hasProviderConfig = Object.keys(providers).length > 0 || !!googleKey || !!googleCx || !!search1apiService;
+  if (options.defaultSearch !== false && !hasProviderConfig && !chain && !newsChain && !crawlChain) {
     providers.parallel = {};
   }
 
