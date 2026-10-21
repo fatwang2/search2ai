@@ -159,11 +159,11 @@ export default app;
 
 以上密钥变量均接受 `*_API_KEY` 别名，例如 `TAVILY_API_KEY`；Google 搜索引擎 ID 也接受 `GOOGLE_CSE_ID`。
 
-### Parallel 免 key 搜索
+### Parallel：免 key，需显式开启
 
-未配置 provider 或 fallback 链时，`npx search2ai mcp` 与 `npx search2ai serve` 默认使用 [Parallel Search MCP](https://docs.parallel.ai/integrations/mcp/search-mcp) 的 Fast 模式免费搜索，无需账号或 API key。CLI 仍会读取 `.env.local` 和 `.env`。已有 key、provider 和显式 fallback 链保持原有行为，不会自动追加 Parallel。
+[Parallel Search MCP](https://docs.parallel.ai/integrations/mcp/search-mcp) 的 Fast 模式提供免费搜索，无需账号或 API key。与 `jina` 一样，它不会自己进链：不写进配置就不会有任何请求发往 Parallel。设 `SEARCH_SERVICE=parallel` 加入搜索链，正文抓取再设 `CRAWL_SERVICE=parallel`。没有配置任何 provider 的安装行为不变，仍然返回 `503`。
 
-显式选择搜索可设 `SEARCH_SERVICE=parallel`；正文抓取需额外设置 `CRAWL_SERVICE=parallel`，不会默认启用。无 key 时设 `SEARCH_SERVICE=none` 可禁用搜索。库中 `createGateway()` 使用相同的仅搜索默认配置；显式 `{ providers: {} }` 或空链保持禁用。`{ providers: { parallel: { crawl: true } } }` 可显式启用搜索与抓取。环境入口的显式 provider 或链覆盖也会抑制未配置时的默认值。
+库中按普通 provider 传入即可：`createGateway({ providers: { parallel: {} } })` 只做搜索，`{ providers: { parallel: { crawl: true } } }` 同时启用搜索与抓取。
 
 Parallel 返回排序后的摘录，并按 `max_results` 裁剪；实际数量由服务决定。它不支持 `news` 或严格的国家、语言、域名、日期过滤，这些请求会返回 `unsupported` warning/error，请选择支持相应能力的其他 provider。免费服务面向探索和轻量使用，有调用限额；失败沿用现有错误与 warning 机制。
 

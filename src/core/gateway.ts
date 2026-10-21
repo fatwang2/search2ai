@@ -3,7 +3,7 @@
  * 与运行时无关, 可直接 import 到任何 JS 进程中使用。
  */
 import { MemoryCache } from './cache.ts';
-import { configFromEnv, type GatewayConfig } from './config.ts';
+import type { GatewayConfig } from './config.ts';
 import { GatewayError } from './errors.ts';
 import { runChain, type ChainOptions } from './fallback.ts';
 import { normalizeDateInput, truncate } from './http.ts';
@@ -71,7 +71,7 @@ function urlKey(url: string): string {
   return url.trim().replace(/\/+$/, '').toLowerCase();
 }
 
-export function createGateway(config: GatewayConfig = configFromEnv({})): Gateway {
+export function createGateway(config: GatewayConfig): Gateway {
   const instances = new Map<string, SearchProvider>();
   for (const name of defaultPriority) {
     const opts = config.providers[name];

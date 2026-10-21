@@ -39,30 +39,39 @@ function post(app: ReturnType<typeof createApp>, path: string, data: unknown, he
 }
 
 describe('Parallel configuration and caller', () => {
-  it('enables search alone in a fresh no-key installation and preserves explicit configurations', async () => {
+  it('stays unselected until it is named, leaving every other configuration untouched', async () => {
     const { fetch, calls } = parallelRemote();
-    const g = createGatewayFromEnv({}, { fetch });
-    expect(g.chain('search')).toEqual(['parallel']);
-    expect(g.chain('crawl')).toEqual([]);
-    expect(g.chain('news')).toEqual([]);
-    expect(createGateway().chain('search')).toEqual(['parallel']);
-    expect(createGateway({ providers: {} }).chain('search')).toEqual([]);
-    expect(createGatewayFromEnv({}, { providers: {} }).chain('search')).toEqual([]);
-    expect(createGatewayFromEnv({}, { chain: [] }).chain('search')).toEqual([]);
-    expect(createGatewayFromEnv({}, { chains: { search: [] } }).chain('search')).toEqual([]);
+    const unconfigured = createGatewayFromEnv({}, { fetch });
+    expect(unconfigured.chain('search')).toEqual([]);
+    expect(unconfigured.chain('news')).toEqual([]);
+    expect(unconfigured.chain('crawl')).toEqual([]);
+    await expect(unconfigured.search({ query: 'no provider configured' })).rejects.toMatchObject({ code: 'no_provider' });
+    expect(configFromEnv({}).providers).toEqual({});
+    for (const env of [{ SEARCH1API_KEY: 'saved' }, { SEARCH1API_SERVICE: 'arxiv' }, { SEARXNG_BASE_URL: 'https://local.example' }, { JINA_KEY: 'saved' }, { GOOGLE_KEY: 'saved' }, { GOOGLE_CX: 'saved' }, { SEARCH_SERVICE: 'tavily' }]) {
+      expect(configFromEnv(env).providers).not.toHaveProperty('parallel');
+    }
     expect(configFromEnv({ SEARCH1API_KEY: 'saved' }).providers).toEqual({ search1api: { apiKey: 'saved', searchService: undefined } });
-    expect(configFromEnv({ SEARXNG_BASE_URL: 'https://local.example' }).providers).not.toHaveProperty('parallel');
-    expect(configFromEnv({ JINA_KEY: 'saved' }).providers).not.toHaveProperty('parallel');
-    expect(configFromEnv({ GOOGLE_KEY: 'incomplete-saved' }).providers).not.toHaveProperty('parallel');
-    expect(configFromEnv({ GOOGLE_CX: 'incomplete-saved' }).providers).not.toHaveProperty('parallel');
-    const engineOnly = createGatewayFromEnv({ SEARCH1API_SERVICE: 'arxiv' }, { fetch });
-    expect(engineOnly.chain('search')).toEqual([]);
-    await expect(engineOnly.search({ query: 'saved engine without a key' })).rejects.toMatchObject({ code: 'no_provider' });
-    expect(calls).toHaveLength(0);
-    expect(createGatewayFromEnv({ SEARCH_SERVICE: 'none' }).chain('search')).toEqual([]);
     expect(createGatewayFromEnv({ SEARCH_SERVICE: 'tavily' }).chain('search')).toEqual([]);
     expect(createGatewayFromEnv({}, { providers: { tavily: { apiKey: 'saved' } } }).chain('search')).toEqual(['tavily']);
+    expect(calls).toHaveLength(0);
+  });
+
+  it('is selected by SEARCH_SERVICE, CRAWL_SERVICE or an explicit provider option', () => {
+    const search = createGatewayFromEnv({ SEARCH_SERVICE: 'parallel' });
+    expect(search.chain('search')).toEqual(['parallel']);
+    expect(search.chain('crawl')).toEqual([]);
+    expect(search.chain('news')).toEqual([]);
+    expect(createGatewayFromEnv({ SEARCH_SERVICE: 'parallel', CRAWL_SERVICE: 'parallel' }).chain('crawl')).toEqual(['parallel']);
     expect(createGatewayFromEnv({ CRAWL_SERVICE: 'parallel' }).chain('crawl')).toEqual(['parallel']);
+    expect(createGateway({ providers: { parallel: {} } }).chain('search')).toEqual(['parallel']);
+    expect(createGateway({ providers: { parallel: {} } }).chain('crawl')).toEqual([]);
+    expect(createGateway({ providers: { parallel: { crawl: true } } }).chain('crawl')).toEqual(['parallel']);
+    expect(createGatewayFromEnv({ SEARCH_SERVICE: 'parallel,tavily', TAVILY_KEY: 'saved' }).chain('search')).toEqual(['parallel', 'tavily']);
+  });
+
+  it('answers search over the keyless MCP endpoint once selected', async () => {
+    const { fetch, calls } = parallelRemote();
+    const g = createGatewayFromEnv({ SEARCH_SERVICE: 'parallel' }, { fetch });
     const result = await g.search({ query: 'MCP documentation', max_results: 1 });
     expect(result).toMatchObject({ provider: 'parallel', results: [{ title: page.title, url: page.url, snippet: page.excerpts[0], date: page.publish_date }] });
     expect(result.session_id).toMatch(/^[a-f0-9-]{36}$/);

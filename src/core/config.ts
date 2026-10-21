@@ -63,9 +63,10 @@ function bool(v: string | undefined): boolean | undefined {
  * - SEARCH1API_KEY(+SEARCH1API_SERVICE), TAVILY_KEY, BRAVE_KEY, EXA_KEY, SERPER_KEY, SERPAPI_KEY,
  *   GOOGLE_KEY + GOOGLE_CX, SEARXNG_BASE_URL, JINA_KEY, FIRECRAWL_KEY / FIRECRAWL_BASE_URL
  *   (以上 *_KEY 也接受 *_API_KEY 写法)
+ * - parallel 免 key, 写进 SEARCH_SERVICE / CRAWL_SERVICE 即启用
  * - MAX_RESULTS, CRAWL_RESULTS, GL, HL, FALLBACK_ON_EMPTY, PROVIDER_TIMEOUT_MS, CACHE_TTL
  */
-export function configFromEnv(env: Env, options: { defaultSearch?: boolean } = {}): GatewayConfig {
+export function configFromEnv(env: Env): GatewayConfig {
   const gl = pick(env, 'GL');
   const hl = pick(env, 'HL');
   const chain = parseList(pick(env, 'SEARCH_SERVICE'));
@@ -76,8 +77,7 @@ export function configFromEnv(env: Env, options: { defaultSearch?: boolean } = {
   const providers: Partial<ProviderOptionsMap> = {};
 
   const search1api = pick(env, 'SEARCH1API_KEY', 'SEARCH1API_API_KEY');
-  const search1apiService = pick(env, 'SEARCH1API_SERVICE');
-  if (search1api) providers.search1api = { apiKey: search1api, searchService: search1apiService };
+  if (search1api) providers.search1api = { apiKey: search1api, searchService: pick(env, 'SEARCH1API_SERVICE') };
 
   const tavily = pick(env, 'TAVILY_KEY', 'TAVILY_API_KEY');
   if (tavily) providers.tavily = { apiKey: tavily };
@@ -109,13 +109,8 @@ export function configFromEnv(env: Env, options: { defaultSearch?: boolean } = {
   const firecrawlBase = pick(env, 'FIRECRAWL_BASE_URL');
   if (firecrawlKey || firecrawlBase || mentioned.has('firecrawl')) providers.firecrawl = { apiKey: firecrawlKey, baseUrl: firecrawlBase };
 
-  // Explicit configuration always wins. An empty installation gets search only;
-  // unlike search, keyless page fetching must still be explicitly enabled.
+  // parallel 同样免 key, 必须写进链里才启用, 不做默认外呼; 抓取还需再写进 CRAWL_SERVICE
   if (mentioned.has('parallel')) providers.parallel = { crawl: crawlChain?.includes('parallel') ?? false };
-  const hasProviderConfig = Object.keys(providers).length > 0 || !!googleKey || !!googleCx || !!search1apiService;
-  if (options.defaultSearch !== false && !hasProviderConfig && !chain && !newsChain && !crawlChain) {
-    providers.parallel = {};
-  }
 
   const chains: Partial<Record<Operation, string[]>> = {};
   if (newsChain) chains.news = newsChain;

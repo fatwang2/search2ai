@@ -1,4 +1,4 @@
-/** Anonymous Parallel Search MCP. Crawl is opt-in; news and strict filters remain with other providers. */
+/** Keyless Parallel Search MCP, selected only when explicitly configured. Crawl is opt-in; news and strict filters remain with other providers. */
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { CfWorkerJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/cfworker-provider.js';
@@ -70,7 +70,7 @@ export function createParallel(opts: ParallelOptions = {}): SearchProvider {
   return {
     name: 'parallel',
     async search(p, ctx) {
-      // The anonymous MCP schema has no strict filter parameters. Never silently
+      // The keyless MCP schema has no strict filter parameters. Never silently
       // drop a caller's filters or pretend natural-language guidance enforces them.
       if (p.country || p.languages?.length || p.domains?.length || p.recency || p.afterDate || p.beforeDate) {
         throw new ProviderError('parallel', 'unsupported', 'parallel: strict search filters require another configured provider');
