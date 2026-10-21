@@ -45,7 +45,12 @@ describe('Parallel configuration and caller', () => {
     expect(unconfigured.chain('search')).toEqual([]);
     expect(unconfigured.chain('news')).toEqual([]);
     expect(unconfigured.chain('crawl')).toEqual([]);
-    await expect(unconfigured.search({ query: 'no provider configured' })).rejects.toMatchObject({ code: 'no_provider' });
+    const error = await unconfigured.search({ query: 'no provider configured' }).catch((e) => e);
+    expect(error).toMatchObject({ code: 'no_provider' });
+    expect(error.session_id).toBeUndefined();
+    const rest = await post(createApp({ gateway: unconfigured }), '/v1/search', { query: 'no provider configured' });
+    expect(rest.status).toBe(503);
+    expect((await rest.json()).error).not.toHaveProperty('session_id');
     expect(configFromEnv({}).providers).toEqual({});
     for (const env of [{ SEARCH1API_KEY: 'saved' }, { SEARCH1API_SERVICE: 'arxiv' }, { SEARXNG_BASE_URL: 'https://local.example' }, { JINA_KEY: 'saved' }, { GOOGLE_KEY: 'saved' }, { GOOGLE_CX: 'saved' }, { SEARCH_SERVICE: 'tavily' }]) {
       expect(configFromEnv(env).providers).not.toHaveProperty('parallel');

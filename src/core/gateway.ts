@@ -34,11 +34,15 @@ export function searchSessionId(value?: string): string {
   return value ?? crypto.randomUUID();
 }
 
-async function withSearchSession<T>(sessionId: string, run: () => Promise<T>): Promise<T> {
+/** Only a run that can reach a session-aware provider carries the ID; other chains keep the untouched error shape. */
+async function withSearchSession<T>(sessionId: string, run: (claim: () => void) => Promise<T>): Promise<T> {
+  let claimed = false;
   try {
-    return await run();
+    return await run(() => {
+      claimed = true;
+    });
   } catch (error) {
-    if (error instanceof GatewayError) error.session_id = sessionId;
+    if (claimed && error instanceof GatewayError) error.session_id = sessionId;
     throw error;
   }
 }
@@ -180,7 +184,8 @@ export function createGateway(config: GatewayConfig): Gateway {
 
   async function runSearch(op: 'search' | 'news', req: SearchRequest, options: GatewayRunOptions = {}): Promise<SearchResponse> {
     const sessionId = searchSessionId(req.session_id);
-    return withSearchSession(sessionId, async () => {
+    return withSearchSession(sessionId, async (claim) => {
+      if (req.session_id) claim();
       const runOpts: ChainOptions = { ...chainOpts, signal: options.signal, sessionId };
       options.signal?.throwIfAborted();
       const queries = (Array.isArray(req.query) ? req.query : [req.query]).map((q) => String(q ?? '').trim()).filter(Boolean);
@@ -188,6 +193,7 @@ export function createGateway(config: GatewayConfig): Gateway {
       const params = normalize(req);
       const chain = resolveChain(op, req.providers);
       const names = chain.map((p) => p.name);
+      if (names.includes('parallel')) claim();
       const maxChars = req.max_tokens_per_page ? req.max_tokens_per_page * 4 : undefined;
       const cacheKey = `${op}:${JSON.stringify([queries, params, names])}`;
 
@@ -240,12 +246,14 @@ export function createGateway(config: GatewayConfig): Gateway {
     fallbackOnEmpty: !!config.fallbackOnEmpty,
     async crawl(req, options = {}) {
       const sessionId = searchSessionId(req.session_id);
-      return withSearchSession(sessionId, async () => {
+      return withSearchSession(sessionId, async (claim) => {
+        if (req.session_id) claim();
         const runOpts: ChainOptions = { ...chainOpts, signal: options.signal, sessionId };
         options.signal?.throwIfAborted();
         const url = String(req.url ?? '').trim();
         if (!url) throw new GatewayError(400, 'invalid_request', 'url is required');
         const names = resolveChain('crawl', req.providers).map((p) => p.name);
+        if (names.includes('parallel')) claim();
         const response = await withCache(`crawl:${JSON.stringify([url, names])}`, async () => {
           const r = await crawlOne(url, req.providers, runOpts);
           const response: CrawlResponse = { object: 'crawl', id: newId(), provider: r.provider, ...r.value };
