@@ -1,0 +1,16 @@
+{
+  "name": "search2ai-sdk-contract-checks",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node smoke.mjs"
+  },
+  "dependencies": {
+    "exa-js": "2.26.0",
+    "@tavily/core": "0.7.14",
+    "@search1api/client": "0.4.0",
+    "@mendable/firecrawl-js": "4.50.1",
+    "@langchain/community": "1.1.29",
+    "@langchain/core": "1.1.38"
+  }
+}

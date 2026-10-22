@@ -11,6 +11,7 @@ export interface ChainOptions {
   fetch: typeof fetch;
   timeoutMs: number;
   onEmpty: boolean;
+  signal?: AbortSignal;
 }
 
 export interface ChainResult<T> {
@@ -30,12 +31,15 @@ export async function runChain<T>(
   let firstEmpty: { value: T; provider: string } | undefined;
 
   for (let i = 0; i < chain.length; i++) {
+    opts.signal?.throwIfAborted();
     const provider = chain[i];
     const isLast = i === chain.length - 1;
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), opts.timeoutMs);
     try {
-      const value = await call(provider, { fetch: opts.fetch, signal: controller.signal });
+      const signal = opts.signal ? AbortSignal.any([opts.signal, controller.signal]) : controller.signal;
+      const value = await call(provider, { fetch: opts.fetch, signal });
+      opts.signal?.throwIfAborted();
       if (isEmpty(value)) {
         if (!firstEmpty) firstEmpty = { value, provider: provider.name };
         if (opts.onEmpty && !isLast) {
@@ -45,6 +49,7 @@ export async function runChain<T>(
       }
       return { value, provider: provider.name, warnings };
     } catch (error) {
+      opts.signal?.throwIfAborted();
       const pe = error instanceof ProviderError ? error : toProviderError(provider.name, error, controller.signal);
       warnings.push(pe.toWarning());
     } finally {

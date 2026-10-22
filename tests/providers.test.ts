@@ -21,14 +21,14 @@ const params = (extra: Partial<ProviderSearchParams> = {}): ProviderSearchParams
 describe('search1api', () => {
   it('maps search/news/crawl and sends key + options', async () => {
     const { fetch, calls } = mockFetch((url) => {
-      if (url.pathname === '/search') return json({ results: [{ title: 'A', link: 'https://a.com', snippet: 's', content: 'body' }] });
+      if (url.pathname === '/search') return json({ results: [{ title: 'A', link: 'https://a.com', snippet: 's', content: 'body', published_date: '2026-09-01' }] });
       if (url.pathname === '/news') return json({ results: [{ title: 'N', link: 'https://n.com', snippet: 'ns', date: '2026-09-01' }] });
       if (url.pathname === '/crawl') return json({ results: { title: 'P', link: 'https://p.com/x', content: '# hi' } });
       return undefined;
     });
     const p = createSearch1api({ apiKey: 'k1', searchService: 'bing' });
     const s = await p.search!(params({ domains: ['a.com'], crawlResults: 2, recency: 'week', languages: ['zh'] }), ctx(fetch));
-    expect(s).toEqual([{ title: 'A', url: 'https://a.com', snippet: 's', content: 'body' }]);
+    expect(s).toEqual([{ title: 'A', url: 'https://a.com', snippet: 's', content: 'body', date: '2026-09-01' }]);
     expect(calls[0].headers.authorization).toBe('Bearer k1');
     expect(calls[0].body).toMatchObject({ query: 'hono workers', search_service: 'bing', max_results: 3, crawl_results: 2, include_sites: ['a.com'], time_range: 'month', language: 'zh' });
 

@@ -5,7 +5,7 @@
  *   GET  /               服务信息
  *   GET  /v1/health      健康检查与已配置 provider
  *   GET  /openapi.json   OpenAPI 3.1
- *   POST /v1/search      Perplexity 兼容搜索
+ *   POST /v1/search      统一网页搜索
  *   POST /v1/news        新闻
  *   POST /v1/crawl       抓取正文
  *   ALL  /mcp            MCP(Streamable HTTP)
@@ -24,11 +24,12 @@ import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/
 import { createMcpServer } from '../mcp/server.ts';
 import { version as pkgVersion } from '../version.ts';
 import { buildOpenApi } from './openapi.ts';
+import { createCompatibilityApp } from './compat.ts';
 
 export interface AppOptions {
   gateway: Gateway;
   version?: string;
-  /** 允许访问 /v1/* 与 /mcp 的 Bearer key; 为空则不鉴权(请自行放在鉴权层之后) */
+  /** 网关访问 key: /v1/*、/mcp 使用 Bearer; /compat 按客户端协议认证。为空则不鉴权。 */
   authKeys?: string[];
   /** 传入即挂载兼容旧版的聊天代理 */
   chatProxy?: ChatProxyConfig;
@@ -83,8 +84,8 @@ export function createApp(opts: AppOptions): Hono {
     cors({
       origin: '*',
       allowMethods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
-      allowHeaders: ['Authorization', 'Content-Type', 'Accept', 'Mcp-Session-Id', 'Mcp-Protocol-Version', 'Last-Event-ID'],
-      exposeHeaders: ['Mcp-Session-Id'],
+      allowHeaders: ['Authorization', 'X-Api-Key', 'Exa-Beta', 'Content-Type', 'Accept', 'Mcp-Session-Id', 'Mcp-Protocol-Version', 'Last-Event-ID'],
+      exposeHeaders: ['Mcp-Session-Id', 'X-Search2AI-Provider', 'X-Search2AI-Mode', 'X-Search2AI-Skipped', 'Retry-After'],
       maxAge: 86400,
     })
   );
@@ -104,7 +105,7 @@ export function createApp(opts: AppOptions): Hono {
     description: 'Self-hosted search gateway for AI agents',
     providers: gateway.providers(),
     chains: { search: gateway.chain('search'), news: gateway.chain('news'), crawl: gateway.chain('crawl') },
-    endpoints: ['/v1/search', '/v1/news', '/v1/crawl', '/v1/health', '/openapi.json', ...(opts.mcp === false ? [] : ['/mcp']), ...(opts.chatProxy ? ['/v1/chat/completions'] : [])],
+    endpoints: ['/v1/search', '/v1/news', '/v1/crawl', '/v1/health', '/openapi.json', '/compat/searxng', '/compat/exa', '/compat/tavily', '/compat/search1api', '/compat/firecrawl', ...(opts.mcp === false ? [] : ['/mcp']), ...(opts.chatProxy ? ['/v1/chat/completions'] : [])],
     auth: authKeys.length > 0 ? 'bearer' : 'none',
   });
 
@@ -120,6 +121,8 @@ export function createApp(opts: AppOptions): Hono {
   app.use('/v1/*', auth);
   app.use('/mcp', auth);
   app.use('/chat/*', auth);
+
+  app.route('/compat', createCompatibilityApp(gateway, authKeys));
 
   // 搜索网关
   app.post('/v1/search', zValidator('json', SearchRequestSchema, validationHook), async (c) => c.json(await gateway.search(c.req.valid('json'))));

@@ -8,6 +8,7 @@ import { GatewayError } from './errors.ts';
 import { runChain, type ChainOptions } from './fallback.ts';
 import { normalizeDateInput, truncate } from './http.ts';
 import { createProvider, defaultPriority, describeProvider, isProviderName } from './providers/index.ts';
+import { createProtocolTransport, type ProtocolRequest } from './protocol.ts';
 import type {
   CrawlRequest,
   CrawlResponse,
@@ -23,9 +24,13 @@ import type {
 } from './types.ts';
 
 export interface Gateway {
-  search(req: SearchRequest): Promise<SearchResponse>;
-  news(req: SearchRequest): Promise<SearchResponse>;
-  crawl(req: CrawlRequest): Promise<CrawlResponse>;
+  search(req: SearchRequest, context?: { signal?: AbortSignal }): Promise<SearchResponse>;
+  news(req: SearchRequest, context?: { signal?: AbortSignal }): Promise<SearchResponse>;
+  crawl(req: CrawlRequest, context?: { signal?: AbortSignal }): Promise<CrawlResponse>;
+  /** Supported raw client-protocol calls, using only configured upstream credentials. */
+  protocol?(req: ProtocolRequest): Promise<Response>;
+  /** Shared empty-result policy for HTTP protocol adapters. */
+  readonly fallbackOnEmpty?: boolean;
   /** 已配置的 provider 及其能力 */
   providers(): ProviderInfo[];
   /** 某操作实际生效的 fallback 顺序 */
@@ -121,13 +126,13 @@ export function createGateway(config: GatewayConfig): Gateway {
     return value;
   }
 
-  async function crawlOne(url: string, override?: string[]): Promise<{ value: CrawlResult; provider: string; warnings: ProviderWarning[] }> {
+  async function crawlOne(url: string, override?: string[], signal?: AbortSignal): Promise<{ value: CrawlResult; provider: string; warnings: ProviderWarning[] }> {
     const chain = resolveChain('crawl', override);
-    return runChain(chain, 'crawl', (p, ctx) => p.crawl!(url, ctx), (r) => !r.content, chainOpts);
+    return runChain(chain, 'crawl', (p, ctx) => p.crawl!(url, ctx), (r) => !r.content, { ...chainOpts, signal });
   }
 
   /** 保证前 N 条结果带正文(已由 provider 原生返回的跳过); 抓取失败只记 warning, 不影响搜索结果 */
-  async function enrich(results: SearchResult[], count: number, maxChars: number | undefined, warnings: ProviderWarning[]): Promise<void> {
+  async function enrich(results: SearchResult[], count: number, maxChars: number | undefined, warnings: ProviderWarning[], signal?: AbortSignal): Promise<void> {
     let crawlChainOk = true;
     try {
       resolveChain('crawl');
@@ -140,7 +145,8 @@ export function createGateway(config: GatewayConfig): Gateway {
     }
     const targets = results.slice(0, count).filter((r) => !r.content);
     if (targets.length === 0) return;
-    const settled = await Promise.allSettled(targets.map((r) => crawlOne(r.url)));
+    const settled = await Promise.allSettled(targets.map((r) => crawlOne(r.url, undefined, signal)));
+    signal?.throwIfAborted();
     settled.forEach((s, i) => {
       if (s.status === 'fulfilled') {
         targets[i].content = truncate(s.value.value.content, maxChars);
@@ -152,7 +158,8 @@ export function createGateway(config: GatewayConfig): Gateway {
     });
   }
 
-  async function runSearch(op: 'search' | 'news', req: SearchRequest): Promise<SearchResponse> {
+  async function runSearch(op: 'search' | 'news', req: SearchRequest, signal?: AbortSignal): Promise<SearchResponse> {
+    signal?.throwIfAborted();
     const queries = (Array.isArray(req.query) ? req.query : [req.query]).map((q) => String(q ?? '').trim()).filter(Boolean);
     if (queries.length === 0) throw new GatewayError(400, 'invalid_request', 'query is required');
     const params = normalize(req);
@@ -163,8 +170,9 @@ export function createGateway(config: GatewayConfig): Gateway {
 
     return withCache(cacheKey, async () => {
       const settled = await Promise.allSettled(
-        queries.map((query) => runChain(chain, op, (p, ctx) => p[op]!({ ...params, query }, ctx), (r) => r.length === 0, chainOpts))
+        queries.map((query) => runChain(chain, op, (p, ctx) => p[op]!({ ...params, query }, ctx), (r) => r.length === 0, { ...chainOpts, signal }))
       );
+      signal?.throwIfAborted();
       const warnings: ProviderWarning[] = [];
       const seen = new Set<string>();
       const results: SearchResult[] = [];
@@ -191,7 +199,7 @@ export function createGateway(config: GatewayConfig): Gateway {
         throw new GatewayError(502, 'all_providers_failed', `All ${op} providers failed (${names.join(', ')})`, warnings);
       }
       if (params.crawlResults && params.crawlResults > 0) {
-        await enrich(results, params.crawlResults, maxChars, warnings);
+        await enrich(results, params.crawlResults, maxChars, warnings, signal);
       }
       const response: SearchResponse = { object: op, id: newId(), provider: providersUsed.join(','), results };
       if (warnings.length) response.warnings = warnings;
@@ -200,14 +208,17 @@ export function createGateway(config: GatewayConfig): Gateway {
   }
 
   return {
-    search: (req) => runSearch('search', req),
-    news: (req) => runSearch('news', req),
-    async crawl(req) {
+    search: (req, context) => runSearch('search', req, context?.signal),
+    news: (req, context) => runSearch('news', req, context?.signal),
+    protocol: createProtocolTransport(config),
+    fallbackOnEmpty: !!config.fallbackOnEmpty,
+    async crawl(req, context) {
+      context?.signal?.throwIfAborted();
       const url = String(req.url ?? '').trim();
       if (!url) throw new GatewayError(400, 'invalid_request', 'url is required');
       const names = resolveChain('crawl', req.providers).map((p) => p.name);
       return withCache(`crawl:${JSON.stringify([url, names])}`, async () => {
-        const r = await crawlOne(url, req.providers);
+        const r = await crawlOne(url, req.providers, context?.signal);
         const response: CrawlResponse = { object: 'crawl', id: newId(), provider: r.provider, ...r.value };
         if (r.warnings.length) response.warnings = r.warnings;
         return response;

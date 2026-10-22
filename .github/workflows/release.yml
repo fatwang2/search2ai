@@ -1,6 +1,6 @@
 # 打 tag 即发版: git tag v0.3.1 && git push origin v0.3.1
-# 需要在仓库 Settings → Secrets 配置 NPM_TOKEN(npm Granular Access Token, 勾选 publish 权限)。
-# 若已在 npmjs.com 为本包开启 Trusted Publishing(OIDC), 可删掉 NODE_AUTH_TOKEN 那行, 仅靠 id-token 权限发布。
+# npm 推荐配置 Trusted Publisher: fatwang2/search2ai, workflow release.yml, 允许 npm publish。
+# 也兼容仓库 Secret NPM_TOKEN；未配置时使用 GitHub Actions OIDC。
 name: Release
 
 on:
@@ -21,6 +21,8 @@ jobs:
           node-version: 22
           cache: npm
           registry-url: https://registry.npmjs.org
+      # Node 22 bundled npm may predate OIDC support (requires npm >=11.5.1).
+      - run: npm install --global npm@11.15.0
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
@@ -35,6 +37,10 @@ jobs:
           if npm view "search2ai@$PKG" version >/dev/null 2>&1; then
             echo "search2ai@$PKG already on npm, skipping publish"
           else
+            if [ -z "${NODE_AUTH_TOKEN:-}" ]; then
+              unset NODE_AUTH_TOKEN
+              npm config delete //registry.npmjs.org/:_authToken
+            fi
             npm publish --provenance --access public
           fi
         env:
