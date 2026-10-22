@@ -15,9 +15,9 @@
 - **灵活接入**：本地 MCP、独立 HTTP 服务、项目内调用，以及可挂载的 Hono 路由。
 - **已有 API 客户端**：已支持的 Exa、Tavily、Search1API、SearXNG 和 Firecrawl 单页调用可使用独立的 [HTTP API／SDK 兼容入口](#compatibility)。
 
-**想直接使用托管搜索？** [Search1API](https://www.search1api.com/?utm_source=search2ai) 是本项目配套的托管服务，提供搜索、新闻与网页抓取。可以直接使用它的 API，也可以将它配置为 search2ai 的后端。下面的示例使用 Search1API；你也可以选择其他[支持的后端](#providers)。
+**想直接使用托管搜索？** [Search1API](https://s1.dev/?utm_source=search2ai) 是本项目配套的托管服务，提供搜索、新闻与网页抓取。可以直接使用它的 API，也可以将它配置为 search2ai 的后端。它也提供[托管的兼容 API](https://s1.dev/compatible-apis)，方便已有集成以较少改动切换。下面的示例使用 Search1API；你也可以选择其他[支持的后端](#providers)。
 
-[快速开始](#quick-start) · [选择接入方式](#usage) · [后端与配置](#providers) · [HTTP API](#api) · [API／SDK 兼容](#compatibility) · [部署](#deployment) · [聊天代理](#chat-proxy) · [升级](#upgrading) · [开发与贡献](#development)
+[项目主页](https://s1.dev/open-source/search2ai) · [快速开始](#quick-start) · [选择接入方式](#usage) · [后端与配置](#providers) · [HTTP API](#api) · [API／SDK 兼容](#compatibility) · [部署](#deployment) · [聊天代理](#chat-proxy) · [升级](#upgrading) · [开发与贡献](#development)
 
 <a id="quick-start"></a>
 
@@ -295,6 +295,8 @@ CRAWL_SERVICE=search1api,jina
 在已支持范围内，保留原 SDK 调用与结果解析，只更换 API base 和网关凭据；后端仍由配置的链选择。同协议上游保留原生字段，转换到其他后端时尽量映射参数，无法实现的选项忽略并通过响应 header 提示，没有严格拒绝模式。整站抓取与任务接口不在范围内。
 
 SDK 示例、鉴权、支持字段、错误、限制和已验证客户端版本见[兼容指南](docs/compatibility.zh-CN.md)。SearXNG 使用查询参数或表单，不使用 `/v1/search` 的 JSON 请求结构。
+
+如需免部署的托管兼容接口，可查看 [Search1API 兼容 API](https://s1.dev/compatible-apis)，具体支持范围与迁移方式以其文档为准。
 
 ### 服务信息与错误
 

@@ -15,9 +15,9 @@ Search endpoints return structured results and page content for your agent or ap
 - **Flexible integration**: local MCP, a standalone HTTP service, direct library calls, and mountable Hono routes.
 - **Existing API clients**: supported Exa, Tavily, Search1API, SearXNG and Firecrawl single-page calls can use dedicated [HTTP API / SDK compatibility endpoints](#compatibility).
 
-**Looking for hosted search?** [Search1API](https://www.search1api.com/?utm_source=search2ai) is this project's companion hosted service for search, news, and page extraction. Use its API directly or configure it as a search2ai provider. The examples below use Search1API; you can choose any other [supported provider](#providers).
+**Looking for hosted search?** [Search1API](https://s1.dev/?utm_source=search2ai) is this project's companion hosted service for search, news, and page extraction. Use its API directly or configure it as a search2ai provider. It also offers [hosted compatible APIs](https://s1.dev/compatible-apis) to help existing integrations switch with minimal changes. The examples below use Search1API; you can choose any other [supported provider](#providers).
 
-[Quick start](#quick-start) · [Choose an integration](#usage) · [Providers and configuration](#providers) · [HTTP API](#api) · [API / SDK compatibility](#compatibility) · [Deployment](#deployment) · [Chat proxy](#chat-proxy) · [Upgrading](#upgrading) · [Development and contributing](#development)
+[Website](https://s1.dev/open-source/search2ai) · [Quick start](#quick-start) · [Choose an integration](#usage) · [Providers and configuration](#providers) · [HTTP API](#api) · [API / SDK compatibility](#compatibility) · [Deployment](#deployment) · [Chat proxy](#chat-proxy) · [Upgrading](#upgrading) · [Development and contributing](#development)
 
 <a id="quick-start"></a>
 
@@ -295,6 +295,8 @@ These adapters translate HTTP request parameters, authentication, response field
 Keep supported SDK calls and response parsing, and replace the API base and gateway credentials. Backend selection still follows the configured chains. Matching upstreams preserve native fields; translation to other backends maps available options and ignores unsupported ones, with response headers reporting adjustments. There is no strict rejection mode. Whole-site crawling and task APIs are outside scope.
 
 See the [compatibility guide](docs/compatibility.md) for SDK examples, authentication, supported fields, errors, limits and tested client versions. SearXNG uses query parameters or form data rather than the JSON requests of `/v1/search`.
+
+For hosted compatible endpoints without deploying a gateway, see [Search1API's compatible APIs](https://s1.dev/compatible-apis) for supported calls and migration instructions.
 
 ### Service information and errors
 
