@@ -13,10 +13,11 @@ Search endpoints return structured results and page content for your agent or ap
 - **Your choice of providers**: supply service URLs or credentials as needed; unconfigured providers are never enabled automatically.
 - **Fallback and caching**: separate chains per operation, in-memory caching, and Cloudflare KV caching.
 - **Flexible integration**: local MCP, a standalone HTTP service, direct library calls, and mountable Hono routes.
+- **Existing API clients (unreleased)**: supported Exa, Tavily, Search1API, SearXNG and Firecrawl single-page calls can use dedicated [HTTP API / SDK compatibility endpoints](#compatibility).
 
 **Looking for hosted search?** [Search1API](https://www.search1api.com/?utm_source=search2ai) is this project's companion hosted service for search, news, and page extraction. Use its API directly or configure it as a search2ai provider. The examples below use Search1API; you can choose any other [supported provider](#providers).
 
-[Quick start](#quick-start) · [Choose an integration](#usage) · [Providers and configuration](#providers) · [HTTP API](#api) · [Deployment](#deployment) · [Chat proxy](#chat-proxy) · [Upgrading](#upgrading) · [Development and contributing](#development)
+[Quick start](#quick-start) · [Choose an integration](#usage) · [Providers and configuration](#providers) · [HTTP API](#api) · [API / SDK compatibility](#compatibility) · [Deployment](#deployment) · [Chat proxy](#chat-proxy) · [Upgrading](#upgrading) · [Development and contributing](#development)
 
 <a id="quick-start"></a>
 
@@ -77,6 +78,8 @@ For clients using the `mcpServers` configuration format, add:
 ```
 
 The client starts search2ai locally and accesses `search`, `news`, and `crawl` over stdio. Each tool needs a configured provider with the corresponding capability. Other MCP clients can use the same command, arguments, and environment variables in their own configuration format.
+
+MCP uses one set of gateway tools with unified parameters and results across backends. Provider-specific compatibility endpoints are for existing HTTP API and SDK integrations; MCP clients use the gateway tools directly.
 
 If you have deployed the HTTP service, connect a client that supports Streamable HTTP to `https://your-search2ai-host/mcp`. With `AUTH_KEYS` configured, the client also needs to send `Authorization: Bearer <gateway_key>`.
 
@@ -264,9 +267,11 @@ Example response after the first provider was rate limited and Tavily answered:
 
 <a id="compatibility"></a>
 
-### Existing client API formats (unreleased)
+### HTTP API and SDK compatibility (unreleased)
 
 The current source checkout includes dedicated bases for **SearXNG**, Exa, Tavily, Search1API, and Firecrawl single-page scrape. These routes are not included in the published v0.3.0 npm package; build from source to try them.
+
+These adapters translate HTTP request parameters, authentication, response fields and errors for existing API clients and SDKs. MCP continues to expose the gateway's unified `search`, `news` and `crawl` tools across all configured backends.
 
 | API base | Supported routes |
 | --- | --- |

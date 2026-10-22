@@ -13,10 +13,11 @@
 - **用户选择后端**：按需提供服务地址或凭据；未配置的后端不会自动启用。
 - **自动回退与缓存**：按操作设置 fallback 链，支持进程内缓存与 Cloudflare KV 缓存。
 - **灵活接入**：本地 MCP、独立 HTTP 服务、项目内调用，以及可挂载的 Hono 路由。
+- **已有 API 客户端（尚未发布）**：已支持的 Exa、Tavily、Search1API、SearXNG 和 Firecrawl 单页调用可使用独立的 [HTTP API／SDK 兼容入口](#compatibility)。
 
 **想直接使用托管搜索？** [Search1API](https://www.search1api.com/?utm_source=search2ai) 是本项目配套的托管服务，提供搜索、新闻与网页抓取。可以直接使用它的 API，也可以将它配置为 search2ai 的后端。下面的示例使用 Search1API；你也可以选择其他[支持的后端](#providers)。
 
-[快速开始](#quick-start) · [选择接入方式](#usage) · [后端与配置](#providers) · [HTTP API](#api) · [部署](#deployment) · [聊天代理](#chat-proxy) · [升级](#upgrading) · [开发与贡献](#development)
+[快速开始](#quick-start) · [选择接入方式](#usage) · [后端与配置](#providers) · [HTTP API](#api) · [API／SDK 兼容](#compatibility) · [部署](#deployment) · [聊天代理](#chat-proxy) · [升级](#upgrading) · [开发与贡献](#development)
 
 <a id="quick-start"></a>
 
@@ -77,6 +78,8 @@ CLI 会读取当前目录的 `.env.local` 和 `.env`，优先使用已有的环�
 ```
 
 客户端在本地启动 search2ai，通过 stdio 使用 `search`、`news`、`crawl` 三个工具。每个工具都需要配置支持对应能力的后端。其他 MCP 客户端可使用相同命令、参数与环境变量，按各自格式接入。
+
+MCP 对各后端使用同一套网关工具，参数与结果结构保持统一。面向各家服务的兼容入口用于已有 HTTP API 和 SDK 集成；MCP 客户端直接使用网关工具。
 
 如果已经部署 HTTP 服务，将支持 Streamable HTTP 的 MCP 客户端连接到 `https://your-search2ai-host/mcp`。配置了 `AUTH_KEYS` 时，还需发送 `Authorization: Bearer <gateway_key>`。
 
@@ -264,9 +267,11 @@ CRAWL_SERVICE=search1api,jina
 
 <a id="compatibility"></a>
 
-### 已有客户端 API 格式（尚未发布）
+### HTTP API 与 SDK 兼容（尚未发布）
 
 当前源码提供 **SearXNG**、Exa、Tavily、Search1API 与 Firecrawl 单页 scrape 的独立入口。这些路由不包含在已发布的 v0.3.0 npm 包中，请从源码构建体验。
+
+这些适配器为已有 API 客户端和 SDK 转换 HTTP 请求参数、鉴权、响应字段及错误格式。MCP 继续使用统一的 `search`、`news`、`crawl` 工具接入各个已配置后端。
 
 | API base | 支持的路由 |
 | --- | --- |

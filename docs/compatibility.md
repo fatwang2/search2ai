@@ -6,6 +6,8 @@
 
 Keep the SDK and supported application calls you already use, and change the service base URL and gateway credentials. Compatibility applies to the methods and options below. It does not imply identical rankings, every original feature, or every SDK version.
 
+This guide covers HTTP API and SDK compatibility. MCP clients use search2ai's own `search`, `news` and `crawl` tools with unified parameters and results, independently of the selected backend. The HTTP adapters do not add separate provider-specific MCP tool formats.
+
 ## Service bases and routes
 
 Replace `https://gateway.example.com` with your deployment, including any application mount prefix.
