@@ -9,7 +9,10 @@ const DateFilter = z
   .string()
   .regex(/^(\d{4}-\d{2}-\d{2}|\d{2}\/\d{2}\/\d{4})$/, 'expected YYYY-MM-DD or MM/DD/YYYY');
 
+const SessionId = z.uuid().describe('Opaque UUID for this conversation or research run. Reuse for related search/crawl calls; omit or change on new chat/reset.');
+
 export const SearchRequestSchema = z.object({
+  session_id: SessionId.optional(),
   query: z.union([z.string().min(1).max(2000), z.array(z.string().min(1).max(2000)).min(1).max(10)]),
   max_results: z.number().int().min(1).max(50).optional(),
   country: z.string().length(2).optional(),
@@ -25,6 +28,7 @@ export const SearchRequestSchema = z.object({
 });
 
 export const CrawlRequestSchema = z.object({
+  session_id: SessionId.optional(),
   url: z.url(),
   providers: z.array(z.string().min(1)).max(10).optional(),
 });
@@ -46,6 +50,7 @@ export const SearchResultSchema = z.object({
 });
 
 export const SearchResponseSchema = z.object({
+  session_id: SessionId.optional(),
   object: z.enum(['search', 'news']),
   id: z.string(),
   provider: z.string(),
@@ -55,6 +60,7 @@ export const SearchResponseSchema = z.object({
 });
 
 export const CrawlResponseSchema = z.object({
+  session_id: SessionId.optional(),
   object: z.literal('crawl'),
   id: z.string(),
   provider: z.string(),
@@ -68,6 +74,7 @@ export const CrawlResponseSchema = z.object({
 
 export const ErrorResponseSchema = z.object({
   error: z.object({
+    session_id: SessionId.optional(),
     message: z.string(),
     type: z.string(),
     code: z.union([z.string(), z.number()]).optional(),

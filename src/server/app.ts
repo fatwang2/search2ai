@@ -85,15 +85,19 @@ export function createApp(opts: AppOptions): Hono {
       origin: '*',
       allowMethods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
       allowHeaders: ['Authorization', 'X-Api-Key', 'Exa-Beta', 'Content-Type', 'Accept', 'Mcp-Session-Id', 'Mcp-Protocol-Version', 'Last-Event-ID'],
-      exposeHeaders: ['Mcp-Session-Id', 'X-Search2AI-Provider', 'X-Search2AI-Mode', 'X-Search2AI-Skipped', 'X-Search2AI-Ignored', 'X-Search2AI-Warnings', 'Retry-After'],
+      exposeHeaders: ['Mcp-Session-Id', 'X-Search2AI-Session-Id', 'X-Search2AI-Provider', 'X-Search2AI-Mode', 'X-Search2AI-Skipped', 'X-Search2AI-Ignored', 'X-Search2AI-Warnings', 'Retry-After'],
       maxAge: 86400,
     })
   );
 
   app.onError((err, c) => {
-    if (err instanceof GatewayError) return errorJson(c, err.status, err.message, err.code, err.warnings.length ? { warnings: err.warnings } : {});
+    if (err instanceof GatewayError) return errorJson(c, err.status, err.message, err.code, {
+      ...(err.warnings.length ? { warnings: err.warnings } : {}),
+      ...(err.session_id ? { session_id: err.session_id } : {}),
+    });
     if (err instanceof UpstreamError) return errorJson(c, err.status, err.message, 'upstream_error');
     if (err instanceof HTTPException) return err.getResponse();
+    if (c.req.raw.signal.aborted) return errorJson(c, 499, 'Request cancelled', 'cancelled');
     console.error('search2ai error:', err);
     return errorJson(c, 500, 'Internal Server Error', 'internal_error');
   });
@@ -125,9 +129,9 @@ export function createApp(opts: AppOptions): Hono {
   app.route('/compat', createCompatibilityApp(gateway, authKeys));
 
   // 搜索网关
-  app.post('/v1/search', zValidator('json', SearchRequestSchema, validationHook), async (c) => c.json(await gateway.search(c.req.valid('json'))));
-  app.post('/v1/news', zValidator('json', SearchRequestSchema, validationHook), async (c) => c.json(await gateway.news(c.req.valid('json'))));
-  app.post('/v1/crawl', zValidator('json', CrawlRequestSchema, validationHook), async (c) => c.json(await gateway.crawl(c.req.valid('json'))));
+  app.post('/v1/search', zValidator('json', SearchRequestSchema, validationHook), async (c) => c.json(await gateway.search(c.req.valid('json'), { signal: c.req.raw.signal })));
+  app.post('/v1/news', zValidator('json', SearchRequestSchema, validationHook), async (c) => c.json(await gateway.news(c.req.valid('json'), { signal: c.req.raw.signal })));
+  app.post('/v1/crawl', zValidator('json', CrawlRequestSchema, validationHook), async (c) => c.json(await gateway.crawl(c.req.valid('json'), { signal: c.req.raw.signal })));
 
   // MCP
   if (opts.mcp !== false) {
@@ -165,7 +169,7 @@ export function createApp(opts: AppOptions): Hono {
       } catch {
         return errorJson(c, 400, 'Invalid JSON', 'invalid_request');
       }
-      const result = await proxy.handleChat(r.apiKey, data);
+      const result = await proxy.handleChat(r.apiKey, data, { signal: c.req.raw.signal });
       return c.body(result.body, result.status as 200, result.headers);
     };
     app.post('/v1/chat/completions', chat);

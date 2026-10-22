@@ -23,6 +23,8 @@ export class ProviderError extends Error {
 
 /** 网关层错误, 直接映射为 HTTP 状态码 */
 export class GatewayError extends Error {
+  /** Research-run identity, retained on failures so callers can retry the same run. */
+  session_id?: string;
   readonly status: number;
   readonly code: string;
   readonly warnings: ProviderWarning[];

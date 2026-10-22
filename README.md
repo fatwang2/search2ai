@@ -153,10 +153,21 @@ Configure only the services you want to use. Keys usually come from the provider
 | `searxng` | ✓ | ✓ | — | `SEARXNG_BASE_URL`, with JSON output enabled |
 | `jina` | — | — | ✓ | `JINA_KEY`, or explicitly list `jina` in `CRAWL_SERVICE` |
 | `firecrawl` | — | — | ✓ | `FIRECRAWL_KEY` or a self-hosted `FIRECRAWL_BASE_URL` |
+| `parallel` | ✓ | — | Opt-in | No key; list `parallel` in `SEARCH_SERVICE`, and in `CRAWL_SERVICE` for page extraction |
 
 ¹ Google's `news` operation uses regular search with `sort=date`, not a dedicated news search endpoint.
 
 All provider key variables above accept a `*_API_KEY` alias, such as `TAVILY_API_KEY`. The Google search engine ID also accepts `GOOGLE_CSE_ID`.
+
+### Parallel: keyless, opt-in
+
+[Parallel Search MCP](https://docs.parallel.ai/integrations/mcp/search-mcp) offers free web search in Fast mode with no account or API key. Like `jina`, it is never selected on its own: nothing reaches Parallel unless you name it. Set `SEARCH_SERVICE=parallel` to put it in the search chain, and `CRAWL_SERVICE=parallel` to also use it for page extraction. An installation with no configured provider keeps its existing behavior and returns `503` as before.
+
+For the library, pass it like any other provider: `createGateway({ providers: { parallel: {} } })` for search, or `{ providers: { parallel: { crawl: true } } }` for search and page extraction.
+
+Parallel returns ranked excerpts and slices them to `max_results`; the service controls how many results it supplies. It does not implement `news` or strict country, language, domain or date filters. Such filter requests return an `unsupported` provider warning/error rather than silently ignoring the filters. Choose another configured provider when those features are needed. The free service is intended for exploration and light use and has rate limits; failures use the existing error/warning contract.
+
+Search and crawl accept an optional opaque UUID `session_id`. Reuse the returned ID for related search, extraction, retries and follow-up calls in one conversation or research run. On failure, the library `GatewayError.session_id`, REST `error.session_id` and MCP error structured content retain the ID, including when the first call fails; omit it for a new run or reset. Array queries and `crawl_results` enrichment share the run ID. Do not put personal data in it. Independent calls generate separate IDs even when they share a gateway. The chat proxy returns `X-Search2AI-Session-Id`; pass it back as `search_session_id` in later chat requests to continue that run. This field is consumed locally and is not forwarded to the model provider. A chat request without it starts a new research run. Library gateway methods also accept `{ signal }` as a second argument for cancellation.
 
 ### Configure fallback
 

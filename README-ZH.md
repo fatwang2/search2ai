@@ -153,10 +153,21 @@ export default app;
 | `searxng` | ✓ | ✓ | — | `SEARXNG_BASE_URL`，需开启 JSON 输出 |
 | `jina` | — | — | ✓ | `JINA_KEY`，或在 `CRAWL_SERVICE` 中显式列出 `jina` |
 | `firecrawl` | — | — | ✓ | `FIRECRAWL_KEY` 或自托管的 `FIRECRAWL_BASE_URL` |
+| `parallel` | ✓ | — | 需显式开启 | 免 key；把 `parallel` 写进 `SEARCH_SERVICE`，正文抓取再写进 `CRAWL_SERVICE` |
 
 ¹ Google 的 `news` 使用普通搜索的 `sort=date`，并非独立的新闻搜索接口。
 
 以上密钥变量均接受 `*_API_KEY` 别名，例如 `TAVILY_API_KEY`；Google 搜索引擎 ID 也接受 `GOOGLE_CSE_ID`。
+
+### Parallel：免 key，需显式开启
+
+[Parallel Search MCP](https://docs.parallel.ai/integrations/mcp/search-mcp) 的 Fast 模式提供免费搜索，无需账号或 API key。与 `jina` 一样，它不会自己进链：不写进配置就不会有任何请求发往 Parallel。设 `SEARCH_SERVICE=parallel` 加入搜索链，正文抓取再设 `CRAWL_SERVICE=parallel`。没有配置任何 provider 的安装行为不变，仍然返回 `503`。
+
+库中按普通 provider 传入即可：`createGateway({ providers: { parallel: {} } })` 只做搜索，`{ providers: { parallel: { crawl: true } } }` 同时启用搜索与抓取。
+
+Parallel 返回排序后的摘录，并按 `max_results` 裁剪；实际数量由服务决定。它不支持 `news` 或严格的国家、语言、域名、日期过滤，这些请求会返回 `unsupported` warning/error，请选择支持相应能力的其他 provider。免费服务面向探索和轻量使用，有调用限额；失败沿用现有错误与 warning 机制。
+
+search / crawl 可传入不含个人信息的 UUID `session_id`。同一对话或研究任务中的搜索、抓取、重试、后续调用复用返回的 ID；首次调用失败时也可从库的 `GatewayError.session_id`、REST 的 `error.session_id` 或 MCP 错误的 structured content 取得 ID；新任务或重置时省略或换新 ID。数组查询和 `crawl_results` 共用任务 ID；共享 gateway 的独立调用会生成不同 ID。聊天代理通过 `X-Search2AI-Session-Id` 返回 ID，后续聊天请求可用 `search_session_id` 继续该任务；此字段仅本地使用，不会转发给模型服务。未传入时，每个聊天请求开始新研究任务。库方法第二个参数可传 `{ signal }` 取消调用。
 
 ### 配置自动回退
 

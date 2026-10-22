@@ -63,6 +63,7 @@ function bool(v: string | undefined): boolean | undefined {
  * - SEARCH1API_KEY(+SEARCH1API_SERVICE), TAVILY_KEY, BRAVE_KEY, EXA_KEY, SERPER_KEY, SERPAPI_KEY,
  *   GOOGLE_KEY + GOOGLE_CX, SEARXNG_BASE_URL, JINA_KEY, FIRECRAWL_KEY / FIRECRAWL_BASE_URL
  *   (以上 *_KEY 也接受 *_API_KEY 写法)
+ * - parallel 免 key, 写进 SEARCH_SERVICE / CRAWL_SERVICE 即启用
  * - MAX_RESULTS, CRAWL_RESULTS, GL, HL, FALLBACK_ON_EMPTY, PROVIDER_TIMEOUT_MS, CACHE_TTL
  */
 export function configFromEnv(env: Env): GatewayConfig {
@@ -107,6 +108,9 @@ export function configFromEnv(env: Env): GatewayConfig {
   const firecrawlKey = pick(env, 'FIRECRAWL_KEY', 'FIRECRAWL_API_KEY');
   const firecrawlBase = pick(env, 'FIRECRAWL_BASE_URL');
   if (firecrawlKey || firecrawlBase || mentioned.has('firecrawl')) providers.firecrawl = { apiKey: firecrawlKey, baseUrl: firecrawlBase };
+
+  // parallel 同样免 key, 必须写进链里才启用, 不做默认外呼; 抓取还需再写进 CRAWL_SERVICE
+  if (mentioned.has('parallel')) providers.parallel = { crawl: crawlChain?.includes('parallel') ?? false };
 
   const chains: Partial<Record<Operation, string[]>> = {};
   if (newsChain) chains.news = newsChain;

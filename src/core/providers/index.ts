@@ -1,6 +1,7 @@
 /**
  * provider 注册表: 新增一家后端只需实现 SearchProvider 并在此登记。
  */
+import { createParallel, type ParallelOptions } from './parallel.ts';
 import { createBrave, type BraveOptions } from './brave.ts';
 import { createExa, type ExaOptions } from './exa.ts';
 import { createFirecrawl, type FirecrawlOptions } from './firecrawl.ts';
@@ -14,6 +15,7 @@ import { createTavily, type TavilyOptions } from './tavily.ts';
 import type { Operation, ProviderInfo, SearchProvider } from '../types.ts';
 
 export interface ProviderOptionsMap {
+  parallel: ParallelOptions;
   search1api: Search1apiOptions;
   tavily: TavilyOptions;
   brave: BraveOptions;
@@ -31,6 +33,7 @@ export type ProviderName = keyof ProviderOptionsMap;
 type Factories = { [K in ProviderName]: (opts: ProviderOptionsMap[K]) => SearchProvider };
 
 export const providerFactories: Factories = {
+  parallel: createParallel,
   search1api: createSearch1api,
   tavily: createTavily,
   brave: createBrave,
@@ -55,6 +58,7 @@ export const defaultPriority: ProviderName[] = [
   'searxng',
   'jina',
   'firecrawl',
+  'parallel',
 ];
 
 export function isProviderName(name: string): name is ProviderName {
@@ -78,6 +82,7 @@ export function describeProvider(p: SearchProvider): ProviderInfo {
 }
 
 export type {
+  ParallelOptions,
   BraveOptions,
   ExaOptions,
   FirecrawlOptions,
@@ -89,4 +94,4 @@ export type {
   SerperOptions,
   TavilyOptions,
 };
-export { createBrave, createExa, createFirecrawl, createGoogle, createJina, createSearch1api, createSearxng, createSerpapi, createSerper, createTavily };
+export { createParallel, createBrave, createExa, createFirecrawl, createGoogle, createJina, createSearch1api, createSearxng, createSerpapi, createSerper, createTavily };
