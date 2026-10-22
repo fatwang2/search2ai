@@ -73,14 +73,14 @@ export function buildOpenApi(opts: { version: string; serverUrl?: string; chatPr
   };
   const compatibility = (protocol: string, summary: string, schema: Record<string, unknown>, form = false) => ({
     summary,
-    description: 'Client protocol compatibility for search and explicitly specified pages only. Matching upstreams preserve native payloads; translation accepts a smaller, documented subset and rejects unsupported options with 422. No recursive crawling or asynchronous jobs.',
+    description: 'Client protocol compatibility for search and explicitly specified pages. Matching upstreams preserve native payloads within scope; cross-provider translation maps available options and ignores unsupported ones. There is no strict mode. X-Search2AI-Ignored reports ignored option names; X-Search2AI-Warnings reports clamped limits, Markdown fallback or unavailable content. No recursive crawling or asynchronous jobs.',
     tags: [`compat/${protocol}`],
     security: opts.secured ? protocol === 'exa' ? [{ exaKey: [] }, { bearerAuth: [] }] : [{ bearerAuth: [] }] : [],
     requestBody: { required: true, content: { [form ? 'application/x-www-form-urlencoded' : 'application/json']: { schema } } },
     responses: Object.fromEntries([
       ['200', 'Protocol response; Exa contents and Tavily extract can contain per-URL failures'],
       ['400', 'Invalid request'], ['401', 'Gateway authentication failed'], ['404', 'Unsupported route'],
-      ['422', 'No configured upstream can honor these options'], ['429', 'Native upstream rate limit'],
+      ['422', 'Validation error returned by the native upstream, not by translation'], ['429', 'Native upstream rate limit'],
       ['502', 'Upstream failure'], ['503', 'No provider configured'], ['504', 'Upstream timeout'],
     ].map(([status, description]) => [status, { description }])),
   });
@@ -89,21 +89,21 @@ export function buildOpenApi(opts: { version: string; serverUrl?: string; chatPr
   const url = { type: 'string', format: 'uri', description: 'Absolute HTTP(S) URL' };
   const urls = { type: 'array', items: url, minItems: 1, maxItems: 10 };
   for (const [protocol, path, schema] of [
-    ['exa', '/search', object(['query'], { query, numResults: { type: 'integer', minimum: 1, maximum: 50 }, contents: { description: 'Native contents options; translated mode supports text and text.maxCharacters, not highlights or summary' } })],
+    ['exa', '/search', object(['query'], { query, numResults: { type: 'integer', minimum: 1, description: 'Clamped to the selected adapter limit in translated mode' }, contents: { description: 'Translated mode attempts text and text.maxCharacters; unsupported options are ignored and unavailable text does not fail the search' } })],
     ['exa', '/contents', object(['urls'], { urls, text: { description: 'true or an object with maxCharacters in translated mode' } })],
-    ['tavily', '/search', object(['query'], { query, max_results: { type: 'integer', minimum: 1, maximum: 20 }, topic: { type: 'string', enum: ['general', 'news'] }, include_raw_content: { type: 'boolean' } })],
+    ['tavily', '/search', object(['query'], { query, max_results: { type: 'integer', minimum: 1, description: 'Clamped to the selected adapter limit in translated mode' }, topic: { type: 'string', description: 'general/news map to search/news; other topics are ignored during translation' }, include_raw_content: { oneOf: [{ type: 'boolean' }, { type: 'string', enum: ['markdown', 'text'] }] } })],
     ['tavily', '/extract', object(['urls'], { urls: { oneOf: [url, urls] } })],
-    ['search1api', '/search', object(['query'], { query, max_results: { type: 'integer', minimum: 1, maximum: 50 }, crawl_results: { type: 'integer', minimum: 0, maximum: 10 } })],
-    ['search1api', '/news', object(['query'], { query, max_results: { type: 'integer', minimum: 1, maximum: 50 } })],
+    ['search1api', '/search', object(['query'], { query, max_results: { type: 'integer', minimum: 1 }, crawl_results: { type: 'integer', minimum: 0, description: 'Clamped to 10 in translated mode; unavailable content adds a warning' } })],
+    ['search1api', '/news', object(['query'], { query, max_results: { type: 'integer', minimum: 1 } })],
     ['search1api', '/crawl', object(['url'], { url, enableFallback: { type: 'boolean', default: true } })],
     ['firecrawl', '/v1/scrape', object(['url'], { url, formats: { type: 'array', items: { type: 'string' }, default: ['markdown'] } })],
     ['firecrawl', '/v2/scrape', object(['url'], { url, formats: { type: 'array', items: { type: 'string' }, default: ['markdown'] } })],
   ] as const) paths[`/compat/${protocol}${path}`] = { post: compatibility(protocol, `${protocol} ${path}`, schema) };
   const searxSchema = object(['q'], {
-    q: query, format: { type: 'string', enum: ['json'], default: 'json' },
+    q: query, format: { type: 'string', default: 'json', description: 'Other formats are ignored; output is always JSON' },
     categories: { type: 'string', description: 'general/news in translated mode; native categories depend on SearXNG' },
     language: { type: 'string' }, pageno: { type: 'integer', minimum: 1, default: 1 },
-    engines: { type: 'string', description: 'SearXNG engine names, not gateway providers; native upstream required' },
+    engines: { type: 'string', description: 'SearXNG engine names, not gateway providers; ignored during translation' },
     time_range: { type: 'string', enum: ['day', 'month', 'year'] }, safesearch: { type: 'integer', enum: [0, 1, 2] },
   });
   const { requestBody: _body, ...searxGet } = compatibility('searxng', 'SearXNG JSON search', searxSchema, true);

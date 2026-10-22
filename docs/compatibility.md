@@ -2,7 +2,7 @@
 
 [简体中文](compatibility.zh-CN.md)
 
-**Available since v0.3.1.** Upgrade with `npm install search2ai@latest`.
+**Endpoints available since v0.3.1; best-effort translation since v0.3.2.** Upgrade with `npm install search2ai@latest`.
 
 Keep the SDK and supported application calls you already use, and change the service base URL and gateway credentials. Compatibility applies to the methods and options below. It does not imply identical rankings, every original feature, or every SDK version.
 
@@ -26,61 +26,70 @@ Do not append `/search` or `/v2` to the SDK base unless that particular client's
 
 ## Backend routing and limits
 
-The protocol does not select the backend. The existing `SEARCH_SERVICE`, `NEWS_SERVICE`, and `CRAWL_SERVICE` chains determine the attempt order. No configured provider means `503`, with no default outbound call.
+The protocol does not select the backend. The existing `SEARCH_SERVICE`, `NEWS_SERVICE`, and `CRAWL_SERVICE` chains determine the attempt order. No configured provider for the operation means `503`, with no default outbound call.
 
-- **Matching upstream:** when a chain reaches the matching provider, requests and responses retain native fields, metadata, scores and costs actually returned by that upstream. Gateway credentials are replaced with configured upstream credentials. Validation of native options is performed by the upstream, subject to the single-page scope and limits below. Exa's `Exa-Beta` header is preserved for native Exa calls.
-- **Another upstream:** only the subset below is translated. Unsupported options skip that provider without a request. A later matching provider can still handle the native options. When none can, the gateway returns `422`.
-- **Failures:** upstream failures can continue to another provider only when that provider can honor the request. A native error is retained if no fallback succeeds. Successful empty responses are returned as-is unless `FALLBACK_ON_EMPTY=true`; this policy also applies to native calls. Native responses bypass normalized result caching; translated calls use the core cache.
-- **Scope:** search and explicitly given page URLs only. No recursive discovery, whole-site crawl, crawl jobs, polling, cancellation endpoints, webhooks, screenshots, browser actions, generated answers or structured extraction.
+- **Matching upstream:** when a chain reaches the matching provider, requests and responses retain native fields, metadata, scores and costs actually returned by that upstream. Gateway credentials are replaced with configured upstream credentials. Native options are validated by the upstream, subject to the search/single-page scope below. Exa's `Exa-Beta` header is preserved for native Exa calls.
+- **Another upstream:** requests are translated on a best-effort basis. Available options are mapped; unknown or unavailable options are ignored. They do not cause `422` or skip an otherwise usable provider. There is no strict mode. For example, Tavily `include_domains` maps to the gateway's domain filter; `search_depth=advanced` is ignored when the chosen adapter has no equivalent.
+- **Failures:** upstream failures continue through the configured chain, including translation of native-only options. A native error is retained if no fallback succeeds. Successful empty responses are returned as-is unless `FALLBACK_ON_EMPTY=true`; this also applies to native calls. Native responses bypass normalized result caching; translated calls use the core cache.
+- **Scope:** search and explicitly given page URLs only. Recursive discovery, generated answers, structured extraction, streaming, browser actions and screenshots are ignored on these routes, including native calls. Whole-site crawl, jobs, polling, cancellation, map and webhook routes remain unavailable (`404`).
 
-`X-Search2AI-Mode` is `native` or `translated`. `X-Search2AI-Provider` lists providers actually used; content enrichment can use another provider. `X-Search2AI-Skipped` lists skipped attempts. These headers keep gateway routing information outside the original response schema.
+Response headers describe routing and adjustments without changing the client's response envelope:
 
-Native calls preserve the upstream's error status and payload. Gateway errors use the client protocol's envelope: Exa `error`/`tag`, Tavily `detail.error`, Search1API `ok: false`/`error`/`message`, Firecrawl `success: false`/`error`, SearXNG `error`. Invalid requests return `400`, authentication failures `401`, unsupported translation `422`, missing providers `503`, native timeouts `504`. Other upstream failures may return `502` or a retained native error. Client cancellation aborts provider calls and does not trigger fallback.
+- `X-Search2AI-Mode`: `native` or `translated`.
+- `X-Search2AI-Provider`: providers actually used, including any content reader.
+- `X-Search2AI-Skipped`: failed or empty attempts passed over during fallback.
+- `X-Search2AI-Ignored`: comma-separated ignored option names, including nested paths such as `contents.highlights`. Names are percent-encoded; diagnostics are bounded to 50 names of at most 120 encoded characters each, with longer names replaced by `option_name_truncated`. Names, not option values, are included.
+- `X-Search2AI-Warnings`: comma-separated adjustment codes: `result_limit_clamped`, `crawl_limit_clamped`, `language_normalized`, `markdown_fallback`, `content_unavailable`, or `content_partial`.
 
-## Supported translation subset
+These headers are exposed through CORS. Check them if your application depends on a particular filter or feature: ignored options may broaden results or repeat the first page. Compatibility preserves the client format, not every original service's behavior, ranking or field availability.
 
-The following describes **cross-provider translation**. Matching native providers can handle additional options within scope. Unknown or meaningful unsupported fields are rejected, rather than silently discarded. Conventional disabled/empty defaults are accepted where they make no additional capability request.
+Invalid request values still return `400`, authentication failures `401`, missing providers `503`, native timeouts `504`, and other upstream failures `502` or a retained native error. Native upstreams may return their own validation errors, including `422`; the gateway does not generate `422` for unavailable translation features. Errors use each client's envelope: Exa `error`/`tag`, Tavily `detail.error`, Search1API `ok: false`/`error`/`message`, Firecrawl `success: false`/`error`, SearXNG `error`. Client cancellation aborts calls without triggering fallback.
 
-### SearXNG — priority integration
+## Cross-provider translation
 
-- JSON output only; `format=json`, or omit it. No HTML interface, CSV or RSS.
-- GET query parameters and POST `application/x-www-form-urlencoded` bodies; an empty POST with URL parameters also works.
-- `q`, `categories=general|news`, page 1, and two-letter `language` codes. The language filter requires Search1API or SearXNG.
-- Existing LangChain JS parameters `numResults` (1–50), `pageNumber` (alias for `pageno`), `imageProxy=true` and `safesearch=0` are accepted. `numResults` limits translated searches; the client can also limit the returned list. `imageProxy` has no effect on JSON page results.
-- SearXNG bang/language query syntax, page 2+, nonempty `engines`, `time_range`, and safe-search levels 1/2 require a native SearXNG backend. Engine names such as `google` refer to SearXNG engines, not gateway providers. Unsupported pagination never repeats page 1.
-- Translated responses include `query`, `results[].title/url/content` and empty answer/infobox/suggestion arrays. They omit unknown total counts, engine names and scores. Native responses retain all original metadata and pagination fields without a gateway default-10 truncation.
+Matching native providers support more options within scope. Across providers, the following mappings are implemented; additional options are ignored with the header above. Unavailable scores, costs, author metadata and generated outputs are not fabricated.
 
-If SearXNG is the backend, configure `SEARXNG_BASE_URL` with the instance base, and enable `json` under `search.formats` in its `settings.yml`.
+### SearXNG
+
+- GET query parameters, POST `application/x-www-form-urlencoded` bodies, or an empty POST with URL parameters. Responses always use JSON; another `format` is ignored.
+- `q`, `categories=general|news`, `numResults` (default 10), `language`, and `time_range`. Language codes such as `en-US` are normalized to two letters for translation. Language is sent to Search1API, SearXNG, Serper, Brave and Google; unsupported adapters ignore it. Language and time semantics depend on the backend.
+- `pageNumber` aliases `pageno`. Non-default pagination, `engines`, safe-search levels and unsupported categories are ignored during translation. SearXNG bang/language query tokens are stripped when an ordinary search query remains. Native SearXNG retains pagination and engine selection. Engine names do not select gateway providers.
+- Translated responses include `query`, `results[].title/url/content` and empty answer/infobox/suggestion arrays. Unknown totals, engine metadata and scores are omitted. Native results are not truncated to the gateway default.
+
+For a SearXNG backend, configure `SEARXNG_BASE_URL` with the instance base and enable `json` under `search.formats` in its `settings.yml`.
 
 ### Exa
 
-- Search: `query`, `numResults` (1–50, default 10), `type=auto`, optional `category=news`.
-- `contents=false` returns search metadata. Otherwise, text contents are supported with `contents.text=true` or `contents.text.maxCharacters`. Omitting `contents` follows the tested SDK's default: fetch text, truncated to 10,000 characters. This requires a crawl provider and adds page reads.
-- Contents: 1–10 explicit `urls`, optional `text=true` or `text.maxCharacters`. Per-URL failures appear in `statuses`.
-- Highlights, domain/date filters, other search modes, beta options and summaries need a matching native upstream or are outside scope. A snippet is never labeled as an Exa highlight. Subpage crawling is rejected even with an Exa upstream.
-- Translated results include `id`, `url`, `title`, and available `text`/`publishedDate`; scores, author metadata and `costDollars` are not fabricated.
+- Search: `query`, `numResults` (default 10), `category=news`, `includeDomains`, `excludeDomains`, `startPublishedDate`, and `endPublishedDate`. Other search types and categories are ignored during translation.
+- `contents=false` returns search metadata. Text is requested with `contents.text=true` or `contents.text.maxCharacters`. Omitting `contents` attempts text enrichment with a 10,000-character limit, matching the tested SDK default. Missing or failed readers leave the search results usable and add a warning; snippets are not relabeled as full text or highlights.
+- Contents: 1–10 explicit `urls`, optional `text=true|false` or `text.maxCharacters`. Per-URL failures appear in `statuses`.
+- Unsupported nested content options, highlights and beta features are ignored during translation. Summaries, streaming and recursive subpages are ignored even on native routes.
 
 ### Tavily
 
-- Search: `query`, `max_results` (1–20, default 5), `topic=general|news`, optional `include_raw_content=true|markdown`. Requested raw content requires a crawl provider and is read for every returned result.
-- Extract: one URL or up to 10 explicit `urls`, basic depth and Markdown output. Successes appear in `results`, failures in `failed_results`; HTTP 200 can contain only per-URL failures, matching this method's contract.
-- Advanced search/extraction, filters and HTML output require the matching upstream. Generated answers are outside scope. Translated results omit unavailable scores and usage. Applications that depend on these values must use an upstream that actually provides them.
+- Search: `query`, `max_results` (default 5), `topic=general|news`, `include_domains`, `exclude_domains`, `time_range`, `start_date`, `end_date`, and two-letter `country` where the backend supports them.
+- `include_raw_content=true|markdown|text` attempts page reads for all returned results. Missing content is `null` and reported in the warning header; it does not fail the search.
+- Extract: one URL or up to 10 explicit `urls`, with Markdown output. Unsupported depth/format options are ignored. Successes appear in `results`, failures in `failed_results`; HTTP 200 can contain only per-URL failures, matching this method's contract.
+- Advanced search options, images and usage fields are ignored during translation. Generated answers are ignored on native routes as well.
 
 ### Search1API
 
-- Search/news: `query`, `max_results` (1–50, default 5), `crawl_results` (0–10, default 0). Requested content is required, not replaced with a success response that only has a warning.
+- Search/news: `query`, `max_results` (default 5), `crawl_results` (default 0, clamped to 10), `include_sites`, `exclude_sites`, `language`, and `time_range`.
+- Requested text is enriched where possible; unavailable or failed page reads produce warnings while retaining search results.
 - Single-page crawl: `url`, optional `enableFallback`. Setting it to `false` restricts the attempt to the first crawl provider.
-- Response envelopes retain `searchParameters`/`crawlParameters` and `results`, including `link`, `snippet`, `content`, and available `published_date`.
-- Nonempty `search_service`, page 2+, language/time/domain filters and images require native Search1API. `search_service` is its engine selector, not a gateway provider override. Search/news request arrays and other Search1API methods are outside this initial coverage.
+- Response envelopes retain `searchParameters`/`crawlParameters` and `results`, including available `link`, `snippet`, `content`, and `published_date`.
+- Engine selection (`search_service`), pagination, images and other unavailable options are ignored during translation. `search_service` is not a gateway provider override. Search/news request arrays remain outside the supported request envelope.
 
-### Firecrawl — single-page scrape only
+### Firecrawl — single-page scrape
 
 - `url`, Markdown `formats` (default `['markdown']`), SDK attribution `origin`.
-- Returns `success`, `data.markdown` and available `data.metadata.title/sourceURL`.
-- Explicit main-content filtering, HTML, links and other page-specific options need a native Firecrawl provider. Browser actions, screenshots and generated output formats are rejected even with Firecrawl configured.
-- No `/crawl`, `/map`, batch jobs or task endpoints. A request to those routes returns `404` and does not execute a single-page scrape instead.
+- Returns `success`, `data.markdown`, available links and `data.metadata.title/sourceURL`.
+- HTML, raw HTML and links formats pass through to native Firecrawl. Across providers, unsupported formats fall back to Markdown with a warning; Markdown is never mislabeled as HTML. Page-specific options are ignored if unavailable.
+- Browser actions, screenshots and generated formats are ignored, including native calls. If no supported format remains, Markdown is requested. Separate `/crawl`, `/map`, batch and job routes return `404`.
 
-All explicit URL lists are limited to 10, translated reads run with concurrency 4, and request bodies are limited to 256 KiB, and native upstream responses to 4 MiB. Search result limits are also constrained by the selected provider: for example, translated Tavily/Brave queries accept at most 20 and Google 10. Configure a provider that supports the requested count rather than expecting silent clamping.
+Domain inclusion uses native fields or `site:` operators; exclusions use `-site:` operators. Absolute date filters map to Exa, Tavily and Brave; other adapters ignore them with a header. Recency and language mappings use the backend's available semantics rather than promising exact equivalence.
+
+Explicit URL lists are limited to 10, translated reads run with concurrency 4, request bodies are limited to 256 KiB, and native responses to 4 MiB. Positive integer search limits are clamped in translated mode to the selected adapter's limit: Tavily/Brave 20, Google 10, others 50, with a warning. Invalid types, nonpositive counts and malformed URLs still fail validation.
 
 ## Existing SDK examples
 

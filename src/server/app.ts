@@ -85,7 +85,7 @@ export function createApp(opts: AppOptions): Hono {
       origin: '*',
       allowMethods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
       allowHeaders: ['Authorization', 'X-Api-Key', 'Exa-Beta', 'Content-Type', 'Accept', 'Mcp-Session-Id', 'Mcp-Protocol-Version', 'Last-Event-ID'],
-      exposeHeaders: ['Mcp-Session-Id', 'X-Search2AI-Provider', 'X-Search2AI-Mode', 'X-Search2AI-Skipped', 'Retry-After'],
+      exposeHeaders: ['Mcp-Session-Id', 'X-Search2AI-Provider', 'X-Search2AI-Mode', 'X-Search2AI-Skipped', 'X-Search2AI-Ignored', 'X-Search2AI-Warnings', 'Retry-After'],
       maxAge: 86400,
     })
   );
