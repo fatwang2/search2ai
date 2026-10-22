@@ -97,6 +97,7 @@ export function createApp(opts: AppOptions): Hono {
     });
     if (err instanceof UpstreamError) return errorJson(c, err.status, err.message, 'upstream_error');
     if (err instanceof HTTPException) return err.getResponse();
+    if (c.req.raw.signal.aborted) return errorJson(c, 499, 'Request cancelled', 'cancelled');
     console.error('search2ai error:', err);
     return errorJson(c, 500, 'Internal Server Error', 'internal_error');
   });

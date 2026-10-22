@@ -110,10 +110,11 @@ export async function callChatCompletions(
   fetchFn: typeof fetch,
   apiKey: string,
   body: unknown,
-  stream: boolean
+  stream: boolean,
+  signal?: AbortSignal
 ): Promise<Response | Record<string, unknown>> {
   const { url, headers } = chatRequestOptions(cfg, apiKey, stream);
-  const upstream = await fetchFn(url, { method: 'POST', headers, body: JSON.stringify(body) });
+  const upstream = await fetchFn(url, { method: 'POST', headers, body: JSON.stringify(body), signal });
   if (!upstream.ok) {
     let detail = upstream.statusText || '';
     try {

@@ -9,7 +9,7 @@ import { createApp } from '../src/server/app.ts';
 import { createMcpServer } from '../src/mcp/server.ts';
 import { createChatProxy } from '../src/chat/proxy.ts';
 import { version } from '../src/version.ts';
-import { json, mockFetch, sse, chunk, readSse, type RecordedCall } from './helpers.ts';
+import { json, mockFetch, sse, chunk, readSse, sleep, type RecordedCall } from './helpers.ts';
 
 const page = { title: 'MCP documentation', url: 'https://example.com/docs', excerpts: ['Useful search excerpt'], publish_date: '2026-10-01' };
 type Rpc = { id?: number; method: string; params?: { name: string; arguments: Record<string, unknown> } };
@@ -32,6 +32,14 @@ function parallelRemote(reply?: (rpc: Rpc, call: RecordedCall) => unknown) {
   });
 }
 const toolCalls = (calls: RecordedCall[]) => calls.filter((c) => (c.body as Rpc)?.method === 'tools/call').map((c) => (c.body as Rpc).params!);
+/** A remote whose tool call never answers until its request is aborted. */
+function stalled() {
+  return parallelRemote((rpc, call) => rpc.method === 'tools/call' ? new Promise<Response>((_resolve, reject) => {
+    const abort = () => reject(new DOMException('aborted', 'AbortError'));
+    if (call.init.signal?.aborted) abort();
+    else call.init.signal?.addEventListener('abort', abort, { once: true });
+  }) : undefined);
+}
 const gateway = (fetch: typeof globalThis.fetch, extra = {}) => createGateway({ providers: { parallel: { crawl: true } }, fetch, ...extra });
 
 function post(app: ReturnType<typeof createApp>, path: string, data: unknown, headers: Record<string, string> = {}) {
@@ -234,13 +242,6 @@ describe('Parallel error and cancellation paths', () => {
     expect(toolCalls(calls).map((c) => c.arguments.session_id)).toEqual([session_id, session_id]);
   });
 
-  function stalled() {
-    return parallelRemote((rpc, call) => rpc.method === 'tools/call' ? new Promise<Response>((_resolve, reject) => {
-      const abort = () => reject(new DOMException('aborted', 'AbortError'));
-      if (call.init.signal?.aborted) abort();
-      else call.init.signal?.addEventListener('abort', abort, { once: true });
-    }) : undefined);
-  }
   it('bounds the complete MCP operation with the configured provider timeout', async () => {
     const { fetch } = stalled();
     await expect(gateway(fetch, { timeoutMs: 40 }).search({ query: 'x' })).rejects.toMatchObject({ warnings: [{ provider: 'parallel', code: 'timeout' }] });
@@ -274,7 +275,7 @@ describe('scripted chat tool execution', () => {
       if (body.stream) return sse([chunk(tool ? { tool_calls: [{ ...tool, index: 0 }] } : { content: 'Answer with https://example.com/docs' }, tool ? 'tool_calls' : 'stop')]);
       return json({ choices: [{ message: tool ? { role: 'assistant', content: null, tool_calls: [tool] } : { role: 'assistant', content: 'Answer with https://example.com/docs' }, finish_reason: tool ? 'tool_calls' : 'stop' }] });
     });
-    return { proxy: createChatProxy(g, { apiBase: 'https://model.example/v1', type: 'openai', authKeys: [], fetch: model.fetch }), observed };
+    return { proxy: createChatProxy(g, { apiBase: 'https://model.example/v1', type: 'openai', authKeys: [], fetch: model.fetch }), observed, model };
   }
 
   it.each([false, true])('searches, fetches and consumes results with one run ID; stream=%s', async (stream) => {
@@ -300,6 +301,34 @@ describe('scripted chat tool execution', () => {
     expect(ids.filter((id) => id === sessionId)).toHaveLength(6);
     expect(ids.filter((id) => id === other.headers['X-Search2AI-Session-Id'])).toHaveLength(3);
     expect(ids.filter((id) => id === reset.headers['X-Search2AI-Session-Id'])).toHaveLength(3);
+  });
+
+  it.each([false, true])('stops the loop without asking the model again once a tool call is cancelled; stream=%s', async (stream) => {
+    const { fetch } = stalled();
+    const { proxy, model } = scriptedProxy(gateway(fetch), stream);
+    const controller = new AbortController();
+    const request = proxy.handleChat('model-key', { messages: [{ role: 'user', content: 'Research MCP' }], stream }, { signal: controller.signal });
+    setTimeout(() => controller.abort(), 20);
+    if (stream) {
+      const { raw } = await readSse(new Response((await request).body as ReadableStream<Uint8Array>));
+      expect(raw).toBe('');
+    } else {
+      await expect(request).rejects.toMatchObject({ name: 'AbortError' });
+    }
+    await sleep(20);
+    expect(model.calls).toHaveLength(1);
+  });
+
+  it.each([false, true])('aborts an in-flight model request; stream=%s', async (stream) => {
+    const model = mockFetch((_url, call) => new Promise<Response>((_resolve, reject) => {
+      call.init.signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')), { once: true });
+    }));
+    const proxy = createChatProxy(gateway(parallelRemote().fetch), { apiBase: 'https://model.example/v1', type: 'openai', authKeys: [], fetch: model.fetch });
+    const controller = new AbortController();
+    const request = proxy.handleChat('model-key', { messages: [{ role: 'user', content: 'Research MCP' }], stream }, { signal: controller.signal });
+    setTimeout(() => controller.abort(), 20);
+    await expect(request).rejects.toMatchObject({ name: 'AbortError' });
+    expect(model.calls).toHaveLength(1);
   });
 });
 

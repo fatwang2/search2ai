@@ -69,6 +69,8 @@ async function executeGatewayTool(gateway: Gateway, name: string, args: Json, se
     }
     return `未知工具: ${name}`;
   } catch (error) {
+    // 调用方取消后整轮请求作废, 不能把取消包装成工具结果继续喂给模型。
+    if (options.signal?.aborted) throw error;
     return `工具 ${name} 执行失败: ${(error as Error).message ?? String(error)}`;
   }
 }
@@ -128,14 +130,16 @@ export function createChatProxy(gateway: Gateway, cfg: ChatProxyConfig) {
     return [...messages, assistant, ...results];
   }
 
-  const callUpstream = (apiKey: string, body: Json, stream: boolean) => callChatCompletions(cfg, fetchFn, apiKey, body, stream);
+  const callUpstream = (apiKey: string, body: Json, stream: boolean, signal?: AbortSignal) =>
+    callChatCompletions(cfg, fetchFn, apiKey, body, stream, signal);
 
   // ---------- 非流式 ----------
 
   async function handleNonStream(apiKey: string, base: Json, ownTools: Set<string>, messages: ChatMessage[], sessionId: string, options: GatewayRunOptions): Promise<Json> {
     let data: Json = {};
     for (let round = 0; round < maxRounds; round++) {
-      data = (await callUpstream(apiKey, roundBody(base, messages, round), false)) as Json;
+      options.signal?.throwIfAborted();
+      data = (await callUpstream(apiKey, roundBody(base, messages, round), false, options.signal)) as Json;
       const message = (data.choices as Array<{ message?: ChatMessage }> | undefined)?.[0]?.message;
       const { own, client } = splitToolCalls(message?.tool_calls, ownTools);
       if (own.length === 0) return data;
@@ -275,21 +279,30 @@ export function createChatProxy(gateway: Gateway, cfg: ChatProxyConfig) {
   ): Promise<void> {
     const encoder = new TextEncoder();
     const write = (text: string) => controller.enqueue(encoder.encode(text));
+    const close = () => {
+      try { controller.close(); } catch { /* 客户端已断开 */ }
+    };
     let upstream: Response | null = firstUpstream;
     try {
       for (let round = 0; round < maxRounds; round++) {
-        if (!upstream) upstream = (await callUpstream(apiKey, { ...roundBody(base, messages, round), stream: true }, true)) as Response;
+        options.signal?.throwIfAborted();
+        if (!upstream) upstream = (await callUpstream(apiKey, { ...roundBody(base, messages, round), stream: true }, true, options.signal)) as Response;
         const r = await relayRound(upstream.body!, ownTools, write);
         upstream = null;
         if (r.done) break;
         messages = await runOwnTools(messages, r.assistant, r.own, sessionId, options);
       }
     } catch (error) {
+      // 调用方取消后不再续写: 既不发错误事件, 也不再请求模型。
+      if (options.signal?.aborted) {
+        close();
+        return;
+      }
       const e = error as { status?: number; message?: string };
       write(`data: ${JSON.stringify({ error: { message: e?.message ?? 'Internal Server Error', type: 'upstream_error', code: e?.status ?? 500 } })}\n\n`);
     }
     write('data: [DONE]\n\n');
-    controller.close();
+    close();
   }
 
   /** 处理一次 chat/completions 请求; requestKey 已通过 resolveApiKey 解析为上游 key */
@@ -307,7 +320,7 @@ export function createChatProxy(gateway: Gateway, cfg: ChatProxyConfig) {
     }
 
     // 首轮在建流之前发起: 上游 4xx/5xx 仍能以 HTTP 状态码返回给客户端
-    const first = (await callUpstream(apiKey, { ...roundBody(base, messages, 0), stream: true }, true)) as Response;
+    const first = (await callUpstream(apiKey, { ...roundBody(base, messages, 0), stream: true }, true, options.signal)) as Response;
     const body = new ReadableStream<Uint8Array>({
       start(controller) {
         void pumpStream(apiKey, base, ownTools, messages, first, controller, sessionId, options);
