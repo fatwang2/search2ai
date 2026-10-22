@@ -2,7 +2,7 @@
 
 [简体中文](compatibility.zh-CN.md)
 
-**Unreleased. These routes are implemented in this source checkout; the published v0.3.0 package does not include them.** Build from source to try them.
+**Available since v0.3.1.** Upgrade with `npm install search2ai@latest`.
 
 Keep the SDK and supported application calls you already use, and change the service base URL and gateway credentials. Compatibility applies to the methods and options below. It does not imply identical rankings, every original feature, or every SDK version.
 

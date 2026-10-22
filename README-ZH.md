@@ -13,7 +13,7 @@
 - **用户选择后端**：按需提供服务地址或凭据；未配置的后端不会自动启用。
 - **自动回退与缓存**：按操作设置 fallback 链，支持进程内缓存与 Cloudflare KV 缓存。
 - **灵活接入**：本地 MCP、独立 HTTP 服务、项目内调用，以及可挂载的 Hono 路由。
-- **已有 API 客户端（尚未发布）**：已支持的 Exa、Tavily、Search1API、SearXNG 和 Firecrawl 单页调用可使用独立的 [HTTP API／SDK 兼容入口](#compatibility)。
+- **已有 API 客户端**：已支持的 Exa、Tavily、Search1API、SearXNG 和 Firecrawl 单页调用可使用独立的 [HTTP API／SDK 兼容入口](#compatibility)。
 
 **想直接使用托管搜索？** [Search1API](https://www.search1api.com/?utm_source=search2ai) 是本项目配套的托管服务，提供搜索、新闻与网页抓取。可以直接使用它的 API，也可以将它配置为 search2ai 的后端。下面的示例使用 Search1API；你也可以选择其他[支持的后端](#providers)。
 
@@ -214,7 +214,7 @@ CRAWL_SERVICE=search1api,jina
 
 ### 搜索：`POST /v1/search`
 
-这是 search2ai 稳定的统一 HTTP 接口。搜索字段最初参考 Perplexity Search API 并加入网关扩展，不承诺完整 Perplexity 兼容；选择不同后端不会改变其格式。已有 SDK 可使用尚未发布源码版本中的独立[兼容入口](#compatibility)。
+这是 search2ai 稳定的统一 HTTP 接口。搜索字段最初参考 Perplexity Search API 并加入网关扩展，不承诺完整 Perplexity 兼容；选择不同后端不会改变其格式。已有 SDK 可使用 v0.3.1 起提供的独立[兼容入口](#compatibility)。
 
 | 字段 | 说明 |
 | --- | --- |
@@ -267,9 +267,9 @@ CRAWL_SERVICE=search1api,jina
 
 <a id="compatibility"></a>
 
-### HTTP API 与 SDK 兼容（尚未发布）
+### HTTP API 与 SDK 兼容
 
-当前源码提供 **SearXNG**、Exa、Tavily、Search1API 与 Firecrawl 单页 scrape 的独立入口。这些路由不包含在已发布的 v0.3.0 npm 包中，请从源码构建体验。
+**v0.3.1 起提供** **SearXNG**、Exa、Tavily、Search1API 与 Firecrawl 单页 scrape 的独立入口。使用 `npm install search2ai@latest` 升级。
 
 这些适配器为已有 API 客户端和 SDK 转换 HTTP 请求参数、鉴权、响应字段及错误格式。MCP 继续使用统一的 `search`、`news`、`crawl` 工具接入各个已配置后端。
 
@@ -416,7 +416,7 @@ npm run build
 
 当前已有进程内与 Workers KV 缓存、按操作回退链和结果去重。后续关注：
 
-- **客户端 API 兼容**：尚未发布的源码已加入首批 SearXNG、Exa、Tavily、Search1API、Firecrawl 单页适配器。后续按实际迁移需求扩展跨后端字段覆盖与客户端验证；调用格式仍与后端路由独立。
+- **客户端 API 兼容**：v0.3.1 已加入首批 SearXNG、Exa、Tavily、Search1API、Firecrawl 单页适配器。后续按实际迁移需求扩展跨后端字段覆盖与客户端验证；调用格式仍与后端路由独立。
 - **可靠性与运维**：同一后端多 key 轮换、熔断与健康探测、Redis 缓存集成、用量记录。
 - **搜索聚合**：多后端并行搜索与结果合并。
 

@@ -1,6 +1,6 @@
 {
   "name": "search2ai",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Self-hosted search gateway for AI agents. Unified search, news and page extraction with provider fallback. REST API, MCP server and TypeScript library.",
   "type": "module",
   "license": "MIT",

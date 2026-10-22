@@ -13,7 +13,7 @@ Search endpoints return structured results and page content for your agent or ap
 - **Your choice of providers**: supply service URLs or credentials as needed; unconfigured providers are never enabled automatically.
 - **Fallback and caching**: separate chains per operation, in-memory caching, and Cloudflare KV caching.
 - **Flexible integration**: local MCP, a standalone HTTP service, direct library calls, and mountable Hono routes.
-- **Existing API clients (unreleased)**: supported Exa, Tavily, Search1API, SearXNG and Firecrawl single-page calls can use dedicated [HTTP API / SDK compatibility endpoints](#compatibility).
+- **Existing API clients**: supported Exa, Tavily, Search1API, SearXNG and Firecrawl single-page calls can use dedicated [HTTP API / SDK compatibility endpoints](#compatibility).
 
 **Looking for hosted search?** [Search1API](https://www.search1api.com/?utm_source=search2ai) is this project's companion hosted service for search, news, and page extraction. Use its API directly or configure it as a search2ai provider. The examples below use Search1API; you can choose any other [supported provider](#providers).
 
@@ -214,7 +214,7 @@ If your application needs strict filtering, select and verify a specific provide
 
 ### Search: `POST /v1/search`
 
-This is search2ai's stable unified HTTP interface. Its search fields originally followed the Perplexity Search API conventions, with gateway extensions; it does not promise full Perplexity compatibility. Choosing a backend does not change its format. Existing SDKs can use the separate [compatibility endpoints](#compatibility) in the unreleased source version.
+This is search2ai's stable unified HTTP interface. Its search fields originally followed the Perplexity Search API conventions, with gateway extensions; it does not promise full Perplexity compatibility. Choosing a backend does not change its format. Existing SDKs can use the separate [compatibility endpoints](#compatibility) available since v0.3.1.
 
 | Field | Description |
 | --- | --- |
@@ -267,9 +267,9 @@ Example response after the first provider was rate limited and Tavily answered:
 
 <a id="compatibility"></a>
 
-### HTTP API and SDK compatibility (unreleased)
+### HTTP API and SDK compatibility
 
-The current source checkout includes dedicated bases for **SearXNG**, Exa, Tavily, Search1API, and Firecrawl single-page scrape. These routes are not included in the published v0.3.0 npm package; build from source to try them.
+Available since **v0.3.1**: dedicated bases for **SearXNG**, Exa, Tavily, Search1API, and Firecrawl single-page scrape. Upgrade with `npm install search2ai@latest`.
 
 These adapters translate HTTP request parameters, authentication, response fields and errors for existing API clients and SDKs. MCP continues to expose the gateway's unified `search`, `news` and `crawl` tools across all configured backends.
 
@@ -416,7 +416,7 @@ Issues and PRs are welcome. To add a provider, implement [`SearchProvider`](src/
 
 In-memory and Workers KV caching, per-operation fallback chains, and result deduplication are already available. Next areas of work:
 
-- **Client API compatibility**: the unreleased source includes the first SearXNG, Exa, Tavily, Search1API and Firecrawl single-page adapters. Expand cross-provider field coverage and client validation based on actual migration needs. Protocol choice remains separate from backend routing.
+- **Client API compatibility**: v0.3.1 includes the first SearXNG, Exa, Tavily, Search1API and Firecrawl single-page adapters. Expand cross-provider field coverage and client validation based on actual migration needs. Protocol choice remains separate from backend routing.
 - **Reliability and operations**: multiple keys per provider, circuit breaking and health probes, Redis cache integration, and usage logging.
 - **Search aggregation**: parallel searches across providers with result merging.
 
