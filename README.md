@@ -281,7 +281,7 @@ These adapters translate HTTP request parameters, authentication, response field
 | `/compat/search1api` | POST `/search`, `/news`, `/crawl` |
 | `/compat/firecrawl` | POST `/v2/scrape`, `/v1/scrape`; single page only |
 
-Keep supported SDK calls and response parsing, and replace the API base and gateway credentials. Backend selection still follows the configured chains. Matching upstreams preserve native fields; translation to other backends supports a smaller subset and explicitly rejects options it cannot fulfill. Whole-site crawling and task APIs are outside scope.
+Keep supported SDK calls and response parsing, and replace the API base and gateway credentials. Backend selection still follows the configured chains. Matching upstreams preserve native fields; translation to other backends maps available options and ignores unsupported ones, with response headers reporting adjustments. There is no strict rejection mode. Whole-site crawling and task APIs are outside scope.
 
 See the [compatibility guide](docs/compatibility.md) for SDK examples, authentication, supported fields, errors, limits and tested client versions. SearXNG uses query parameters or form data rather than the JSON requests of `/v1/search`.
 

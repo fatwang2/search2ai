@@ -44,9 +44,11 @@ try {
     const base = (protocol) => `${origin}/${mode === 'gateway' ? 'gateway' : `native/${protocol}`}/compat/${protocol}`;
     const exa = new Exa(key, base('exa'));
     assert.equal((await exa.search('q')).results[0].title, 'SDK Page');
+    assert.equal((await exa.search('q', { type: 'neural', contents: { highlights: true } })).results[0].title, 'SDK Page');
     assert.equal((await exa.getContents(['https://example.com/a'], { text: true })).results[0].text, '# SDK Page\nBody');
     const tv = tavily({ apiKey: key, apiBaseURL: base('tavily') });
     assert.equal((await tv.search('q')).results[0].title, 'SDK Page');
+    assert.equal((await tv.search('q', { searchDepth: 'advanced', includeAnswer: true, includeImages: true, includeDomains: ['example.com'] })).results[0].title, 'SDK Page');
     assert.equal((await tv.extract(['https://example.com/a'])).results[0].rawContent, '# SDK Page\nBody');
     const s1 = new Search1API({ apiKey: key, baseUrl: base('search1api') });
     assert.equal((await s1.search('q')).results[0].title, 'SDK Page');
@@ -54,6 +56,7 @@ try {
     assert.equal((await s1.crawl('https://example.com/a')).results.content, '# SDK Page\nBody');
     const fc = new Firecrawl({ apiKey: key, apiUrl: base('firecrawl') });
     assert.equal((await fc.scrape('https://example.com/a', { formats: ['markdown'] })).markdown, '# SDK Page\nBody');
+    assert.equal((await fc.scrape('https://example.com/a', { formats: ['markdown', 'html'], onlyMainContent: true })).markdown, '# SDK Page\nBody');
     const searx = new SearxngSearch({ apiBase: base('searxng'), headers: { Authorization: `Bearer ${key}` } });
     assert.match(await searx.invoke('q'), /SDK Page/);
     console.log(`${mode}: Exa search/contents; Tavily search/extract; Search1API search/news/crawl; Firecrawl scrape; LangChain SearXNG OK`);

@@ -281,7 +281,7 @@ CRAWL_SERVICE=search1api,jina
 | `/compat/search1api` | POST `/search`、`/news`、`/crawl` |
 | `/compat/firecrawl` | POST `/v2/scrape`、`/v1/scrape`，仅单页 |
 
-在已支持范围内，保留原 SDK 调用与结果解析，只更换 API base 和网关凭据；后端仍由配置的链选择。同协议上游保留原生字段，转换到其他后端时支持范围较小，无法满足的选项会明确拒绝。整站抓取与任务接口不在范围内。
+在已支持范围内，保留原 SDK 调用与结果解析，只更换 API base 和网关凭据；后端仍由配置的链选择。同协议上游保留原生字段，转换到其他后端时尽量映射参数，无法实现的选项忽略并通过响应 header 提示，没有严格拒绝模式。整站抓取与任务接口不在范围内。
 
 SDK 示例、鉴权、支持字段、错误、限制和已验证客户端版本见[兼容指南](docs/compatibility.zh-CN.md)。SearXNG 使用查询参数或表单，不使用 `/v1/search` 的 JSON 请求结构。
 
