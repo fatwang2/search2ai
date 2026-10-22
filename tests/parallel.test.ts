@@ -136,6 +136,23 @@ describe('Parallel configuration and caller', () => {
     expect(new Set(runA.map((c) => c.arguments.session_id))).toEqual(new Set([a.session_id]));
   });
 
+  it('returns the run ID when another provider searches and Parallel only enriches', async () => {
+    const remote = parallelRemote();
+    const { fetch } = mockFetch((url, call) =>
+      url.hostname === 'api.tavily.com' ? json({ results: [{ title: 'Tavily result', url: page.url, content: '' }] }) : remote.fetch(url, call.init)
+    );
+    const mixed = createGateway({ providers: { tavily: { apiKey: 't' }, parallel: { crawl: true } }, chains: { search: ['tavily'], crawl: ['parallel'] }, fetch });
+    const result = await mixed.search({ query: 'mixed providers', crawl_results: 1 });
+    expect(result.provider).toBe('tavily');
+    expect(result.results[0].content).toBe('# Full page');
+    expect(result.session_id).toMatch(/^[a-f0-9-]{36}$/);
+    expect(toolCalls(remote.calls).map((c) => [c.name, c.arguments.session_id])).toEqual([['web_fetch', result.session_id]]);
+    const follow = await mixed.crawl({ url: page.url, session_id: result.session_id });
+    expect(follow.session_id).toBe(result.session_id);
+    const searchOnly = await createGateway({ providers: { tavily: { apiKey: 't' } }, fetch }).search({ query: 'mixed providers' });
+    expect(searchOnly).not.toHaveProperty('session_id');
+  });
+
   it('never reuses a cached response conversation ID', async () => {
     const { fetch, calls } = parallelRemote();
     const g = gateway(fetch, { cacheTtlSeconds: 60 });

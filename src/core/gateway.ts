@@ -118,6 +118,15 @@ export function createGateway(config: GatewayConfig): Gateway {
     return list;
   }
 
+  /** 某操作的生效链; 没有可用 provider 时返回空数组而不抛错 */
+  function optionalChainNames(op: Operation): string[] {
+    try {
+      return resolveChain(op).map((p) => p.name);
+    } catch {
+      return [];
+    }
+  }
+
   function normalize(req: SearchRequest): Omit<ProviderSearchParams, 'query'> {
     const p: Omit<ProviderSearchParams, 'query'> = {
       maxResults: clamp(req.max_results ?? defaultMax, 1, MAX_RESULTS_LIMIT),
@@ -193,7 +202,10 @@ export function createGateway(config: GatewayConfig): Gateway {
       const params = normalize(req);
       const chain = resolveChain(op, req.providers);
       const names = chain.map((p) => p.name);
-      if (names.includes('parallel')) claim();
+      // 正文抓取走 crawl 链, 搜索链里没有 parallel 时 parallel 仍可能拿到这次的 run ID。
+      const enriching = (params.crawlResults ?? 0) > 0;
+      const sessionAware = names.includes('parallel') || (enriching && optionalChainNames('crawl').includes('parallel'));
+      if (sessionAware) claim();
       const maxChars = req.max_tokens_per_page ? req.max_tokens_per_page * 4 : undefined;
       const cacheKey = `${op}:${JSON.stringify([queries, params, names])}`;
 
@@ -234,7 +246,7 @@ export function createGateway(config: GatewayConfig): Gateway {
         if (warnings.length) response.warnings = warnings;
         return response;
       });
-      if (response.provider.split(',').includes('parallel') || req.session_id) response.session_id = sessionId;
+      if (sessionAware || req.session_id) response.session_id = sessionId;
       return response;
     });
   }
@@ -253,24 +265,19 @@ export function createGateway(config: GatewayConfig): Gateway {
         const url = String(req.url ?? '').trim();
         if (!url) throw new GatewayError(400, 'invalid_request', 'url is required');
         const names = resolveChain('crawl', req.providers).map((p) => p.name);
-        if (names.includes('parallel')) claim();
+        const sessionAware = names.includes('parallel');
+        if (sessionAware) claim();
         const response = await withCache(`crawl:${JSON.stringify([url, names])}`, async () => {
           const r = await crawlOne(url, req.providers, runOpts);
           const response: CrawlResponse = { object: 'crawl', id: newId(), provider: r.provider, ...r.value };
           if (r.warnings.length) response.warnings = r.warnings;
           return response;
         });
-        if (response.provider.split(',').includes('parallel') || req.session_id) response.session_id = sessionId;
+        if (sessionAware || req.session_id) response.session_id = sessionId;
         return response;
       });
     },
     providers: () => [...instances.values()].map(describeProvider),
-    chain: (op) => {
-      try {
-        return resolveChain(op).map((p) => p.name);
-      } catch {
-        return [];
-      }
-    },
+    chain: optionalChainNames,
   };
 }
