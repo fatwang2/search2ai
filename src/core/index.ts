@@ -56,3 +56,4 @@ export {
 } from './schema.ts';
 export { fetchJson, toIsoDate, cleanText, withSiteFilter } from './http.ts';
 export type * from './types.ts';
+export type { ClientProtocol, ProtocolRequest } from './protocol.ts';

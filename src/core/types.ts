@@ -1,5 +1,5 @@
 /**
- * 公共类型: 请求 / 响应 schema 以 Perplexity Search API 为基线, 在其上做超集扩展。
+ * 公共类型: 网关统一的请求与响应, 用于连接不同的搜索后端和调用入口。
  * 扩展字段: 响应的 provider / content / warnings / cached, 请求的 providers / crawl_results。
  */
 
@@ -26,7 +26,7 @@ export interface SearchRequest {
   search_before_date_filter?: string;
   /** 单条结果正文 token 上限(仅在抓取正文时生效, 近似按字符裁剪) */
   max_tokens_per_page?: number;
-  /** 兼容 Perplexity, 仅支持 web */
+  /** 搜索类型, 当前仅支持 web */
   search_type?: 'web';
   /** 扩展: 本次请求的 provider 顺序, 覆盖默认 fallback 链 */
   providers?: string[];

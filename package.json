@@ -1,7 +1,7 @@
 {
   "name": "search2ai",
   "version": "0.3.0",
-  "description": "Self-hosted search gateway for AI agents: one Perplexity-compatible API over Search1API, Serper, Tavily, Brave, Exa, SearXNG and more, with provider fallback. Use it as a library, an HTTP service, or an MCP server.",
+  "description": "Self-hosted search gateway for AI agents. Unified search, news and page extraction with provider fallback. REST API, MCP server and TypeScript library.",
   "type": "module",
   "license": "MIT",
   "author": "fatwang2",
@@ -16,7 +16,7 @@
     "ai",
     "agent",
     "mcp",
-    "perplexity",
+    "search-api",
     "tavily",
     "serper",
     "brave",
@@ -50,7 +50,9 @@
   },
   "files": [
     "dist",
+    "docs",
     "README.md",
+    "README-ZH.md",
     "README-EN.md",
     "LICENSE"
   ],
@@ -61,6 +63,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "node scripts/e2e.ts",
+    "test:sdk": "npm --prefix tests/sdk test",
     "deploy": "wrangler deploy",
     "prepublishOnly": "npm run build"
   },

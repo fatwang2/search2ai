@@ -18,12 +18,13 @@ interface S1Item {
   snippet?: string;
   content?: string;
   date?: string;
+  published_date?: string;
 }
 
 function mapResults(items: S1Item[] | undefined): SearchResult[] {
   return (items ?? []).map((i) => {
     const r: SearchResult = { title: str(i.title), url: str(i.link), snippet: str(i.snippet) };
-    const date = toIsoDate(i.date);
+    const date = toIsoDate(i.published_date ?? i.date);
     if (date) r.date = date;
     if (i.content) r.content = str(i.content);
     return r;

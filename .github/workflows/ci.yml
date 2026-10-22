@@ -18,5 +18,9 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+      - name: Install pinned compatibility SDKs
+        run: npm install --prefix tests/sdk --ignore-scripts --legacy-peer-deps --no-package-lock --no-audit --no-fund
+      - name: Check official client SDK compatibility
+        run: npm run test:sdk
       - name: Bundle check for Cloudflare Workers
         run: npx wrangler deploy --dry-run --outdir /tmp/wrangler-out
