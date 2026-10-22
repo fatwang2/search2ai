@@ -422,6 +422,6 @@ npm run build
 
 ## 交流与支持
 
-[Discord](https://discord.gg/AKXYq32Bxc) · [Buy Me a Coffee](https://www.buymeacoffee.com/fatwang2)
+欢迎在 X 上关注 [@fatwang2ai](https://x.com/fatwang2ai)，获取项目动态与交流反馈。
 
 [MIT License](LICENSE)

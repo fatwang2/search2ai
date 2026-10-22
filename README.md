@@ -422,6 +422,6 @@ In-memory and Workers KV caching, per-operation fallback chains, and result dedu
 
 ## Community and support
 
-[Discord](https://discord.gg/AKXYq32Bxc) · [Buy Me a Coffee](https://www.buymeacoffee.com/fatwang2)
+Follow [@fatwang2ai on X](https://x.com/fatwang2ai) for updates and discussion.
 
 [MIT License](LICENSE)
