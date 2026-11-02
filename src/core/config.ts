@@ -61,7 +61,7 @@ function bool(v: string | undefined): boolean | undefined {
  * 支持的环境变量:
  * - SEARCH_SERVICE / NEWS_SERVICE / CRAWL_SERVICE: 逗号分隔的 provider 顺序
  * - SEARCH1API_KEY(+SEARCH1API_SERVICE), TAVILY_KEY, BRAVE_KEY, EXA_KEY, SERPER_KEY, SERPAPI_KEY,
- *   GOOGLE_KEY + GOOGLE_CX, SEARXNG_BASE_URL, JINA_KEY, FIRECRAWL_KEY / FIRECRAWL_BASE_URL
+ *   GOOGLE_KEY + GOOGLE_CX, SEARXNG_BASE_URL, OUTCRAWL_KEY, JINA_KEY, FIRECRAWL_KEY / FIRECRAWL_BASE_URL
  *   (以上 *_KEY 也接受 *_API_KEY 写法)
  * - parallel 免 key, 写进 SEARCH_SERVICE / CRAWL_SERVICE 即启用
  * - MAX_RESULTS, CRAWL_RESULTS, GL, HL, FALLBACK_ON_EMPTY, PROVIDER_TIMEOUT_MS, CACHE_TTL
@@ -100,6 +100,9 @@ export function configFromEnv(env: Env): GatewayConfig {
 
   const searxng = pick(env, 'SEARXNG_BASE_URL');
   if (searxng) providers.searxng = { baseUrl: searxng, language: hl };
+
+  const outcrawl = pick(env, 'OUTCRAWL_KEY', 'OUTCRAWL_API_KEY');
+  if (outcrawl) providers.outcrawl = { apiKey: outcrawl };
 
   // 抓取类 provider 可免 key 使用, 但只有显式配置(key 或写进链里)才启用, 不做默认外呼
   const jinaKey = pick(env, 'JINA_KEY', 'JINA_API_KEY');

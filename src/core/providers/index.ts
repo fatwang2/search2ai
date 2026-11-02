@@ -7,6 +7,7 @@ import { createExa, type ExaOptions } from './exa.ts';
 import { createFirecrawl, type FirecrawlOptions } from './firecrawl.ts';
 import { createGoogle, type GoogleOptions } from './google.ts';
 import { createJina, type JinaOptions } from './jina.ts';
+import { createOutcrawl, type OutcrawlOptions } from './outcrawl.ts';
 import { createSearch1api, type Search1apiOptions } from './search1api.ts';
 import { createSearxng, type SearxngOptions } from './searxng.ts';
 import { createSerpapi, type SerpapiOptions } from './serpapi.ts';
@@ -26,6 +27,7 @@ export interface ProviderOptionsMap {
   searxng: SearxngOptions;
   jina: JinaOptions;
   firecrawl: FirecrawlOptions;
+  outcrawl: OutcrawlOptions;
 }
 
 export type ProviderName = keyof ProviderOptionsMap;
@@ -44,6 +46,7 @@ export const providerFactories: Factories = {
   searxng: createSearxng,
   jina: createJina,
   firecrawl: createFirecrawl,
+  outcrawl: createOutcrawl,
 };
 
 /** 未显式指定链时的默认优先级(只取已配置的) */
@@ -56,6 +59,7 @@ export const defaultPriority: ProviderName[] = [
   'serpapi',
   'google',
   'searxng',
+  'outcrawl',
   'jina',
   'firecrawl',
   'parallel',
@@ -88,10 +92,11 @@ export type {
   FirecrawlOptions,
   GoogleOptions,
   JinaOptions,
+  OutcrawlOptions,
   Search1apiOptions,
   SearxngOptions,
   SerpapiOptions,
   SerperOptions,
   TavilyOptions,
 };
-export { createParallel, createBrave, createExa, createFirecrawl, createGoogle, createJina, createSearch1api, createSearxng, createSerpapi, createSerper, createTavily };
+export { createParallel, createBrave, createExa, createFirecrawl, createGoogle, createJina, createOutcrawl, createSearch1api, createSearxng, createSerpapi, createSerper, createTavily };

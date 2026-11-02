@@ -6,6 +6,7 @@ import {
   createFirecrawl,
   createGoogle,
   createJina,
+  createOutcrawl,
   createSearch1api,
   createSearxng,
   createSerpapi,
@@ -167,6 +168,42 @@ describe('exa', () => {
     expect(calls[0].body).toMatchObject({ query: 'hono workers', numResults: 3, category: 'news', includeDomains: ['a.com'] });
     const c = await p.crawl!('https://a.com', ctx(fetch));
     expect(c).toEqual({ url: 'https://a.com', title: 'A', content: 'full text' });
+  });
+});
+
+describe('outcrawl', () => {
+  it('searches /v1/search with bearer auth, site: domains and a capped limit, and scrapes markdown for crawl', async () => {
+    const { fetch, calls } = mockFetch((url) => {
+      if (url.pathname === '/v1/search') return json({ hits: [{ url: 'https://a.com/x', title: 'A', snippet: 's', rank: 1 }], usage: { credits: '0.5' } });
+      if (url.pathname === '/v1/scrape') return json({ url: 'https://a.com/x', statusCode: 200, markdown: '# md', metadata: { title: 'T' } });
+      return undefined;
+    });
+    const p = createOutcrawl({ apiKey: 'ock_k' });
+    expect(p.news).toBeUndefined();
+    const s = await p.search!(params({ domains: ['a.com'] }), ctx(fetch));
+    expect(s).toEqual([{ title: 'A', url: 'https://a.com/x', snippet: 's' }]);
+    expect(calls[0].url.toString()).toBe('https://api.outcrawl.ai/v1/search');
+    expect(calls[0].headers.authorization).toBe('Bearer ock_k');
+    expect(calls[0].body).toEqual({ query: 'hono workers site:a.com', limit: 3 });
+
+    await p.search!(params({ maxResults: 50 }), ctx(fetch));
+    expect(calls[1].body).toEqual({ query: 'hono workers', limit: 20 });
+
+    const c = await p.crawl!('https://a.com/x', ctx(fetch));
+    expect(c).toEqual({ url: 'https://a.com/x', title: 'T', content: '# md' });
+    expect(calls[2].body).toEqual({ url: 'https://a.com/x', formats: ['markdown'], onlyMainContent: true });
+  });
+
+  it('maps 401 and 402 to provider errors', async () => {
+    for (const [status, code] of [
+      [401, 'auth'],
+      [402, 'bad_request'],
+    ] as const) {
+      const { fetch } = mockFetch(() => json({ error: 'nope' }, status));
+      const err = await createOutcrawl({ apiKey: 'ock_k' }).search!(params(), ctx(fetch)).catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(ProviderError);
+      expect((err as ProviderError).code).toBe(code);
+    }
   });
 });
 
