@@ -64,6 +64,7 @@ function bool(v: string | undefined): boolean | undefined {
  *   GOOGLE_KEY + GOOGLE_CX, SEARXNG_BASE_URL, OUTCRAWL_KEY, CLORO_KEY, JINA_KEY, FIRECRAWL_KEY / FIRECRAWL_BASE_URL
  *   (以上 *_KEY 也接受 *_API_KEY 写法)
  * - parallel 免 key, 写进 SEARCH_SERVICE / CRAWL_SERVICE 即启用
+ * - KEENABLE_KEY 可选; 不填 key 时把 keenable 写进 SEARCH_SERVICE / CRAWL_SERVICE 即免 key 启用
  * - MAX_RESULTS, CRAWL_RESULTS, GL, HL, FALLBACK_ON_EMPTY, PROVIDER_TIMEOUT_MS, CACHE_TTL
  */
 export function configFromEnv(env: Env): GatewayConfig {
@@ -106,6 +107,12 @@ export function configFromEnv(env: Env): GatewayConfig {
 
   const cloro = pick(env, 'CLORO_KEY', 'CLORO_API_KEY');
   if (cloro) providers.cloro = { apiKey: cloro, gl, hl };
+  // keenable 可免 key 使用, 同样只有显式配置(key 或写进链里)才启用, 不做默认外呼
+  const keenable = pick(env, 'KEENABLE_KEY', 'KEENABLE_API_KEY');
+  if (keenable) providers.keenable = { apiKey: keenable };
+  // 免 key 时只服务写了 keenable 的链: 只写进 CRAWL_SERVICE 不会加入默认搜索链
+  else if (mentioned.has('keenable'))
+    providers.keenable = { search: chain?.includes('keenable') ?? false, crawl: crawlChain?.includes('keenable') ?? false };
 
   // 抓取类 provider 可免 key 使用, 但只有显式配置(key 或写进链里)才启用, 不做默认外呼
   const jinaKey = pick(env, 'JINA_KEY', 'JINA_API_KEY');
