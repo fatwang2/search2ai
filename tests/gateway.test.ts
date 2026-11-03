@@ -149,6 +149,13 @@ describe('configFromEnv', () => {
     expect(cfg).toMatchObject({ maxResults: 7, crawlResults: 2, fallbackOnEmpty: true, timeoutMs: 5000, cacheTtlSeconds: 30 });
   });
 
+  it('enables keenable only when keyed or explicitly listed', () => {
+    expect(configFromEnv({}).providers.keenable).toBeUndefined();
+    expect(configFromEnv({ SEARCH_SERVICE: 'keenable' }).providers.keenable).toEqual({ apiKey: undefined });
+    expect(configFromEnv({ CRAWL_SERVICE: 'keenable' }).providers.keenable).toEqual({ apiKey: undefined });
+    expect(configFromEnv({ KEENABLE_API_KEY: 'kk' }).providers.keenable).toEqual({ apiKey: 'kk' });
+  });
+
   it('enables jina only when keyed or explicitly listed, and drops unknown chain entries at gateway level', () => {
     expect(configFromEnv({ CRAWL_SERVICE: 'jina' }).providers.jina).toEqual({ apiKey: undefined });
     expect(configFromEnv({ JINA_KEY: 'j' }).providers.jina).toEqual({ apiKey: 'j' });
