@@ -1,6 +1,6 @@
 /**
  * Search1API: 本项目配套的托管搜索服务, search / news / crawl 全部支持, 且可在搜索时原生抓取正文。
- * https://www.search1api.com
+ * https://s1.dev
  */
 import { fetchJson, jsonHeaders, str, toIsoDate } from '../http.ts';
 import type { CrawlResult, ProviderContext, ProviderSearchParams, SearchProvider, SearchResult } from '../types.ts';
