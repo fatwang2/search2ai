@@ -62,7 +62,7 @@ async function main(): Promise<void> {
 
   if (info.chains.crawl.length) {
     await step('POST /v1/crawl', async () => {
-      const r = await post('/v1/crawl', { url: 'https://www.search1api.com' });
+      const r = await post('/v1/crawl', { url: 'https://s1.dev' });
       const d = (await r.json()) as { provider: string; title?: string; content: string };
       if (r.status !== 200) throw new Error(`HTTP ${r.status} ${JSON.stringify(d)}`);
       return `provider=${d.provider} title=${JSON.stringify(d.title)} content=${d.content.length} chars`;
