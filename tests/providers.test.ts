@@ -3,6 +3,7 @@ import { ProviderError } from '../src/core/errors.ts';
 import {
   createBrave,
   createExa,
+  createCloro,
   createFirecrawl,
   createGoogle,
   createJina,
@@ -201,6 +202,65 @@ describe('outcrawl', () => {
     ] as const) {
       const { fetch } = mockFetch(() => json({ error: 'nope' }, status));
       const err = await createOutcrawl({ apiKey: 'ock_k' }).search!(params(), ctx(fetch)).catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(ProviderError);
+      expect((err as ProviderError).code).toBe(code);
+    }
+  });
+});
+
+describe('cloro', () => {
+  it('maps search and news, skips rows without a usable link, and sends country, language and pages', async () => {
+    const { fetch, calls } = mockFetch((url) => {
+      if (url.pathname === '/v1/monitor/google')
+        return json({
+          success: true,
+          result: {
+            organicResults: [
+              { position: 1, title: 'Gone', link: '', snippet: 'no link', redirectLink: 'https://www.google.com/goto?url=abc' },
+              { position: 2, title: 'Goto', link: 'https://www.google.com/goto?url=def', snippet: 'redirect', redirectLink: 'https://www.google.com/goto?url=def' },
+              { position: 3, title: 'A', link: 'https://a.com/x', snippet: 's', displayedLink: 'https://a.com > x' },
+              { position: 4, title: 'B', link: 'https://b.com/y', snippet: 's2' },
+            ],
+          },
+        });
+      if (url.pathname === '/v1/monitor/google/news')
+        return json({ success: true, result: { newsResults: [{ position: 1, title: 'N', link: 'https://n.com/z', snippet: '', source: 'N', date: '2026-11-06' }] } });
+      return undefined;
+    });
+    const p = createCloro({ apiKey: 'ck', gl: 'cn', hl: 'zh' });
+    expect(p.crawl).toBeUndefined();
+    const s = await p.search!(params({ maxResults: 5, domains: ['a.com'], country: 'de', languages: ['en'] }), ctx(fetch));
+    expect(s).toEqual([
+      { title: 'A', url: 'https://a.com/x', snippet: 's' },
+      { title: 'B', url: 'https://b.com/y', snippet: 's2' },
+    ]);
+    expect(calls[0].url.toString()).toBe('https://api.cloro.dev/v1/monitor/google');
+    expect(calls[0].headers.authorization).toBe('Bearer ck');
+    expect(calls[0].body).toEqual({ query: 'hono workers site:a.com', country: 'DE', hl: 'en', pages: 1 });
+
+    const s2 = await p.search!(params({ maxResults: 50 }), ctx(fetch));
+    expect(s2).toHaveLength(2);
+    expect(calls[1].body).toEqual({ query: 'hono workers', country: 'CN', hl: 'zh', pages: 2 });
+
+    const n = await p.news!(params(), ctx(fetch));
+    expect(n).toEqual([{ title: 'N', url: 'https://n.com/z', snippet: '', date: '2026-11-06' }]);
+    expect(calls[2].url.toString()).toBe('https://api.cloro.dev/v1/monitor/google/news');
+  });
+
+  it('defaults the country to US and returns an empty list when result is missing', async () => {
+    const { fetch, calls } = mockFetch(() => json({ success: true }));
+    const out = await createCloro({ apiKey: 'ck' }).search!(params(), ctx(fetch));
+    expect(out).toEqual([]);
+    expect(calls[0].body).toEqual({ query: 'hono workers', country: 'US', pages: 1 });
+  });
+
+  it('maps 401 and 429 to provider errors', async () => {
+    for (const [status, code] of [
+      [401, 'auth'],
+      [429, 'rate_limit'],
+    ] as const) {
+      const { fetch } = mockFetch(() => json({ success: false, error: { code: 'X', message: 'nope' } }, status));
+      const err = await createCloro({ apiKey: 'ck' }).search!(params(), ctx(fetch)).catch((e: unknown) => e);
       expect(err).toBeInstanceOf(ProviderError);
       expect((err as ProviderError).code).toBe(code);
     }

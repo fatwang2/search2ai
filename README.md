@@ -152,6 +152,7 @@ Configure only the services you want to use. Keys usually come from the provider
 | `google` | ✓ | Date-sorted¹ | — | `GOOGLE_KEY` + `GOOGLE_CX` |
 | `searxng` | ✓ | ✓ | — | `SEARXNG_BASE_URL`, with JSON output enabled |
 | `outcrawl` | ✓ | — | ✓ | `OUTCRAWL_KEY` |
+| `cloro` | ✓ | ✓ | — | `CLORO_KEY` |
 | `jina` | — | — | ✓ | `JINA_KEY`, or explicitly list `jina` in `CRAWL_SERVICE` |
 | `firecrawl` | — | — | ✓ | `FIRECRAWL_KEY` or a self-hosted `FIRECRAWL_BASE_URL` |
 | `parallel` | ✓ | — | Opt-in | No key; list `parallel` in `SEARCH_SERVICE`, and in `CRAWL_SERVICE` for page extraction |
@@ -213,10 +214,10 @@ A positive `CACHE_TTL` enables in-memory caching by default. On Workers, a KV na
 
 The common interface standardizes calls and result fields. Filter support, result counts, and content quality still depend on the adapter and provider:
 
-- Google returns at most 10 results per query; the current Brave, Tavily and Outcrawl adapters cap results at 20. Other services can also return fewer results than requested.
+- Google returns at most 10 results per query; the current Brave, Tavily and Outcrawl adapters cap results at 20, and the cloro adapter at 20 (two pages). Other services can also return fewer results than requested.
 - Some adapters use only the first requested language. Some implement domain filters through `site:` search operators.
 - Time filters can be approximate, such as treating `hour` as a day. Currently, explicit date ranges are passed through by the Tavily, Brave, and Exa adapters.
-- The current Exa adapter does not handle country or language filters; the Search1API adapter does not handle country or explicit date ranges; the Outcrawl adapter does not handle country, language or time filters. Unimplemented filters may be ignored without triggering fallback.
+- The current Exa adapter does not handle country or language filters; the Search1API adapter does not handle country or explicit date ranges; the Outcrawl adapter does not handle country, language or time filters; the cloro adapter does not handle time filters. Unimplemented filters may be ignored without triggering fallback.
 
 If your application needs strict filtering, select and verify a specific provider rather than relying on fallback across providers with different capabilities. See [`src/core/providers/`](src/core/providers) for the mappings.
 

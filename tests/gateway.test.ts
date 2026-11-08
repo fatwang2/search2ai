@@ -129,6 +129,7 @@ describe('configFromEnv', () => {
       TAVILY_API_KEY: 'tv',
       FIRECRAWL_BASE_URL: 'http://fc',
       OUTCRAWL_API_KEY: 'oc',
+      CLORO_API_KEY: 'cl',
       MAX_RESULTS: '7',
       CRAWL_RESULTS: '2',
       FALLBACK_ON_EMPTY: 'true',
@@ -145,6 +146,7 @@ describe('configFromEnv', () => {
     expect(cfg.providers.tavily).toEqual({ apiKey: 'tv' });
     expect(cfg.providers.firecrawl).toEqual({ apiKey: undefined, baseUrl: 'http://fc' });
     expect(cfg.providers.outcrawl).toEqual({ apiKey: 'oc' });
+    expect(cfg.providers.cloro).toEqual({ apiKey: 'cl', gl: 'cn', hl: 'zh' });
     expect(cfg.providers.jina).toBeUndefined();
     expect(cfg).toMatchObject({ maxResults: 7, crawlResults: 2, fallbackOnEmpty: true, timeoutMs: 5000, cacheTtlSeconds: 30 });
   });
