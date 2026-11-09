@@ -3,6 +3,7 @@ import { ProviderError } from '../src/core/errors.ts';
 import {
   createBrave,
   createExa,
+  createCloro,
   createFirecrawl,
   createGoogle,
   createJina,
@@ -201,6 +202,86 @@ describe('outcrawl', () => {
     ] as const) {
       const { fetch } = mockFetch(() => json({ error: 'nope' }, status));
       const err = await createOutcrawl({ apiKey: 'ock_k' }).search!(params(), ctx(fetch)).catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(ProviderError);
+      expect((err as ProviderError).code).toBe(code);
+    }
+  });
+});
+
+describe('cloro', () => {
+  it('maps search and news, skips rows without a usable link, and sends country, language and pages', async () => {
+    const { fetch, calls } = mockFetch((url) => {
+      if (url.pathname === '/v1/monitor/google')
+        return json({
+          success: true,
+          result: {
+            organicResults: [
+              { position: 1, title: 'Gone', link: '', snippet: 'no link', redirectLink: 'https://www.google.com/goto?url=abc' },
+              { position: 2, title: 'Goto', link: 'https://www.google.com/goto?url=def', snippet: 'redirect', redirectLink: 'https://www.google.com/goto?url=def' },
+              { position: 3, title: 'A', link: 'https://a.com/x', snippet: 's', displayedLink: 'https://a.com > x' },
+              { position: 4, title: 'B', link: 'https://b.com/y', snippet: 's2' },
+            ],
+          },
+        });
+      if (url.pathname === '/v1/monitor/google/news')
+        return json({ success: true, result: { newsResults: [{ position: 1, title: 'N', link: 'https://n.com/z', snippet: '', source: 'N', date: '2026-11-06' }] } });
+      return undefined;
+    });
+    const p = createCloro({ apiKey: 'ck', gl: 'cn', hl: 'zh' });
+    expect(p.crawl).toBeUndefined();
+    const s = await p.search!(params({ maxResults: 5, domains: ['a.com'], country: 'de', languages: ['en'] }), ctx(fetch));
+    expect(s).toEqual([
+      { title: 'A', url: 'https://a.com/x', snippet: 's' },
+      { title: 'B', url: 'https://b.com/y', snippet: 's2' },
+    ]);
+    expect(calls[0].url.toString()).toBe('https://api.cloro.dev/v1/monitor/google');
+    expect(calls[0].headers.authorization).toBe('Bearer ck');
+    expect(calls[0].body).toEqual({ query: 'hono workers site:a.com', country: 'DE', hl: 'en', pages: 1 });
+
+    const s2 = await p.search!(params({ maxResults: 50 }), ctx(fetch));
+    expect(s2).toHaveLength(2);
+    expect(calls[1].body).toEqual({ query: 'hono workers', country: 'CN', hl: 'zh', pages: 2 });
+
+    const n = await p.news!(params(), ctx(fetch));
+    expect(n).toEqual([{ title: 'N', url: 'https://n.com/z', snippet: '', date: '2026-11-06' }]);
+    expect(calls[2].url.toString()).toBe('https://api.cloro.dev/v1/monitor/google/news');
+  });
+
+  it('sends a Google URL with tbs and one page when a time filter is set', async () => {
+    const { fetch, calls } = mockFetch(() => json({ success: true, result: { organicResults: [{ position: 1, title: 'A', link: 'https://a.com/x', snippet: 's' }] } }));
+    const p = createCloro({ apiKey: 'ck', hl: 'zh' });
+    const out = await p.search!(params({ maxResults: 50, recency: 'day', domains: ['a.com'], country: 'de' }), ctx(fetch));
+    expect(out).toEqual([{ title: 'A', url: 'https://a.com/x', snippet: 's' }]);
+    expect(calls[0].url.toString()).toBe('https://api.cloro.dev/v1/monitor/google');
+    expect(calls[0].body).toEqual({ url: 'https://www.google.com/search?q=hono+workers+site%3Aa.com&gl=de&hl=zh&tbs=qdr%3Ad' });
+
+    await p.search!(params({ afterDate: '2026-10-01', beforeDate: '2026-10-07' }), ctx(fetch));
+    const range = new URL((calls[1].body as { url: string }).url);
+    expect(range.searchParams.get('tbs')).toBe('cdr:1,cd_min:10/1/2026,cd_max:10/7/2026');
+    expect(range.searchParams.get('gl')).toBe('us');
+
+    await p.search!(params({ afterDate: '2026-10-01', recency: 'year' }), ctx(fetch));
+    expect(new URL((calls[2].body as { url: string }).url).searchParams.get('tbs')).toBe('cdr:1,cd_min:10/1/2026');
+
+    // news 没有 url 形式, 时间过滤仍不映射
+    await p.news!(params({ recency: 'day' }), ctx(fetch));
+    expect(calls[3].body).toEqual({ query: 'hono workers', country: 'US', hl: 'zh', pages: 1 });
+  });
+
+  it('defaults the country to US and returns an empty list when result is missing', async () => {
+    const { fetch, calls } = mockFetch(() => json({ success: true }));
+    const out = await createCloro({ apiKey: 'ck' }).search!(params(), ctx(fetch));
+    expect(out).toEqual([]);
+    expect(calls[0].body).toEqual({ query: 'hono workers', country: 'US', pages: 1 });
+  });
+
+  it('maps 401 and 429 to provider errors', async () => {
+    for (const [status, code] of [
+      [401, 'auth'],
+      [429, 'rate_limit'],
+    ] as const) {
+      const { fetch } = mockFetch(() => json({ success: false, error: { code: 'X', message: 'nope' } }, status));
+      const err = await createCloro({ apiKey: 'ck' }).search!(params(), ctx(fetch)).catch((e: unknown) => e);
       expect(err).toBeInstanceOf(ProviderError);
       expect((err as ProviderError).code).toBe(code);
     }

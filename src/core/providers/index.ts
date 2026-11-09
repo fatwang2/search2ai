@@ -3,6 +3,7 @@
  */
 import { createParallel, type ParallelOptions } from './parallel.ts';
 import { createBrave, type BraveOptions } from './brave.ts';
+import { createCloro, type CloroOptions } from './cloro.ts';
 import { createExa, type ExaOptions } from './exa.ts';
 import { createFirecrawl, type FirecrawlOptions } from './firecrawl.ts';
 import { createGoogle, type GoogleOptions } from './google.ts';
@@ -28,6 +29,7 @@ export interface ProviderOptionsMap {
   jina: JinaOptions;
   firecrawl: FirecrawlOptions;
   outcrawl: OutcrawlOptions;
+  cloro: CloroOptions;
 }
 
 export type ProviderName = keyof ProviderOptionsMap;
@@ -47,6 +49,7 @@ export const providerFactories: Factories = {
   jina: createJina,
   firecrawl: createFirecrawl,
   outcrawl: createOutcrawl,
+  cloro: createCloro,
 };
 
 /** 未显式指定链时的默认优先级(只取已配置的) */
@@ -60,6 +63,7 @@ export const defaultPriority: ProviderName[] = [
   'google',
   'searxng',
   'outcrawl',
+  'cloro',
   'jina',
   'firecrawl',
   'parallel',
@@ -89,6 +93,7 @@ export type {
   ParallelOptions,
   BraveOptions,
   ExaOptions,
+  CloroOptions,
   FirecrawlOptions,
   GoogleOptions,
   JinaOptions,
@@ -99,4 +104,4 @@ export type {
   SerperOptions,
   TavilyOptions,
 };
-export { createParallel, createBrave, createExa, createFirecrawl, createGoogle, createJina, createOutcrawl, createSearch1api, createSearxng, createSerpapi, createSerper, createTavily };
+export { createParallel, createBrave, createCloro, createExa, createFirecrawl, createGoogle, createJina, createOutcrawl, createSearch1api, createSearxng, createSerpapi, createSerper, createTavily };
