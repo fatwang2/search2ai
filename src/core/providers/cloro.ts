@@ -1,7 +1,7 @@
 /**
  * cloro: Google 搜索 /v1/monitor/google, Google 新闻 /v1/monitor/google/news。https://cloro.dev/docs
  */
-import { fetchJson, jsonHeaders, str, toIsoDate, withSiteFilter } from '../http.ts';
+import { fetchJson, googleTbs, jsonHeaders, str, toIsoDate, withSiteFilter } from '../http.ts';
 import type { ProviderContext, ProviderSearchParams, SearchProvider, SearchResult } from '../types.ts';
 
 export interface CloroOptions {
@@ -35,6 +35,23 @@ function usableUrl(link: unknown): string | undefined {
   return s;
 }
 
+/** YYYY-MM-DD -> Google cd_min/cd_max 的 M/D/YYYY */
+function googleDate(d: string): string {
+  const [y, m, day] = d.split('-');
+  return `${Number(m)}/${Number(day)}/${y}`;
+}
+
+/** 时间过滤对应的 Google tbs: 日期范围用 cdr, 否则用 recency 的 qdr */
+function timeTbs(p: ProviderSearchParams): string | undefined {
+  if (p.afterDate || p.beforeDate) {
+    const parts = ['cdr:1'];
+    if (p.afterDate) parts.push(`cd_min:${googleDate(p.afterDate)}`);
+    if (p.beforeDate) parts.push(`cd_max:${googleDate(p.beforeDate)}`);
+    return parts.join(',');
+  }
+  return googleTbs(p.recency);
+}
+
 function map(items: CloroItem[] | undefined, limit: number): SearchResult[] {
   const out: SearchResult[] = [];
   for (const i of items ?? []) {
@@ -66,10 +83,29 @@ export function createCloro(opts: CloroOptions): SearchProvider {
     return JSON.stringify(b);
   }
 
+  /**
+   * 有时间过滤时发完整的 Google 搜索 URL, cloro 原样应用其中的 tbs, 计费与标准请求相同。
+   * URL 自带 q/gl/hl, 且不能再传 pages, 所以只取 1 页(最多 10 条)。
+   */
+  function urlBody(p: ProviderSearchParams, tbs: string): string {
+    const u = new URL('https://www.google.com/search');
+    u.searchParams.set('q', withSiteFilter(p.query, p.domains));
+    u.searchParams.set('gl', (p.country ?? opts.gl ?? 'US').toLowerCase());
+    const hl = p.languages?.[0] ?? opts.hl;
+    if (hl) u.searchParams.set('hl', hl);
+    u.searchParams.set('tbs', tbs);
+    return JSON.stringify({ url: u.toString() });
+  }
+
   return {
     name,
     async search(p: ProviderSearchParams, ctx: ProviderContext) {
-      const data = await fetchJson<{ result?: { organicResults?: CloroItem[] } }>(ctx, name, `${base}/v1/monitor/google`, { method: 'POST', headers, body: body(p) });
+      const tbs = timeTbs(p);
+      const data = await fetchJson<{ result?: { organicResults?: CloroItem[] } }>(ctx, name, `${base}/v1/monitor/google`, {
+        method: 'POST',
+        headers,
+        body: tbs ? urlBody(p, tbs) : body(p),
+      });
       return map(data.result?.organicResults, p.maxResults);
     },
     async news(p: ProviderSearchParams, ctx: ProviderContext) {

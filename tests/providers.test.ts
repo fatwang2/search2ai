@@ -247,6 +247,27 @@ describe('cloro', () => {
     expect(calls[2].url.toString()).toBe('https://api.cloro.dev/v1/monitor/google/news');
   });
 
+  it('sends a Google URL with tbs and one page when a time filter is set', async () => {
+    const { fetch, calls } = mockFetch(() => json({ success: true, result: { organicResults: [{ position: 1, title: 'A', link: 'https://a.com/x', snippet: 's' }] } }));
+    const p = createCloro({ apiKey: 'ck', hl: 'zh' });
+    const out = await p.search!(params({ maxResults: 50, recency: 'day', domains: ['a.com'], country: 'de' }), ctx(fetch));
+    expect(out).toEqual([{ title: 'A', url: 'https://a.com/x', snippet: 's' }]);
+    expect(calls[0].url.toString()).toBe('https://api.cloro.dev/v1/monitor/google');
+    expect(calls[0].body).toEqual({ url: 'https://www.google.com/search?q=hono+workers+site%3Aa.com&gl=de&hl=zh&tbs=qdr%3Ad' });
+
+    await p.search!(params({ afterDate: '2026-10-01', beforeDate: '2026-10-07' }), ctx(fetch));
+    const range = new URL((calls[1].body as { url: string }).url);
+    expect(range.searchParams.get('tbs')).toBe('cdr:1,cd_min:10/1/2026,cd_max:10/7/2026');
+    expect(range.searchParams.get('gl')).toBe('us');
+
+    await p.search!(params({ afterDate: '2026-10-01', recency: 'year' }), ctx(fetch));
+    expect(new URL((calls[2].body as { url: string }).url).searchParams.get('tbs')).toBe('cdr:1,cd_min:10/1/2026');
+
+    // news 没有 url 形式, 时间过滤仍不映射
+    await p.news!(params({ recency: 'day' }), ctx(fetch));
+    expect(calls[3].body).toEqual({ query: 'hono workers', country: 'US', hl: 'zh', pages: 1 });
+  });
+
   it('defaults the country to US and returns an empty list when result is missing', async () => {
     const { fetch, calls } = mockFetch(() => json({ success: true }));
     const out = await createCloro({ apiKey: 'ck' }).search!(params(), ctx(fetch));
