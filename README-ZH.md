@@ -154,6 +154,7 @@ export default app;
 | `outcrawl` | ✓ | — | ✓ | `OUTCRAWL_KEY` |
 | `cloro` | ✓ | ✓ | — | `CLORO_KEY` |
 | `keenable` | ✓ | — | ✓ | `KEENABLE_KEY`，或把 `keenable` 写进 `SEARCH_SERVICE` / `CRAWL_SERVICE` 免 key 使用 |
+| `specstream` | ✓ | ✓ | ✓ | `SPECSTREAM_API_KEY` |
 | `jina` | — | — | ✓ | `JINA_KEY`，或在 `CRAWL_SERVICE` 中显式列出 `jina` |
 | `firecrawl` | — | — | ✓ | `FIRECRAWL_KEY` 或自托管的 `FIRECRAWL_BASE_URL` |
 | `parallel` | ✓ | — | 需显式开启 | 免 key；把 `parallel` 写进 `SEARCH_SERVICE`，正文抓取再写进 `CRAWL_SERVICE` |
@@ -217,8 +218,8 @@ CRAWL_SERVICE=search1api,jina
 
 - Google 每个查询最多返回 10 条；Brave、Tavily、Outcrawl 的当前适配器最多返回 20 条，cloro 适配器最多返回 20 条（两页），设置时间过滤时最多 10 条（一页）。其他服务也可能返回少于请求数量的结果。
 - 部分后端只使用语言数组中的第一项；部分域名过滤通过 `site:` 搜索操作符实现。
-- 时间范围可能近似映射，例如将 `hour` 按天处理。当前显式日期范围由 Tavily、Brave、Exa、cloro、Keenable 适配器传递（cloro 仅限搜索）。
-- 当前 Exa 适配器不处理国家或语言过滤；Search1API 适配器不处理国家或显式日期范围；Outcrawl 适配器不处理国家、语言或时间过滤；cloro 适配器只在搜索中处理时间过滤，新闻不处理；Keenable 适配器不处理国家或语言过滤，多个域名时返回 `unsupported` 错误。未实现的过滤参数可能被忽略，并不一定触发回退。
+- 时间范围可能近似映射，例如将 `hour` 按天处理。当前显式日期范围由 Tavily、Brave、Exa、cloro、Keenable、SpecStream 适配器传递（cloro 仅限搜索；SpecStream 以 `after:` / `before:` 操作符传递）。
+- 当前 Exa 适配器不处理国家或语言过滤；Search1API 适配器不处理国家或显式日期范围；Outcrawl 适配器不处理国家、语言或时间过滤；cloro 适配器只在搜索中处理时间过滤，新闻不处理；Keenable 适配器不处理国家或语言过滤，多个域名时返回 `unsupported` 错误；SpecStream 适配器多个域名时同样返回 `unsupported` 错误。未实现的过滤参数可能被忽略，并不一定触发回退。
 
 如果业务依赖严格过滤，请固定并验证对应后端，避免在具有不同能力的后端之间自动切换。各家映射见 [`src/core/providers/`](src/core/providers)。
 

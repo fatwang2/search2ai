@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { ProviderError } from '../src/core/errors.ts';
 import {
   createBrave,
@@ -13,6 +13,7 @@ import {
   createSearxng,
   createSerpapi,
   createSerper,
+  createSpecstream,
   createTavily,
 } from '../src/core/providers/index.ts';
 import type { ProviderContext, ProviderSearchParams } from '../src/core/types.ts';
@@ -355,6 +356,83 @@ describe('keenable', () => {
     const rl = mockFetch(() => new Response('slow down', { status: 429 }));
     const e2 = await createKeenable().search!(params(), ctx(rl.fetch)).catch((e: unknown) => e);
     expect((e2 as ProviderError).code).toBe('rate_limit');
+  });
+});
+
+describe('specstream', () => {
+  it('searches /v1/web-search with bearer auth, fast speed, operators and locale, and extracts markdown for crawl', async () => {
+    const { fetch, calls } = mockFetch((url) => {
+      if (url.pathname === '/v1/web-search')
+        return json({
+          data: {
+            sources: [
+              { url: 'https://a.com/x', title: 'A', site: 'a.com', snippet: 's', cited: false, published: '2026-05-06', modified: '2026-06-01' },
+              { url: 'https://a.com/y', title: 'B', site: 'a.com', snippet: 's2', cited: false, published: null },
+            ],
+          },
+        });
+      if (url.pathname === '/v1/extract')
+        return json({ data: { results: [{ url: 'https://a.com/x', status: 'ok', title: 'T', text: '# md', published: null }], took_ms: 1, price_usd: 0.0008 } });
+      return undefined;
+    });
+    const p = createSpecstream({ apiKey: 'ss_k', gl: 'us', hl: 'zh-CN' });
+    const s = await p.search!(params({ domains: ['a.com'], afterDate: '2026-01-01', beforeDate: '2026-02-01' }), ctx(fetch));
+    expect(s).toEqual([
+      { title: 'A', url: 'https://a.com/x', snippet: 's', date: '2026-05-06', last_updated: '2026-06-01' },
+      { title: 'B', url: 'https://a.com/y', snippet: 's2' },
+    ]);
+    expect(calls[0].url.origin + calls[0].url.pathname).toBe('https://api.specstream.ai/v1/web-search');
+    expect(calls[0].headers.authorization).toBe('Bearer ss_k');
+    expect(Object.fromEntries(calls[0].url.searchParams)).toEqual({
+      q: 'hono workers site:a.com after:2026-01-01 before:2026-02-01',
+      num: '3',
+      speed: 'fast',
+      country: 'US',
+      language: 'zh',
+    });
+
+    await p.news!(params({ maxResults: 50, country: 'de', languages: ['de'] }), ctx(fetch));
+    expect(Object.fromEntries(calls[1].url.searchParams)).toEqual({ q: 'hono workers', num: '50', speed: 'fast', news: 'true', country: 'DE', language: 'de' });
+
+    const c = await p.crawl!('https://a.com/x', ctx(fetch));
+    expect(c).toEqual({ url: 'https://a.com/x', title: 'T', content: '# md' });
+    expect(calls[2].body).toEqual({ urls: ['https://a.com/x'], format: 'markdown' });
+    expect(calls[2].headers.authorization).toBe('Bearer ss_k');
+  });
+
+  it('maps recency to an after: date', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-11-10T12:00:00Z'));
+    try {
+      const { fetch, calls } = mockFetch(() => json({ data: { sources: [] } }));
+      expect(await createSpecstream({ apiKey: 'k' }).search!(params({ recency: 'week' }), ctx(fetch))).toEqual([]);
+      expect(calls[0].url.searchParams.get('q')).toBe('hono workers after:2026-11-03');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('returns unsupported for more than one domain, and maps HTTP and page errors', async () => {
+    const { fetch, calls } = mockFetch(() => json({ data: { sources: [] } }));
+    const p = createSpecstream({ apiKey: 'k' });
+    await expect(p.search!(params({ domains: ['a.com', 'b.com'] }), ctx(fetch))).rejects.toMatchObject({ code: 'unsupported' });
+    expect(calls).toHaveLength(0);
+
+    for (const [status, code] of [
+      [401, 'auth'],
+      [402, 'bad_request'],
+      [429, 'rate_limit'],
+    ] as const) {
+      const m = mockFetch(() => json({ error: { code: 'x', message: 'nope' } }, status));
+      const err = await p.search!(params(), ctx(m.fetch)).catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(ProviderError);
+      expect((err as ProviderError).code).toBe(code);
+    }
+
+    const blocked = mockFetch(() => json({ data: { results: [{ url: 'https://a.com', status: 'blocked', title: null, text: '', published: null }] } }));
+    await expect(p.crawl!('https://a.com', ctx(blocked.fetch))).rejects.toMatchObject({ code: 'upstream' });
+    const empty = mockFetch(() => json({ data: { results: [{ url: 'https://a.com', status: 'empty', title: null, text: '', published: null }] } }));
+    await expect(p.crawl!('https://a.com', ctx(empty.fetch))).rejects.toMatchObject({ code: 'empty' });
   });
 });
 
