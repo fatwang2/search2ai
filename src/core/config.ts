@@ -61,7 +61,7 @@ function bool(v: string | undefined): boolean | undefined {
  * 支持的环境变量:
  * - SEARCH_SERVICE / NEWS_SERVICE / CRAWL_SERVICE: 逗号分隔的 provider 顺序
  * - SEARCH1API_KEY(+SEARCH1API_SERVICE), TAVILY_KEY, BRAVE_KEY, EXA_KEY, SERPER_KEY, SERPAPI_KEY,
- *   GOOGLE_KEY + GOOGLE_CX, SEARXNG_BASE_URL, OUTCRAWL_KEY, CLORO_KEY, JINA_KEY, FIRECRAWL_KEY / FIRECRAWL_BASE_URL
+ *   GOOGLE_KEY + GOOGLE_CX, SEARXNG_BASE_URL, OUTCRAWL_KEY, CLORO_KEY, SPECSTREAM_KEY, JINA_KEY, FIRECRAWL_KEY / FIRECRAWL_BASE_URL
  *   (以上 *_KEY 也接受 *_API_KEY 写法)
  * - parallel 免 key, 写进 SEARCH_SERVICE / CRAWL_SERVICE 即启用
  * - KEENABLE_KEY 可选; 不填 key 时把 keenable 写进 SEARCH_SERVICE / CRAWL_SERVICE 即免 key 启用
@@ -113,6 +113,9 @@ export function configFromEnv(env: Env): GatewayConfig {
   // 免 key 时只服务写了 keenable 的链: 只写进 CRAWL_SERVICE 不会加入默认搜索链
   else if (mentioned.has('keenable'))
     providers.keenable = { search: chain?.includes('keenable') ?? false, crawl: crawlChain?.includes('keenable') ?? false };
+
+  const specstream = pick(env, 'SPECSTREAM_KEY', 'SPECSTREAM_API_KEY');
+  if (specstream) providers.specstream = { apiKey: specstream, gl, hl };
 
   // 抓取类 provider 可免 key 使用, 但只有显式配置(key 或写进链里)才启用, 不做默认外呼
   const jinaKey = pick(env, 'JINA_KEY', 'JINA_API_KEY');
