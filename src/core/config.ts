@@ -61,7 +61,7 @@ function bool(v: string | undefined): boolean | undefined {
  * 支持的环境变量:
  * - SEARCH_SERVICE / NEWS_SERVICE / CRAWL_SERVICE: 逗号分隔的 provider 顺序
  * - SEARCH1API_KEY(+SEARCH1API_SERVICE), TAVILY_KEY, BRAVE_KEY, EXA_KEY, SERPER_KEY, SERPAPI_KEY,
- *   GOOGLE_KEY + GOOGLE_CX, SEARXNG_BASE_URL, OUTCRAWL_KEY, CLORO_KEY, SPECSTREAM_KEY, JINA_KEY, FIRECRAWL_KEY / FIRECRAWL_BASE_URL
+ *   GOOGLE_KEY + GOOGLE_CX, SEARXNG_BASE_URL, OUTCRAWL_KEY, CLORO_KEY, AUTOM_KEY, SPECSTREAM_KEY, JINA_KEY, FIRECRAWL_KEY / FIRECRAWL_BASE_URL
  *   (以上 *_KEY 也接受 *_API_KEY 写法)
  * - parallel 免 key, 写进 SEARCH_SERVICE / CRAWL_SERVICE 即启用
  * - KEENABLE_KEY 可选; 不填 key 时把 keenable 写进 SEARCH_SERVICE / CRAWL_SERVICE 即免 key 启用
@@ -107,6 +107,8 @@ export function configFromEnv(env: Env): GatewayConfig {
 
   const cloro = pick(env, 'CLORO_KEY', 'CLORO_API_KEY');
   if (cloro) providers.cloro = { apiKey: cloro, gl, hl };
+  const autom = pick(env, 'AUTOM_KEY', 'AUTOM_API_KEY');
+  if (autom) providers.autom = { apiKey: autom, gl, hl };
   // keenable 可免 key 使用, 同样只有显式配置(key 或写进链里)才启用, 不做默认外呼
   const keenable = pick(env, 'KEENABLE_KEY', 'KEENABLE_API_KEY');
   if (keenable) providers.keenable = { apiKey: keenable };

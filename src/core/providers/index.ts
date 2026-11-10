@@ -3,6 +3,7 @@
  */
 import { createParallel, type ParallelOptions } from './parallel.ts';
 import { createBrave, type BraveOptions } from './brave.ts';
+import { createAutom, type AutomOptions } from './autom.ts';
 import { createCloro, type CloroOptions } from './cloro.ts';
 import { createExa, type ExaOptions } from './exa.ts';
 import { createFirecrawl, type FirecrawlOptions } from './firecrawl.ts';
@@ -32,6 +33,7 @@ export interface ProviderOptionsMap {
   firecrawl: FirecrawlOptions;
   outcrawl: OutcrawlOptions;
   cloro: CloroOptions;
+  autom: AutomOptions;
   keenable: KeenableOptions;
   specstream: SpecstreamOptions;
 }
@@ -54,6 +56,7 @@ export const providerFactories: Factories = {
   firecrawl: createFirecrawl,
   outcrawl: createOutcrawl,
   cloro: createCloro,
+  autom: createAutom,
   keenable: createKeenable,
   specstream: createSpecstream,
 };
@@ -70,6 +73,7 @@ export const defaultPriority: ProviderName[] = [
   'searxng',
   'outcrawl',
   'cloro',
+  'autom',
   'keenable',
   'specstream',
   'jina',
@@ -101,6 +105,7 @@ export type {
   ParallelOptions,
   BraveOptions,
   ExaOptions,
+  AutomOptions,
   CloroOptions,
   FirecrawlOptions,
   GoogleOptions,
@@ -114,4 +119,4 @@ export type {
   SpecstreamOptions,
   TavilyOptions,
 };
-export { createParallel, createBrave, createCloro, createExa, createFirecrawl, createGoogle, createJina, createKeenable, createOutcrawl, createSearch1api, createSearxng, createSerpapi, createSerper, createSpecstream, createTavily };
+export { createParallel, createBrave, createAutom, createCloro, createExa, createFirecrawl, createGoogle, createJina, createKeenable, createOutcrawl, createSearch1api, createSearxng, createSerpapi, createSerper, createSpecstream, createTavily };
