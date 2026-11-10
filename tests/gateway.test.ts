@@ -151,6 +151,28 @@ describe('configFromEnv', () => {
     expect(cfg).toMatchObject({ maxResults: 7, crawlResults: 2, fallbackOnEmpty: true, timeoutMs: 5000, cacheTtlSeconds: 30 });
   });
 
+  it('enables keenable only when keyed or explicitly listed', () => {
+    expect(configFromEnv({}).providers.keenable).toBeUndefined();
+    expect(configFromEnv({ SEARCH_SERVICE: 'keenable' }).providers.keenable).toEqual({ search: true, crawl: false });
+    expect(configFromEnv({ CRAWL_SERVICE: 'keenable' }).providers.keenable).toEqual({ search: false, crawl: true });
+    expect(configFromEnv({ KEENABLE_API_KEY: 'kk' }).providers.keenable).toEqual({ apiKey: 'kk' });
+  });
+
+  it('keeps keyless keenable out of the default search chain when only CRAWL_SERVICE lists it', () => {
+    const crawlOnly = createGateway(configFromEnv({ CRAWL_SERVICE: 'keenable' }));
+    expect(crawlOnly.chain('search')).toEqual([]);
+    expect(crawlOnly.chain('crawl')).toEqual(['keenable']);
+    const withTavily = createGateway(configFromEnv({ CRAWL_SERVICE: 'keenable', TAVILY_KEY: 't' }));
+    expect(withTavily.chain('search')).toEqual(['tavily']);
+    const searchOnly = createGateway(configFromEnv({ SEARCH_SERVICE: 'keenable' }));
+    expect(searchOnly.chain('search')).toEqual(['keenable']);
+    expect(searchOnly.chain('crawl')).toEqual([]);
+    // keyed keenable keeps serving both
+    const keyed = createGateway(configFromEnv({ KEENABLE_KEY: 'kk' }));
+    expect(keyed.chain('search')).toContain('keenable');
+    expect(keyed.chain('crawl')).toContain('keenable');
+  });
+
   it('enables jina only when keyed or explicitly listed, and drops unknown chain entries at gateway level', () => {
     expect(configFromEnv({ CRAWL_SERVICE: 'jina' }).providers.jina).toEqual({ apiKey: undefined });
     expect(configFromEnv({ JINA_KEY: 'j' }).providers.jina).toEqual({ apiKey: 'j' });

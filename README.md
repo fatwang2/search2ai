@@ -139,7 +139,7 @@ For regular chat clients, see the [chat proxy](#chat-proxy).
 
 ### Supported providers
 
-Configure only the services you want to use. Keys usually come from the provider. SearXNG and self-hosted Firecrawl use your service URL; Jina can be explicitly enabled without a key.
+Configure only the services you want to use. Keys usually come from the provider. SearXNG and self-hosted Firecrawl use your service URL; Jina and Keenable can be explicitly enabled without a key.
 
 | Provider | Search | News | Page extraction | Environment variables |
 | --- | :-: | :-: | :-: | --- |
@@ -153,6 +153,7 @@ Configure only the services you want to use. Keys usually come from the provider
 | `searxng` | ✓ | ✓ | — | `SEARXNG_BASE_URL`, with JSON output enabled |
 | `outcrawl` | ✓ | — | ✓ | `OUTCRAWL_KEY` |
 | `cloro` | ✓ | ✓ | — | `CLORO_KEY` |
+| `keenable` | ✓ | — | ✓ | `KEENABLE_KEY`, or list `keenable` in `SEARCH_SERVICE` / `CRAWL_SERVICE` to use it without a key |
 | `jina` | — | — | ✓ | `JINA_KEY`, or explicitly list `jina` in `CRAWL_SERVICE` |
 | `firecrawl` | — | — | ✓ | `FIRECRAWL_KEY` or a self-hosted `FIRECRAWL_BASE_URL` |
 | `parallel` | ✓ | — | Opt-in | No key; list `parallel` in `SEARCH_SERVICE`, and in `CRAWL_SERVICE` for page extraction |
@@ -216,8 +217,8 @@ The common interface standardizes calls and result fields. Filter support, resul
 
 - Google returns at most 10 results per query; the current Brave, Tavily and Outcrawl adapters cap results at 20, and the cloro adapter at 20 (two pages), or 10 (one page) when a time filter is set. Other services can also return fewer results than requested.
 - Some adapters use only the first requested language. Some implement domain filters through `site:` search operators.
-- Time filters can be approximate, such as treating `hour` as a day. Currently, explicit date ranges are passed through by the Tavily, Brave, Exa, and cloro adapters (cloro: search only).
-- The current Exa adapter does not handle country or language filters; the Search1API adapter does not handle country or explicit date ranges; the Outcrawl adapter does not handle country, language or time filters; the cloro adapter applies time filters to search only, not to news. Unimplemented filters may be ignored without triggering fallback.
+- Time filters can be approximate, such as treating `hour` as a day. Currently, explicit date ranges are passed through by the Tavily, Brave, Exa, cloro and Keenable adapters (cloro: search only).
+- The current Exa adapter does not handle country or language filters; the Search1API adapter does not handle country or explicit date ranges; the Outcrawl adapter does not handle country, language or time filters; the cloro adapter applies time filters to search only, not to news; the Keenable adapter does not handle country or language filters, and returns an `unsupported` error for more than one domain. Unimplemented filters may be ignored without triggering fallback.
 
 If your application needs strict filtering, select and verify a specific provider rather than relying on fallback across providers with different capabilities. See [`src/core/providers/`](src/core/providers) for the mappings.
 

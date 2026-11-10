@@ -7,6 +7,7 @@ import {
   createFirecrawl,
   createGoogle,
   createJina,
+  createKeenable,
   createOutcrawl,
   createSearch1api,
   createSearxng,
@@ -285,6 +286,75 @@ describe('cloro', () => {
       expect(err).toBeInstanceOf(ProviderError);
       expect((err as ProviderError).code).toBe(code);
     }
+  });
+});
+
+describe('keenable', () => {
+  it('uses the keyless public endpoints with an app title, a native site filter and markdown fetch', async () => {
+    const { fetch, calls } = mockFetch((url) => {
+      if (url.pathname === '/v1/search/public')
+        return json({
+          results: [
+            { title: 'A', url: 'https://a.com/x', description: '', snippet: 'long excerpt', published_at: '2026-05-06T10:00:00Z' },
+            { title: 'no url', snippet: 'dropped' },
+          ],
+        });
+      if (url.pathname === '/v1/fetch/public') return json({ url: 'https://a.com/x', title: 'T', content: '# md' });
+      return undefined;
+    });
+    const p = createKeenable();
+    expect(p.news).toBeUndefined();
+    const s = await p.search!(params({ domains: ['a.com'], recency: 'week' }), ctx(fetch));
+    expect(s).toEqual([{ title: 'A', url: 'https://a.com/x', snippet: 'long excerpt', date: '2026-05-06' }]);
+    expect(calls[0].url.toString()).toBe('https://api.keenable.ai/v1/search/public');
+    expect(calls[0].headers['x-keenable-title']).toBe('search2ai');
+    expect(calls[0].headers['x-api-key']).toBeUndefined();
+    expect(calls[0].body).toEqual({ query: 'hono workers', max_results: 3, site: 'a.com', published_after: '7d' });
+
+    await p.search!(params({ maxResults: 80, afterDate: '2026-01-01', beforeDate: '2026-02-01', recency: 'day' }), ctx(fetch));
+    expect(calls[1].body).toEqual({ query: 'hono workers', max_results: 50, published_after: '2026-01-01', published_before: '2026-02-01' });
+
+    const c = await p.crawl!('https://a.com/x?q=1', ctx(fetch));
+    expect(c).toEqual({ url: 'https://a.com/x', title: 'T', content: '# md' });
+    expect(calls[2].url.searchParams.get('url')).toBe('https://a.com/x?q=1');
+  });
+
+  it('uses the keyed endpoints with X-API-Key when a key is configured', async () => {
+    const { fetch, calls } = mockFetch((url) => {
+      if (url.pathname === '/v1/search') return json({ results: [] });
+      if (url.pathname === '/v1/fetch') return json({ content: 'body' });
+      return undefined;
+    });
+    const p = createKeenable({ apiKey: 'kk' });
+    expect(await p.search!(params(), ctx(fetch))).toEqual([]);
+    expect(calls[0].headers['x-api-key']).toBe('kk');
+    expect(calls[0].headers['x-keenable-title']).toBeUndefined();
+    expect(await p.crawl!('https://a.com', ctx(fetch))).toEqual({ url: 'https://a.com', title: undefined, content: 'body' });
+    expect(calls[1].url.pathname).toBe('/v1/fetch');
+  });
+
+  it('maps hour recency to an exact 1h filter', async () => {
+    const { fetch, calls } = mockFetch(() => json({ results: [] }));
+    await createKeenable().search!(params({ recency: 'hour' }), ctx(fetch));
+    expect(calls[0].body).toEqual({ query: 'hono workers', max_results: 3, published_after: '1h' });
+  });
+
+  it('omits search or crawl when disabled', () => {
+    expect(createKeenable({ search: false }).search).toBeUndefined();
+    expect(createKeenable({ search: false }).crawl).toBeDefined();
+    expect(createKeenable({ crawl: false }).crawl).toBeUndefined();
+  });
+
+  it('rejects multiple domains as unsupported and maps 429 to rate_limit', async () => {
+    const { fetch, calls } = mockFetch(() => json({ results: [] }));
+    const err = await createKeenable().search!(params({ domains: ['a.com', 'b.com'] }), ctx(fetch)).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(ProviderError);
+    expect((err as ProviderError).code).toBe('unsupported');
+    expect(calls).toHaveLength(0);
+
+    const rl = mockFetch(() => new Response('slow down', { status: 429 }));
+    const e2 = await createKeenable().search!(params(), ctx(rl.fetch)).catch((e: unknown) => e);
+    expect((e2 as ProviderError).code).toBe('rate_limit');
   });
 });
 
