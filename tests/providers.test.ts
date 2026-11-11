@@ -271,14 +271,15 @@ describe('autom', () => {
     expect(calls[2].url.searchParams.get('tbs')).toBeNull();
   });
 
-  it('returns an empty list when organic_results is missing and maps HTTP errors', async () => {
+  it('returns an empty list when organic_results is missing and maps HTTP errors, including the 401 rate limit', async () => {
     const empty = mockFetch(() => json({}));
     expect(await createAutom({ apiKey: 'ak' }).search!(params(), ctx(empty.fetch))).toEqual([]);
-    for (const [status, code] of [
-      [401, 'auth'],
-      [429, 'rate_limit'],
+    for (const [status, error, code] of [
+      [401, 'Invalid API Key', 'auth'],
+      [401, 'Rate limit exceeded, please retry later', 'rate_limit'],
+      [429, 'Too Many Requests', 'rate_limit'],
     ] as const) {
-      const { fetch } = mockFetch(() => json({ error: 'Invalid API Key' }, status));
+      const { fetch } = mockFetch(() => json({ error }, status));
       const err = await createAutom({ apiKey: 'ak' }).search!(params(), ctx(fetch)).catch((e: unknown) => e);
       expect(err).toBeInstanceOf(ProviderError);
       expect((err as ProviderError).code).toBe(code);

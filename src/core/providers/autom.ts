@@ -1,6 +1,7 @@
 /**
  * Autom: Google 搜索 /v1/google/search, Google 新闻 /v1/google/news。https://docs.autom.dev
  */
+import { ProviderError } from '../errors.ts';
 import { fetchJson, googleTbs, jsonHeaders, qs, str, toIsoDate, withSiteFilter } from '../http.ts';
 import type { ProviderContext, ProviderSearchParams, SearchProvider, SearchResult } from '../types.ts';
 
@@ -63,6 +64,18 @@ export function createAutom(opts: AutomOptions): SearchProvider {
   const base = (opts.baseUrl ?? 'https://api.autom.dev').replace(/\/+$/, '');
   const headers = jsonHeaders({ 'x-api-key': opts.apiKey });
 
+  /** Autom 的限流返回 401 (`Rate limit exceeded`) 而不是 429, 这里改回 rate_limit */
+  async function get(ctx: ProviderContext, url: string): Promise<AutomPage> {
+    try {
+      return await fetchJson<AutomPage>(ctx, name, url, { method: 'GET', headers });
+    } catch (error) {
+      if (error instanceof ProviderError && error.status === 401 && /rate.limit/i.test(error.message)) {
+        throw new ProviderError(name, 'rate_limit', error.message, error.status);
+      }
+      throw error;
+    }
+  }
+
   /** 取够 maxResults 为止, 最多 2 页; 下一页不存在时停止 */
   async function pages(p: ProviderSearchParams, ctx: ProviderContext, path: string, tbs?: string): Promise<SearchResult[]> {
     const want = Math.min(Math.ceil(p.maxResults / PAGE_SIZE) || 1, MAX_PAGES);
@@ -75,7 +88,7 @@ export function createAutom(opts: AutomOptions): SearchProvider {
         tbs,
         page: page > 1 ? page : undefined,
       });
-      const data = await fetchJson<AutomPage>(ctx, name, `${base}${path}${query}`, { method: 'GET', headers });
+      const data = await get(ctx, `${base}${path}${query}`);
       items.push(...(data.organic_results ?? []));
       if (!data.pagination?.has_next_page) break;
     }
