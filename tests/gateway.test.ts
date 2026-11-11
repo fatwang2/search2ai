@@ -130,6 +130,7 @@ describe('configFromEnv', () => {
       FIRECRAWL_BASE_URL: 'http://fc',
       OUTCRAWL_API_KEY: 'oc',
       CLORO_API_KEY: 'cl',
+      AUTOM_API_KEY: 'au',
       SPECSTREAM_API_KEY: 'ss',
       MAX_RESULTS: '7',
       CRAWL_RESULTS: '2',
@@ -148,6 +149,7 @@ describe('configFromEnv', () => {
     expect(cfg.providers.firecrawl).toEqual({ apiKey: undefined, baseUrl: 'http://fc' });
     expect(cfg.providers.outcrawl).toEqual({ apiKey: 'oc' });
     expect(cfg.providers.cloro).toEqual({ apiKey: 'cl', gl: 'cn', hl: 'zh' });
+    expect(cfg.providers.autom).toEqual({ apiKey: 'au', gl: 'cn', hl: 'zh' });
     expect(cfg.providers.specstream).toEqual({ apiKey: 'ss', gl: 'cn', hl: 'zh' });
     expect(cfg.providers.jina).toBeUndefined();
     expect(cfg).toMatchObject({ maxResults: 7, crawlResults: 2, fallbackOnEmpty: true, timeoutMs: 5000, cacheTtlSeconds: 30 });

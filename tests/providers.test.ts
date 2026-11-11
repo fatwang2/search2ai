@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { ProviderError } from '../src/core/errors.ts';
 import {
+  createAutom,
   createBrave,
   createExa,
   createCloro,
@@ -204,6 +205,82 @@ describe('outcrawl', () => {
     ] as const) {
       const { fetch } = mockFetch(() => json({ error: 'nope' }, status));
       const err = await createOutcrawl({ apiKey: 'ock_k' }).search!(params(), ctx(fetch)).catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(ProviderError);
+      expect((err as ProviderError).code).toBe(code);
+    }
+  });
+});
+
+describe('autom', () => {
+  it('maps search and news, skips rows without a link, and sends country, language and the key', async () => {
+    const { fetch, calls } = mockFetch((url) => {
+      if (url.pathname === '/v1/google/search')
+        return json({
+          organic_results: [
+            { position: 1, title: 'A', link: 'https://a.com/x', snippet: 's', domain: 'a.com' },
+            { position: 2, title: 'No link', link: '', snippet: 'skip' },
+            { position: 3, title: 'B', link: 'https://b.com/y', snippet: 's2' },
+          ],
+          pagination: { current: 1, has_next_page: true },
+        });
+      if (url.pathname === '/v1/google/news')
+        return json({ organic_results: [{ position: 1, title: 'N', link: 'https://n.com/z', snippet: '', source: 'N', date: '2026-11-06' }] });
+      return undefined;
+    });
+    const p = createAutom({ apiKey: 'ak', gl: 'cn', hl: 'zh' });
+    expect(p.crawl).toBeUndefined();
+    const s = await p.search!(params({ maxResults: 5, domains: ['a.com'], country: 'DE', languages: ['en'] }), ctx(fetch));
+    expect(s).toEqual([
+      { title: 'A', url: 'https://a.com/x', snippet: 's' },
+      { title: 'B', url: 'https://b.com/y', snippet: 's2' },
+    ]);
+    expect(calls).toHaveLength(1);
+    expect(calls[0].url.pathname).toBe('/v1/google/search');
+    expect(Object.fromEntries(calls[0].url.searchParams)).toEqual({ query: 'hono workers site:a.com', gl: 'de', hl: 'en' });
+    expect(calls[0].headers['x-api-key']).toBe('ak');
+
+    const n = await p.news!(params(), ctx(fetch));
+    expect(n).toEqual([{ title: 'N', url: 'https://n.com/z', snippet: '', date: '2026-11-06' }]);
+    expect(calls[1].url.toString()).toBe('https://api.autom.dev/v1/google/news?query=hono+workers&gl=cn&hl=zh');
+  });
+
+  it('reads a second page only when more than 10 results are wanted and Google has one', async () => {
+    const page = (n: number, next: boolean) =>
+      json({
+        organic_results: Array.from({ length: 10 }, (_, i) => ({ title: `R${n}-${i}`, link: `https://r.com/${n}/${i}`, snippet: '' })),
+        pagination: { current: n, has_next_page: next },
+      });
+    const { fetch, calls } = mockFetch((url) => page(Number(url.searchParams.get('page') ?? 1), true));
+    const out = await createAutom({ apiKey: 'ak' }).search!(params({ maxResults: 50 }), ctx(fetch));
+    expect(out).toHaveLength(20);
+    expect(calls.map((c) => c.url.searchParams.get('page'))).toEqual([null, '2']);
+
+    const last = mockFetch(() => page(1, false));
+    expect(await createAutom({ apiKey: 'ak' }).search!(params({ maxResults: 50 }), ctx(last.fetch))).toHaveLength(10);
+    expect(last.calls).toHaveLength(1);
+  });
+
+  it('maps a time filter to tbs on search only', async () => {
+    const { fetch, calls } = mockFetch(() => json({ organic_results: [] }));
+    const p = createAutom({ apiKey: 'ak' });
+    await p.search!(params({ recency: 'day' }), ctx(fetch));
+    expect(calls[0].url.searchParams.get('tbs')).toBe('qdr:d');
+    await p.search!(params({ afterDate: '2026-10-01', beforeDate: '2026-10-07' }), ctx(fetch));
+    expect(calls[1].url.searchParams.get('tbs')).toBe('cdr:1,cd_min:10/1/2026,cd_max:10/7/2026');
+    await p.news!(params({ recency: 'day' }), ctx(fetch));
+    expect(calls[2].url.searchParams.get('tbs')).toBeNull();
+  });
+
+  it('returns an empty list when organic_results is missing and maps HTTP errors, including the 401 rate limit', async () => {
+    const empty = mockFetch(() => json({}));
+    expect(await createAutom({ apiKey: 'ak' }).search!(params(), ctx(empty.fetch))).toEqual([]);
+    for (const [status, error, code] of [
+      [401, 'Invalid API Key', 'auth'],
+      [401, 'Rate limit exceeded, please retry later', 'rate_limit'],
+      [429, 'Too Many Requests', 'rate_limit'],
+    ] as const) {
+      const { fetch } = mockFetch(() => json({ error }, status));
+      const err = await createAutom({ apiKey: 'ak' }).search!(params(), ctx(fetch)).catch((e: unknown) => e);
       expect(err).toBeInstanceOf(ProviderError);
       expect((err as ProviderError).code).toBe(code);
     }

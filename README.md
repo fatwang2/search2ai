@@ -153,6 +153,7 @@ Configure only the services you want to use. Keys usually come from the provider
 | `searxng` | ✓ | ✓ | — | `SEARXNG_BASE_URL`, with JSON output enabled |
 | `outcrawl` | ✓ | — | ✓ | `OUTCRAWL_KEY` |
 | `cloro` | ✓ | ✓ | — | `CLORO_KEY` |
+| `autom` | ✓ | ✓ | — | `AUTOM_KEY` |
 | `keenable` | ✓ | — | ✓ | `KEENABLE_KEY`, or list `keenable` in `SEARCH_SERVICE` / `CRAWL_SERVICE` to use it without a key |
 | `specstream` | ✓ | ✓ | ✓ | `SPECSTREAM_API_KEY` |
 | `jina` | — | — | ✓ | `JINA_KEY`, or explicitly list `jina` in `CRAWL_SERVICE` |
@@ -216,9 +217,9 @@ A positive `CACHE_TTL` enables in-memory caching by default. On Workers, a KV na
 
 The common interface standardizes calls and result fields. Filter support, result counts, and content quality still depend on the adapter and provider:
 
-- Google returns at most 10 results per query; the current Brave, Tavily and Outcrawl adapters cap results at 20, and the cloro adapter at 20 (two pages), or 10 (one page) when a time filter is set. Other services can also return fewer results than requested.
+- Google returns at most 10 results per query; the current Brave, Tavily and Outcrawl adapters cap results at 20, the cloro adapter at 20 (two pages), or 10 (one page) when a time filter is set, and the Autom adapter at 20 (two pages). Other services can also return fewer results than requested.
 - Some adapters use only the first requested language. Some implement domain filters through `site:` search operators.
-- Time filters can be approximate, such as treating `hour` as a day. Currently, explicit date ranges are passed through by the Tavily, Brave, Exa, cloro, Keenable and SpecStream adapters (cloro: search only; SpecStream: as `after:` / `before:` operators).
+- Time filters can be approximate, such as treating `hour` as a day. Currently, explicit date ranges are passed through by the Tavily, Brave, Exa, cloro, Autom, Keenable and SpecStream adapters (cloro and Autom: search only; SpecStream: as `after:` / `before:` operators).
 - The current Exa adapter does not handle country or language filters; the Search1API adapter does not handle country or explicit date ranges; the Outcrawl adapter does not handle country, language or time filters; the cloro adapter applies time filters to search only, not to news; the Keenable adapter does not handle country or language filters, and returns an `unsupported` error for more than one domain; the SpecStream adapter also returns an `unsupported` error for more than one domain. Unimplemented filters may be ignored without triggering fallback.
 
 If your application needs strict filtering, select and verify a specific provider rather than relying on fallback across providers with different capabilities. See [`src/core/providers/`](src/core/providers) for the mappings.
