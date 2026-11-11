@@ -22,7 +22,10 @@ function errorResult(error: unknown) {
 }
 
 export function createMcpServer(gateway: Gateway, version: string): McpServer {
-  const server = new McpServer({ name: 'search2ai', version });
+  const server = new McpServer(
+    { name: 'search2ai', version },
+    { maxToolInputElements: 10_000 }
+  );
 
   server.registerTool(
     'search',
