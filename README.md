@@ -349,6 +349,12 @@ docker run --rm -p 3014:3014 --env-file .env search2ai
 
 The container receives settings through `--env-file`. In-memory caches are cleared when the container restarts.
 
+### Railway
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/search2ai)
+
+One-click deploy built from this repository's Dockerfile, with a generated gateway key in `AUTH_KEYS` so the deployment is never an open public API. Copy `AUTH_KEYS` from the service variables, add at least one provider key (or set `SEARCH_SERVICE` to a keyless provider), and check `/v1/health`.
+
 ### Cloudflare Workers
 
 From the repository root, install dependencies, add your chosen provider key as a Workers secret, and deploy:

@@ -349,6 +349,12 @@ docker run --rm -p 3014:3014 --env-file .env search2ai
 
 容器通过 `--env-file` 接收配置。进程内缓存随容器重启清空。
 
+### Railway
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/search2ai)
+
+基于本仓库 Dockerfile 一键部署，并自动在 `AUTH_KEYS` 中生成网关密钥，避免部署后成为无鉴权的公开 API。部署后在服务变量中复制 `AUTH_KEYS`，至少添加一个后端密钥（或将 `SEARCH_SERVICE` 设为免 key 后端），再访问 `/v1/health` 检查状态。
+
 ### Cloudflare Workers
 
 在仓库根目录安装依赖，将所选后端密钥写入 Workers secrets，再部署：
