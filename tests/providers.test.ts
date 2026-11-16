@@ -14,6 +14,7 @@ import {
   createSearxng,
   createSerpapi,
   createSerper,
+  createSofya,
   createSpecstream,
   createTavily,
 } from '../src/core/providers/index.ts';
@@ -509,6 +510,117 @@ describe('specstream', () => {
     const blocked = mockFetch(() => json({ data: { results: [{ url: 'https://a.com', status: 'blocked', title: null, text: '', published: null }] } }));
     await expect(p.crawl!('https://a.com', ctx(blocked.fetch))).rejects.toMatchObject({ code: 'upstream' });
     const empty = mockFetch(() => json({ data: { results: [{ url: 'https://a.com', status: 'empty', title: null, text: '', published: null }] } }));
+    await expect(p.crawl!('https://a.com', ctx(empty.fetch))).rejects.toMatchObject({ code: 'empty' });
+  });
+});
+
+describe('sofya', () => {
+  const item = (n: string, extra: Record<string, unknown> = {}) => ({
+    title: n,
+    url: `https://a.com/${n}`,
+    content: `snippet ${n}`,
+    description: `snippet ${n}`,
+    fetched: false,
+    content_fetched_at: null,
+    published_date: null,
+    sublinks: [],
+    table: {},
+    ...extra,
+  });
+
+  it('searches /v1/search at snippets depth with bearer auth and domain filters, and maps news and crawl', async () => {
+    const { fetch, calls } = mockFetch((url) => {
+      if (url.pathname === '/v1/search')
+        return json({ query: 'q', answer: null, results: [item('x', { published_date: '2026-05-06' }), item('y'), { title: 'No url', url: '' }], search_depth: 'snippets', credits_used: 1 });
+      if (url.pathname === '/v1/fetch')
+        return json({ results: [{ title: 'T', url: 'https://a.com/x', content: '# md', success: true, error: null }], credits_used: 1 });
+      return undefined;
+    });
+    const p = createSofya({ apiKey: 'sofya_live_k' });
+    const s = await p.search!(params({ domains: ['a.com', 'b.com'], country: 'DE', languages: ['de'] }), ctx(fetch));
+    expect(s).toEqual([
+      { title: 'x', url: 'https://a.com/x', snippet: 'snippet x', date: '2026-05-06' },
+      { title: 'y', url: 'https://a.com/y', snippet: 'snippet y' },
+    ]);
+    expect(calls[0].url.toString()).toBe('https://sofya.co/v1/search');
+    expect(calls[0].headers.authorization).toBe('Bearer sofya_live_k');
+    expect(calls[0].body).toEqual({ query: 'hono workers', topic: 'general', max_results: 3, search_depth: 'snippets', include_domains: ['a.com', 'b.com'] });
+
+    await p.news!(params({ maxResults: 50 }), ctx(fetch));
+    expect(calls[1].body).toEqual({ query: 'hono workers', topic: 'news', max_results: 20, search_depth: 'snippets' });
+
+    const c = await p.crawl!('https://a.com/x', ctx(fetch));
+    expect(c).toEqual({ url: 'https://a.com/x', title: 'T', content: '# md' });
+    expect(calls[2].url.toString()).toBe('https://sofya.co/v1/fetch');
+    expect(calls[2].body).toEqual({ urls: ['https://a.com/x'] });
+    expect(calls[2].headers.authorization).toBe('Bearer sofya_live_k');
+  });
+
+  it('asks for basic depth when page content is wanted and keeps it only for pages that were read', async () => {
+    const { fetch, calls } = mockFetch(() =>
+      json({
+        results: [
+          item('x', { content: 'page x', fetched: true }),
+          item('y'),
+          item('z', { content: 'page z', fetched: true }),
+        ],
+      })
+    );
+    const s = await createSofya({ apiKey: 'k', baseUrl: 'https://sofya.test/' }).search!(params({ crawlResults: 2 }), ctx(fetch));
+    expect(calls[0].url.toString()).toBe('https://sofya.test/v1/search');
+    expect(calls[0].body).toMatchObject({ search_depth: 'basic' });
+    expect(s).toEqual([
+      { title: 'x', url: 'https://a.com/x', snippet: 'snippet x', content: 'page x' },
+      { title: 'y', url: 'https://a.com/y', snippet: 'snippet y' },
+      { title: 'z', url: 'https://a.com/z', snippet: 'snippet z' },
+    ]);
+  });
+
+  it('maps recency and date ranges to freshness', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-11-10T12:00:00Z'));
+    try {
+      const { fetch, calls } = mockFetch(() => json({ results: [] }));
+      const p = createSofya({ apiKey: 'k' });
+      expect(await p.search!(params({ recency: 'hour' }), ctx(fetch))).toEqual([]);
+      await p.search!(params({ recency: 'month' }), ctx(fetch));
+      await p.search!(params({ recency: 'week', afterDate: '2026-10-01', beforeDate: '2026-10-07' }), ctx(fetch));
+      await p.search!(params({ afterDate: '2026-10-01' }), ctx(fetch));
+      await p.search!(params({ beforeDate: '2026-10-07' }), ctx(fetch));
+      expect(calls.map((c) => (c.body as { freshness?: string }).freshness)).toEqual([
+        'day',
+        'month',
+        '2026-10-01:2026-10-07',
+        '2026-10-01:2026-11-10',
+        '1970-01-01:2026-10-07',
+      ]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('returns unsupported for more than 10 domains, and maps HTTP and page errors', async () => {
+    const { fetch, calls } = mockFetch(() => json({ results: [] }));
+    const p = createSofya({ apiKey: 'k' });
+    const domains = Array.from({ length: 11 }, (_, i) => `d${i}.com`);
+    await expect(p.search!(params({ domains }), ctx(fetch))).rejects.toMatchObject({ code: 'unsupported' });
+    expect(calls).toHaveLength(0);
+
+    for (const [status, code] of [
+      [401, 'auth'],
+      [402, 'bad_request'],
+      [429, 'rate_limit'],
+      [503, 'upstream'],
+    ] as const) {
+      const m = mockFetch(() => json({ error: 'x', detail: 'nope' }, status));
+      const err = await p.search!(params(), ctx(m.fetch)).catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(ProviderError);
+      expect((err as ProviderError).code).toBe(code);
+    }
+
+    const failed = mockFetch(() => json({ results: [{ title: '', url: 'https://a.com', content: '', success: false, error: 'HTTP 404' }], credits_used: 0 }));
+    await expect(p.crawl!('https://a.com', ctx(failed.fetch))).rejects.toMatchObject({ code: 'upstream', message: 'sofya: HTTP 404' });
+    const empty = mockFetch(() => json({ results: [{ title: 'T', url: 'https://a.com', content: '', success: true, error: null }] }));
     await expect(p.crawl!('https://a.com', ctx(empty.fetch))).rejects.toMatchObject({ code: 'empty' });
   });
 });

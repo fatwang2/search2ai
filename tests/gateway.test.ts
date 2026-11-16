@@ -132,6 +132,7 @@ describe('configFromEnv', () => {
       CLORO_API_KEY: 'cl',
       AUTOM_API_KEY: 'au',
       SPECSTREAM_API_KEY: 'ss',
+      SOFYA_API_KEY: 'sf',
       MAX_RESULTS: '7',
       CRAWL_RESULTS: '2',
       FALLBACK_ON_EMPTY: 'true',
@@ -151,6 +152,7 @@ describe('configFromEnv', () => {
     expect(cfg.providers.cloro).toEqual({ apiKey: 'cl', gl: 'cn', hl: 'zh' });
     expect(cfg.providers.autom).toEqual({ apiKey: 'au', gl: 'cn', hl: 'zh' });
     expect(cfg.providers.specstream).toEqual({ apiKey: 'ss', gl: 'cn', hl: 'zh' });
+    expect(cfg.providers.sofya).toEqual({ apiKey: 'sf' });
     expect(cfg.providers.jina).toBeUndefined();
     expect(cfg).toMatchObject({ maxResults: 7, crawlResults: 2, fallbackOnEmpty: true, timeoutMs: 5000, cacheTtlSeconds: 30 });
   });
