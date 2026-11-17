@@ -34,6 +34,7 @@ export {
   createSearxng,
   createSerpapi,
   createSerper,
+  createSofya,
   createSpecstream,
   createTavily,
   type ProviderName,
@@ -51,6 +52,7 @@ export {
   type SearxngOptions,
   type SerpapiOptions,
   type SerperOptions,
+  type SofyaOptions,
   type SpecstreamOptions,
   type TavilyOptions,
 } from './providers/index.ts';

@@ -15,6 +15,7 @@ import { createSearch1api, type Search1apiOptions } from './search1api.ts';
 import { createSearxng, type SearxngOptions } from './searxng.ts';
 import { createSerpapi, type SerpapiOptions } from './serpapi.ts';
 import { createSerper, type SerperOptions } from './serper.ts';
+import { createSofya, type SofyaOptions } from './sofya.ts';
 import { createSpecstream, type SpecstreamOptions } from './specstream.ts';
 import { createTavily, type TavilyOptions } from './tavily.ts';
 import type { Operation, ProviderInfo, SearchProvider } from '../types.ts';
@@ -36,6 +37,7 @@ export interface ProviderOptionsMap {
   autom: AutomOptions;
   keenable: KeenableOptions;
   specstream: SpecstreamOptions;
+  sofya: SofyaOptions;
 }
 
 export type ProviderName = keyof ProviderOptionsMap;
@@ -59,6 +61,7 @@ export const providerFactories: Factories = {
   autom: createAutom,
   keenable: createKeenable,
   specstream: createSpecstream,
+  sofya: createSofya,
 };
 
 /** 未显式指定链时的默认优先级(只取已配置的) */
@@ -76,6 +79,7 @@ export const defaultPriority: ProviderName[] = [
   'autom',
   'keenable',
   'specstream',
+  'sofya',
   'jina',
   'firecrawl',
   'parallel',
@@ -116,7 +120,8 @@ export type {
   SearxngOptions,
   SerpapiOptions,
   SerperOptions,
+  SofyaOptions,
   SpecstreamOptions,
   TavilyOptions,
 };
-export { createParallel, createBrave, createAutom, createCloro, createExa, createFirecrawl, createGoogle, createJina, createKeenable, createOutcrawl, createSearch1api, createSearxng, createSerpapi, createSerper, createSpecstream, createTavily };
+export { createParallel, createBrave, createAutom, createCloro, createExa, createFirecrawl, createGoogle, createJina, createKeenable, createOutcrawl, createSearch1api, createSearxng, createSerpapi, createSerper, createSofya, createSpecstream, createTavily };
